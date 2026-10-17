@@ -13,6 +13,15 @@ from radar.contrato import id_contrato, id_desde_url
 from radar.recoleccion import imprimir_json, linkedin
 
 
+def _fecha_desde_id(identificador):
+    if identificador.isdecimal():
+        try:
+            return datetime.fromtimestamp((int(identificador) >> 22) / 1000, timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            pass
+    return None
+
+
 def _entero(valor, minimo, maximo, nombre):
     if type(valor) is not int or not minimo <= valor <= maximo:
         raise ValueError(f"{nombre} debe estar entre {minimo} y {maximo}")
@@ -93,19 +102,39 @@ def descubrir(consultas, *, clave, sal, dias=None, maximo=100, pedir=None, obten
         raise ValueError("Falta OPENROUTER_API_KEY en el entorno")
     if not sal or not sal.strip():
         raise ValueError("Falta AUTOR_HASH_SAL en el entorno")
-    resumen = {"consultas": 0, "urls": 0, "completados": 0, "omitidos": 0,
+    resumen = {"consultas": 0, "consultas_fallidas": 0, "urls": 0, "completados": 0, "omitidos": 0,
                "fuera_fecha": 0, "costo_usd": Decimal("0"), "aviso": None}
     urls, vistos = [], set()
     for consulta in consultas:
-        encontradas, costo = buscar_urls(consulta, clave=clave, max_resultados=max_resultados, pedir=pedir)
+        if dias is not None:
+            meses = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+                     "septiembre", "octubre", "noviembre", "diciembre")
+            consulta = (f"publicaciones de los últimos {dias} días ({meses[ahora.month - 1]} de {ahora.year}) "
+                        f"en LinkedIn: {consulta}")
         resumen["consultas"] += 1
+        try:
+            encontradas, costo = buscar_urls(consulta, clave=clave, max_resultados=max_resultados, pedir=pedir)
+        except ValueError:
+            resumen["consultas_fallidas"] += 1
+            continue
         resumen["costo_usd"] += costo
         for url in encontradas:
             identificador = id_contrato(*id_desde_url(url))
             if identificador not in vistos:
                 vistos.add(identificador)
                 urls.append(url)
+    if resumen["consultas_fallidas"] == resumen["consultas"]:
+        raise ValueError("OpenRouter: no se pudo obtener una respuesta de búsqueda válida en ninguna consulta")
     resumen["urls"] = len(urls)
+    if desde is not None:
+        recientes = []
+        for url in urls:
+            fecha = _fecha_desde_id(id_desde_url(url)[1])
+            if fecha is not None and fecha < desde:
+                resumen["fuera_fecha"] += 1
+            else:
+                recientes.append(url)
+        urls = recientes
     publicaciones, metricas = [], []
     reunidos = set()
     for intento, url in enumerate(urls[:maximo]):
@@ -147,7 +176,8 @@ def main(argv=None):
     except ValueError as error:
         parser.exit(1, f"Error: {error}\n")
     imprimir_json(publicaciones, metricas)
-    print(f"Consultas: {resumen['consultas']}; URLs encontradas (únicas): {resumen['urls']}; "
+    print(f"Consultas: {resumen['consultas']}; consultas fallidas: {resumen['consultas_fallidas']}; "
+          f"URLs encontradas (únicas): {resumen['urls']}; "
           f"posts completados: {resumen['completados']}; omitidos: {resumen['omitidos']}; "
           f"fuera de fecha: {resumen['fuera_fecha']}; costo total: USD {resumen['costo_usd']:.6f}", file=sys.stderr)
     if resumen["aviso"]:

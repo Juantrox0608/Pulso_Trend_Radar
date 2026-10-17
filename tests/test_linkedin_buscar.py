@@ -87,7 +87,116 @@ def pagina(fecha=None):
     return html.replace("2026-01-02T10:00:00-05:00", (fecha or datetime.now(timezone.utc)).isoformat())
 
 
+def url_fecha(fecha):
+    return f"https://www.linkedin.com/feed/update/urn:li:activity:{int(fecha.timestamp() * 1000) << 22}/"
+
+
+def test_fecha_desde_id_en_utc_y_alternativas_sin_fecha():
+    fecha = datetime(2026, 10, 17, 12, 34, 56, 789000, tzinfo=timezone.utc)
+    identificador = str((int(fecha.timestamp() * 1000) << 22) + 123)
+    assert buscar._fecha_desde_id(identificador) == fecha
+    assert buscar._fecha_desde_id("lnkd-X-Ficticio") is None
+    assert buscar._fecha_desde_id("9" * 22) is None
+
+
+def test_filtro_id_incluye_limite_exacto_y_cuenta_todas_las_antiguas(monkeypatch):
+    ahora = datetime(2026, 10, 17, 12, tzinfo=timezone.utc)
+    class Reloj(datetime):
+        @classmethod
+        def now(cls, tz=None): return ahora
+    monkeypatch.setattr(buscar, "datetime", Reloj)
+    limite = ahora - timedelta(days=7)
+    vieja = url_fecha(limite - timedelta(milliseconds=1))
+    vigente = url_fecha(limite)
+    otra_vieja = url_fecha(limite - timedelta(days=1))
+    llamadas = []
+    def obtener(u):
+        llamadas.append(u)
+        return u, pagina(limite)
+    p, m, resumen = buscar.descubrir(["IA"], clave="ficticia", sal="sal", dias=7, maximo=1,
+        pedir=lambda _: respuesta([vieja, vigente, otra_vieja]), obtener=obtener)
+    assert llamadas == [vigente] and len(p) == 1 and resumen["fuera_fecha"] == 2
+
+
+@pytest.mark.parametrize("dias", [None, 7])
+def test_consulta_con_periodo_y_mes_en_espanol(monkeypatch, dias):
+    class Reloj(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 10, 17, 12, tzinfo=timezone.utc)
+    monkeypatch.setattr(buscar, "datetime", Reloj)
+    consultas = []
+    def pedir(request):
+        consultas.append(json.loads(request.data)["messages"][0]["content"])
+        return respuesta([])
+    buscar.descubrir(["IA", "automatización"], clave="ficticia", sal="sal", dias=dias, pedir=pedir)
+    prefijo = "publicaciones de los últimos 7 días (octubre de 2026) en LinkedIn: " if dias else ""
+    assert consultas == [prefijo + "IA", prefijo + "automatización"]
+
+
+def test_filtra_id_antes_de_consultar_sin_gastar_tope_ni_pausas():
+    ahora = datetime.now(timezone.utc)
+    antigua = url_fecha(ahora - timedelta(days=8))
+    reciente = url_fecha(ahora - timedelta(days=1))
+    llamadas = []
+    def obtener(u):
+        llamadas.append(u)
+        return u, pagina()
+    p, m, resumen = buscar.descubrir(["IA"], clave="ficticia", sal="sal", dias=7, maximo=1,
+        pedir=lambda _: respuesta([antigua, reciente]), obtener=obtener,
+        pausa=lambda _: pytest.fail("No hay pausa antes del primer intento"))
+    assert llamadas == [reciente] and len(p) == len(m) == 1
+    assert resumen["fuera_fecha"] == 1 and resumen["completados"] == 1 and resumen["urls"] == 2
+
+
+def test_id_no_numerico_conserva_filtro_por_publicada_en(monkeypatch):
+    corta = "https://lnkd.in/X/Ficticio"
+    monkeypatch.setattr(buscar, "buscar_urls", lambda *a, **kw: ([corta], Decimal("0.007")))
+    llamadas = []
+    def obtener(u):
+        llamadas.append(u)
+        return URL, pagina(datetime.now(timezone.utc) - timedelta(days=8))
+    p, m, resumen = buscar.descubrir(["IA"], clave="ficticia", sal="sal", dias=7, obtener=obtener)
+    assert llamadas == [corta] and p == m == []
+    assert resumen["fuera_fecha"] == resumen["completados"] == 1
+
+
+def test_consulta_fallida_continua_y_resume_sin_datos_privados(monkeypatch, capsys):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "ficticia")
+    monkeypatch.setenv("AUTOR_HASH_SAL", "sal")
+    consultas = []
+    def pedir(request):
+        consulta = json.loads(request.data)["messages"][0]["content"]
+        consultas.append(consulta)
+        if consulta == "falla":
+            raise ValueError("clave_privada nombre_privado")
+        return respuesta([URL])
+    monkeypatch.setattr(buscar, "_pedir", pedir)
+    monkeypatch.setattr(buscar.linkedin, "_obtener", lambda u: (u, pagina()))
+    buscar.main(["--consulta", "falla", "--consulta", "IA"])
+    salida = capsys.readouterr()
+    assert consultas == ["falla", "IA"]
+    assert len(json.loads(salida.out)["publicaciones"]) == 1
+    assert "Consultas: 2" in salida.err and "consultas fallidas: 1" in salida.err
+    assert "USD 0.007000" in salida.err and "privad" not in salida.err + salida.out
+
+
+def test_todas_las_consultas_fallidas_no_abren_linkedin():
+    llamadas = []
+    def pedir(request):
+        llamadas.append(request)
+        raise ValueError("dato_privado")
+    with pytest.raises(ValueError, match="OpenRouter") as exc:
+        buscar.descubrir(["IA", "automatización"], clave="ficticia", sal="sal", pedir=pedir,
+            obtener=lambda _: pytest.fail("No debe consultar LinkedIn"))
+    assert len(llamadas) == 2 and "dato_privado" not in str(exc.value)
+
+
 def test_descubrir_omite_filtra_y_conserva_privacidad():
+    URL = url_fecha(datetime.now(timezone.utc) - timedelta(days=1))
+    base = int(URL.rstrip('/').rsplit(':', 1)[1])
+    def url(numero):
+        return f"https://www.linkedin.com/feed/update/urn:li:activity:{base + numero}/"
     peticiones, obtenidas, pausas = [], [], []
     def pedir(request):
         peticiones.append(request)
@@ -99,7 +208,7 @@ def test_descubrir_omite_filtra_y_conserva_privacidad():
         return u, pagina(fecha)
     publicaciones, metricas, resumen = buscar.descubrir(["IA", "IA en LatAm"], clave="ficticia", sal="sal",
         dias=7, pedir=pedir, obtener=obtener, pausa=pausas.append)
-    assert [p.id for p in publicaciones] == ["li:2234567890123456789", "li:2234567890123456792"]
+    assert [p.id for p in publicaciones] == [f"li:{base}", f"li:{base + 3}"]
     assert len(metricas) == 2 and len(peticiones) == 2
     assert obtenidas == [URL, url(1), url(2), url(3)]
     assert pausas == [3, 3, 3]
@@ -153,6 +262,7 @@ def test_limites_antes_de_cualquier_peticion(opciones):
 
 
 def test_cli_json_y_resumen(monkeypatch, capsys):
+    URL = url_fecha(datetime.now(timezone.utc) - timedelta(days=1))
     monkeypatch.setenv("OPENROUTER_API_KEY", "clave_ficticia")
     monkeypatch.setenv("AUTOR_HASH_SAL", "sal")
     monkeypatch.setattr(buscar, "_pedir", lambda _: respuesta([URL]))
@@ -205,6 +315,7 @@ def test_tope_configurado_y_post_sin_metricas():
 
 
 def test_dias_no_acepta_publicaciones_futuras():
+    URL = url_fecha(datetime.now(timezone.utc) - timedelta(days=1))
     p, m, resumen = buscar.descubrir(["IA"], clave="ficticia", sal="sal", dias=7,
         pedir=lambda _: respuesta([URL]), obtener=lambda u: (u, pagina(datetime.now(timezone.utc) + timedelta(days=1))))
     assert p == m == [] and resumen["omitidos"] == 1
