@@ -79,13 +79,14 @@ Get-Content "$env:USERPROFILE\secretos_hackaton\.env" | ForEach-Object { $k, $v 
 No pegues credenciales en comandos que queden guardados en el historial. Mantén la misma sal entre capturas
 para que el seudónimo del autor sea estable.
 
-Devuelve un array JSON de `radar.contrato.Publicacion`. Para usarlo desde Python:
+La CLI devuelve `{"publicaciones": [...], "metricas": [...]}`. Las estadísticas
+se piden en el mismo lote de detalles, sin llamadas adicionales. Para usarlo desde Python:
 
 ```python
 from datetime import datetime, timedelta, timezone
-from radar.recoleccion.youtube import buscar_publicaciones
+from radar.recoleccion.youtube import buscar_con_metricas
 
-publicaciones = buscar_publicaciones(
+publicaciones, metricas = buscar_con_metricas(
     "agentes de IA", "MX", "es", datetime.now(timezone.utc) - timedelta(days=7)
 )
 ```
@@ -102,9 +103,8 @@ Usa `channelId` en memoria solo para calcular el hash, y `channelTitle` solo par
 de las etiquetas el nombre del canal; ninguno de los dos se devuelve ni se guarda.
 No guarda respuestas crudas ni agrega dependencias.
 
-Pendiente: revisión de Claude y comprobación de Juan con credenciales reales
-(al menos 10 publicaciones con enlace, texto y fecha). Esta comprobación real
-no se ha realizado y no forma parte de las pruebas sin red.
+El paso 1 ya se comprobó con YouTube real. La nueva salida con métricas del paso 4
+se comprueba con respuestas ficticias; Claude realiza la corrida real en su revisión.
 
 ## Recolección CSV manual (paso 2)
 
@@ -124,9 +124,24 @@ estable el hash del autor. Para verificar sin secretos se puede usar una sal
 ficticia en un proceso de prueba; sus hashes no deben mezclarse con los reales.
 
 El encabezado debe incluir `url`, `fecha_publicacion`, `texto` y `formato`, en
-cualquier orden. Opcionales: `autor`, `hashtags`, `tipo_autor`, `idioma`, `pais`.
-Se ignoran las columnas de métricas: vistas, reacciones, comentarios y compartidos.
+cualquier orden. Opcionales: `autor`, `hashtags`, `tipo_autor`, `idioma`, `pais`,
+`fecha_captura`, `vistas`, `reacciones`, `comentarios`, `compartidos`.
+La CLI devuelve `{"publicaciones": [...], "metricas": [...]}`; `reacciones` pasa a `likes`.
 Hashtags y métricas pueden quedar vacíos: un dato ausente no equivale a cero.
+Si faltan las cuatro métricas, la publicación sale sin una fila en `metricas`.
+Se aceptan cantidades como `1200`, `1.200`, `1,2 mil`, `12K`, `12 mil`, `1,5M`
+y `1.5 M`; se rechazan negativos, cantidades ambiguas (`12.5`) y resultados
+fraccionarios (`1,2345 mil`), sin redondear.
+
+`fecha_captura` acepta los mismos formatos que `fecha_publicacion`. Si está vacía
+se usa la fecha de modificación del CSV. Esa fecha se asigna tanto a la publicación
+como a su métrica. Para registrar la observación real aunque vuelvas a guardar el
+archivo, completa `fecha_captura`; reimportarlo no demuestra crecimiento.
+
+Desde Python, `leer_con_metricas(ruta)` devuelve `(publicaciones, metricas)`.
+`buscar_publicaciones(...)` y `leer_publicaciones(ruta)` conservan la salida de
+solo publicaciones y delegan en las funciones nuevas.
+Consulta [el contrato de métricas y la tabla SQL](docs/contrato_metrica.md).
 
 Acepta UTF-8 con o sin BOM y Windows-1252, separados por coma o punto y coma.
 Los textos con comas, separadores o saltos de línea deben ir entre comillas CSV
