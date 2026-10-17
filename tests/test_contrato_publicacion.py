@@ -114,7 +114,23 @@ def test_normaliza_hashtags():
     assert pub.hashtags == ("ia", "agentesia")
 
 
-@pytest.mark.parametrize("pais", ["mx", "MEX", "M"])
+@pytest.mark.parametrize(
+    ("idioma", "esperado"),
+    [("es-419", "es"), ("pt-BR", "pt"), ("EN", "en"), ("zxx", None), ("", None)],
+)
+def test_normaliza_idioma_de_youtube(idioma, esperado):
+    pub = Publicacion(**datos_validos(idioma=idioma))
+
+    assert pub.idioma == esperado
+
+
+def test_pais_en_minusculas_se_pasa_a_mayusculas():
+    pub = Publicacion(**datos_validos(pais=" mx "))
+
+    assert pub.pais == "MX"
+
+
+@pytest.mark.parametrize("pais", ["MEX", "M"])
 def test_rechaza_codigo_de_pais_invalido(pais):
     with pytest.raises(ValidationError):
         Publicacion(**datos_validos(pais=pais))

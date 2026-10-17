@@ -6,9 +6,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-VERSION_CONTRATO = "1.0"
-
-
 class Plataforma(StrEnum):
     YOUTUBE = "youtube"
     TIKTOK = "tiktok"
@@ -30,7 +27,7 @@ class ModeloContrato(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=True)
 
-    schema_version: Literal["1.0"] = VERSION_CONTRATO
+    schema_version: Literal["1.0"] = "1.0"
 
 
 def calcular_autor_hash(plataforma: Plataforma, id_autor: str, sal: str) -> str:

@@ -57,7 +57,11 @@ def id_desde_url(url: str) -> tuple[Plataforma, str]:
         raise ValueError(f"La url no es de YouTube, TikTok ni LinkedIn: {host or url!r}")
 
     if not candidato or not es_id_nativo_valido(plataforma, candidato):
-        raise ValueError(f"No se encontró el id de la publicación en la url de {plataforma.value}")
+        raise ValueError(
+            f"No se encontró el id de la publicación en la url de {plataforma.value}. "
+            "Si es un link compartido desde la app, ábrelo en el navegador y copia la url completa "
+            "(debe tener /video/ en TikTok o activity en LinkedIn)."
+        )
     return plataforma, candidato
 
 

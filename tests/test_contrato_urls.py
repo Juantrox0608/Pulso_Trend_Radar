@@ -56,6 +56,20 @@ def test_rechaza_urls_de_perfil_sin_publicacion(url):
         id_desde_url(url)
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://vm.tiktok.com/ZMabc123/",
+        "https://www.tiktok.com/t/ZTabc123/",
+        "https://www.linkedin.com/feed/update/urn:li:ugcPost:7380123456789012345/",
+        "https://www.linkedin.com/feed/update/urn:li:share:7380123456789012345/",
+    ],
+)
+def test_links_compartidos_desde_la_app_explican_que_hacer(url):
+    with pytest.raises(ValueError, match="copia la url completa"):
+        id_desde_url(url)
+
+
 def test_id_contrato_agrega_prefijo():
     assert id_contrato(Plataforma.TIKTOK, "7667873615114964244") == "tt:7667873615114964244"
 

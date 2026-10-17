@@ -70,6 +70,20 @@ class Publicacion(ModeloContrato):
             return {clave: valor for clave, valor in datos.items() if clave != "url"}
         return datos
 
+    @field_validator("idioma", mode="before")
+    @classmethod
+    def _normalizar_idioma(cls, valor: object) -> object:
+        # YouTube manda "es-419" o "zxx" (sin habla): se guarda solo el idioma base o nada.
+        if not isinstance(valor, str):
+            return valor
+        base = valor.split("-")[0].strip().lower()
+        return base if len(base) == 2 and base.isalpha() else None
+
+    @field_validator("pais", mode="before")
+    @classmethod
+    def _pais_en_mayusculas(cls, valor: object) -> object:
+        return valor.strip().upper() if isinstance(valor, str) else valor
+
     @field_validator("publicada_en", "capturada_en")
     @classmethod
     def _a_utc(cls, valor: AwareDatetime) -> AwareDatetime:
