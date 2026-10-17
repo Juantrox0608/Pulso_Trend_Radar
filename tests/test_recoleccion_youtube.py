@@ -87,6 +87,15 @@ def test_texto_largo_e_idioma_opcional(api):
     assert recolectar(api)[0].idioma is None
     assert recolectar(api)[0].hashtags == ()
 
+def test_quita_etiquetas_con_el_nombre_del_canal(api):
+    snippet = api[0]["videos"]["items"][0]["snippet"]
+    snippet["channelTitle"] = "Canal Ficticio"
+    snippet["tags"] = ["canal ficticio", "#CanalFicticio", "IA"]
+    publicacion = recolectar(api)[0]
+    assert publicacion.hashtags == ("ia",)
+    assert "channelTitle" in api[1][1][1]["fields"]
+    assert "ficticio" not in publicacion.model_dump_json().lower()
+
 @pytest.mark.parametrize("estado", ["live", "upcoming"])
 def test_salta_transmisiones_en_vivo_y_programadas(api, estado):
     api[0]["videos"]["items"][0]["snippet"]["liveBroadcastContent"] = estado

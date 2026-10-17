@@ -14,6 +14,7 @@ from radar.contrato import (
     Formato, Origen, Plataforma, Publicacion, TipoAutor,
     calcular_autor_hash, id_contrato,
 )
+from radar.recoleccion import sin_autor
 
 Peticion = Callable[[str, dict], dict]
 _DURACION = re.compile(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?")
@@ -92,7 +93,7 @@ def buscar_publicaciones(
         return []
     videos = pedir("videos", {
         "part": "snippet,contentDetails", "id": ",".join(ids),
-        "fields": "items(id,snippet(title,description,tags,publishedAt,channelId,defaultAudioLanguage,defaultLanguage,liveBroadcastContent),contentDetails/duration)",
+        "fields": "items(id,snippet(title,description,tags,publishedAt,channelId,channelTitle,defaultAudioLanguage,defaultLanguage,liveBroadcastContent),contentDetails/duration)",
     })
     capturada_en = datetime.now(timezone.utc)
     publicaciones = []
@@ -111,7 +112,8 @@ def buscar_publicaciones(
                 id=id_contrato(Plataforma.YOUTUBE, video["id"]),
                 plataforma=Plataforma.YOUTUBE,
                 titulo=snippet["title"], texto=snippet.get("description", "")[:5000],
-                hashtags=snippet.get("tags", ()), formato=formato,
+                # channelTitle se usa solo aquí, para no guardar el nombre del canal como etiqueta.
+                hashtags=sin_autor(snippet.get("tags", ()), snippet.get("channelTitle", "")), formato=formato,
                 duracion_segundos=segundos,
                 idioma=snippet.get("defaultAudioLanguage") or snippet.get("defaultLanguage"),
                 pais=pais, tipo_autor=TipoAutor.DESCONOCIDO,

@@ -93,7 +93,8 @@ Omite videos eliminados o no devueltos en el lote de detalles.
 El país es la región de búsqueda, no el país del autor. El idioma proviene del
 video; puede faltar o diferir del idioma buscado. El umbral de 180 segundos
 aproxima el formato corto, sin certificar que sea un Short.
-No solicita `channelTitle`: usa `channelId` en memoria solo para calcular el hash.
+Usa `channelId` en memoria solo para calcular el hash, y `channelTitle` solo para quitar
+de las etiquetas el nombre del canal; ninguno de los dos se devuelve ni se guarda.
 No guarda respuestas crudas ni agrega dependencias.
 
 Pendiente: revisión de Claude y comprobación de Juan con credenciales reales
@@ -139,7 +140,8 @@ Estados Unidos. `N/D` en país se guarda como ausente.
 
 El autor se toma de la columna `autor`; si está vacía, del usuario en `/@usuario/video/`
 de TikTok o del tramo previo al primer `_` en `/posts/` de LinkedIn. Si no puede
-extraerse, la fila falla. Solo sale su hash y la URL canónica del contrato;
+extraerse, la fila falla. Los hashtags iguales al autor o al usuario del enlace (`#AnaPerez`) se quitan.
+Solo sale su hash y la URL canónica del contrato;
 no se devuelve la columna de autor ni se guardan respuestas crudas.
 
 Los enlaces se procesan localmente, sin red. El contrato admite enlaces cortos

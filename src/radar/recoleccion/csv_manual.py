@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from pydantic import ValidationError
 
 from radar.contrato import Publicacion, calcular_autor_hash, id_contrato, id_desde_url
+from radar.recoleccion import sin_autor
 
 _OBLIGATORIAS = {"url", "fecha_publicacion", "texto", "formato"}
 _PAISES = dict(zip(
@@ -66,12 +67,11 @@ def _publicacion(fila: dict, sal: str, ahora: datetime) -> Publicacion:
         plataforma, nativo = id_desde_url(identificable)
     except ValueError:
         raise ValueError("url: no contiene un identificador de publicación válido; copia el enlace completo") from None
-    autor = d.get("autor", "")
-    if not autor:
-        ruta = unquote(urlsplit(url).path)
-        patron = r"/@([^/]+)/video/" if plataforma.value == "tiktok" else r"/posts/([^/_]+)_"
-        coincidencia = re.search(patron, ruta)
-        autor = coincidencia.group(1) if coincidencia else ""
+    ruta = unquote(urlsplit(url).path)
+    patron = r"/@([^/]+)/video/" if plataforma.value == "tiktok" else r"/posts/([^/_]+)_"
+    coincidencia = re.search(patron, ruta)
+    del_enlace = coincidencia.group(1) if coincidencia else ""
+    autor = d.get("autor", "") or del_enlace
     if not autor:
         raise ValueError("autor: completa la columna; no aparece en el enlace")
 
@@ -107,7 +107,7 @@ def _publicacion(fila: dict, sal: str, ahora: datetime) -> Publicacion:
         texto=d["texto"], formato=formato, duracion_segundos=duracion,
         tipo_autor=(d.get("tipo_autor") or "desconocido").split()[0],
         idioma=idioma or None, pais=pais,
-        hashtags=tuple(filter(None, re.split(r"[\s,]+", d.get("hashtags", "")))),
+        hashtags=sin_autor(filter(None, re.split(r"[\s,]+", d.get("hashtags", ""))), autor, del_enlace),
         autor_hash=calcular_autor_hash(plataforma, autor, sal),
         publicada_en=publicada, capturada_en=ahora, origen="csv_manual",
     )

@@ -59,6 +59,17 @@ def test_fixtures_mapeo_y_privacidad(nombre):
         assert dato not in serializado
 
 
+@pytest.mark.parametrize("autor,hashtags", [
+    ("Ana Ficticia", "#AnaFicticia #ia"),
+    ("", "#usuario_ficticio #IA"),
+    ("Marca Ficticia", "#marca-ficticia, #ia"),
+])
+def test_quita_hashtags_con_el_nombre_del_autor(tmp_path, fila, autor, hashtags):
+    fila.update(autor=autor, hashtags=hashtags)
+    p = csv_manual.leer_publicaciones(archivo(tmp_path, [fila]))[0]
+    assert p.hashtags == ("ia",)
+
+
 @pytest.mark.parametrize("segundos,formato", [(53,"video_corto"), (180,"video_corto"), (181,"video_largo")])
 def test_excel_normaliza(tmp_path, fila, segundos, formato):
     fila.update(fecha_publicacion="2/01/2026", formato=f"video {segundos}s",
