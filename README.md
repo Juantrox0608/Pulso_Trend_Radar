@@ -10,6 +10,15 @@ LinkedIn, explica por qué está funcionando cada uno y filtra lo que le sirve a
 El tema lo elige quien busca: una industria, una tecnología, una marca o un formato. Por ejemplo: "inteligencia
 artificial en México", "finanzas personales en TikTok" o "videos cortos de educación".
 
+## Primera versión: inteligencia artificial
+
+Arrancamos con un solo tema para validar el radar: **tendencias de IA para ejecutivos y equipos de Latinoamérica
+que están aprendiendo IA**. La pregunta de esta versión es:
+
+> ¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué y cómo los adaptamos?
+
+Una vez probado con IA, el mismo radar se abre a cualquier otro tema.
+
 ## Qué hace
 
 1. **Busca.** Escribes un tema o una palabra clave y el radar revisa lo que se está publicando en las tres
