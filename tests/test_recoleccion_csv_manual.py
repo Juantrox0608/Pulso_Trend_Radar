@@ -35,7 +35,8 @@ def archivo(tmp_path, filas, *, separador=",", encoding="utf-8-sig"):
 def fila():
     return dict(url="https://www.tiktok.com/@usuario_ficticio/video/1234567890123456789",
                 fecha_publicacion="2026-01-01", texto="Ejemplo ficticio, con coma",
-                formato="video_corto", autor="", hashtags="", tipo_autor="", pais="", idioma="")
+                formato="video_corto", autor="", hashtags="", tipo_autor="", pais="", idioma="",
+                fecha_captura="2026-01-05")
 
 
 @pytest.mark.parametrize("nombre", ["manual_comas.csv", "manual_excel.csv"])
@@ -47,7 +48,7 @@ def test_fixtures_mapeo_y_privacidad(nombre):
     assert tt.id == "tt:1234567890123456789"
     assert tt.autor_hash == calcular_autor_hash(Plataforma.TIKTOK, "usuario_ficticio", "sal_sintetica")
     assert tt.publicada_en == datetime(2026, 1, 1, tzinfo=timezone.utc)
-    assert tt.capturada_en == datetime.fromtimestamp((FIXTURES / nombre).stat().st_mtime, timezone.utc)
+    assert tt.capturada_en == datetime(2026, 1, 5, tzinfo=timezone.utc)
     assert tt.origen == "csv_manual" and tt.tipo_autor == "desconocido"
     assert tt.hashtags == ()
     assert li.autor_hash == calcular_autor_hash(Plataforma.LINKEDIN, "autor-ficticio", "sal_sintetica")
@@ -209,13 +210,21 @@ def test_fecha_captura_explicita(tmp_path, fila, fecha, esperada):
     assert ps[0].capturada_en == ms[0].capturada_en == esperada
 
 
-def test_fecha_captura_estable_por_archivo(tmp_path, fila):
-    fila.update(vistas="3", fecha_captura="")
+def test_metricas_sin_fecha_captura_es_error(tmp_path, fila):
+    # Editar el CSV cambia su fecha de modificación: no sirve para fechar métricas.
+    filas = [{**fila, "vistas": "3", "reacciones": "", "fecha_captura": ""},
+             {**fila, "vistas": "", "reacciones": "", "fecha_captura": ""}]
+    with pytest.raises(ValueError) as exc:
+        csv_manual.leer_con_metricas(archivo(tmp_path, filas))
+    assert "Línea 2: fecha_captura" in str(exc.value) and "Línea 3" not in str(exc.value)
+
+
+def test_sin_metricas_la_captura_es_la_del_archivo(tmp_path, fila):
+    fila.update(fecha_captura="")
     ruta = archivo(tmp_path, [fila])
-    a = csv_manual.leer_con_metricas(ruta)
-    b = csv_manual.leer_con_metricas(ruta)
-    assert a == b
-    assert a[1][0].capturada_en == datetime.fromtimestamp(ruta.stat().st_mtime, timezone.utc)
+    publicaciones, metricas = csv_manual.leer_con_metricas(ruta)
+    assert metricas == []
+    assert publicaciones[0].capturada_en == datetime.fromtimestamp(ruta.stat().st_mtime, timezone.utc)
 
 
 @pytest.mark.parametrize("fecha", ["ayer", "2026-01-02T12:00:00", "2025-01-01"])

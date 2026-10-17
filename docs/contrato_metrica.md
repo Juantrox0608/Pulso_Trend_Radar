@@ -38,10 +38,10 @@ Los contadores ausentes se conservan como `null`.
 
 ## Capturas del CSV
 
-`fecha_captura` es opcional y acepta `AAAA-MM-DD`, `DD/MM/AAAA` o fecha y hora
-ISO con zona. Una fecha sin hora significa 00:00 UTC. Si está vacía se usa la
-fecha de modificación del CSV, para la publicación y su métrica.
-Reimportar el mismo archivo sin modificarlo produce exactamente las mismas capturas.
+`fecha_captura` acepta `AAAA-MM-DD`, `DD/MM/AAAA` o fecha y hora ISO con zona. Una
+fecha sin hora significa 00:00 UTC. Es **obligatoria en las filas con métricas** (el día
+en que se vieron los números); en filas sin métricas puede quedar vacía y la publicación
+toma la fecha de modificación del CSV. Reimportar el mismo archivo produce las mismas capturas.
 
 `vistas`, `reacciones` (a `likes`), `comentarios` y `compartidos` son opcionales.
 Se aceptan `1200`, `1.200`, `1,2 mil`, `12K`, `12 mil`, `1,5M` y `1.5 M`.
@@ -49,8 +49,8 @@ Punto sin sufijo significa grupos de tres cifras; sin sufijo no se admiten
 decimales. `12.5`, `1,200` y un resultado fraccionario como `1,2345 mil` son
 errores de fila. No se redondea ni se convierten celdas vacías en ceros.
 
-Editar o copiar un archivo puede cambiar su fecha de modificación sin actualizar
-las métricas: usa `fecha_captura` para registrar cuándo las observaste realmente.
+Por eso `fecha_captura` es obligatoria con métricas: editar o copiar el archivo
+cambia su fecha de modificación y fecharía como nuevas unas métricas viejas.
 Guardar el mismo dato otra vez no demuestra crecimiento ni aceleración.
 
 ## Tabla sugerida (Postgres / DuckDB)

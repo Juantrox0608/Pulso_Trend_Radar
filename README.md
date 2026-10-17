@@ -133,10 +133,10 @@ Se aceptan cantidades como `1200`, `1.200`, `1,2 mil`, `12K`, `12 mil`, `1,5M`
 y `1.5 M`; se rechazan negativos, cantidades ambiguas (`12.5`) y resultados
 fraccionarios (`1,2345 mil`), sin redondear.
 
-`fecha_captura` acepta los mismos formatos que `fecha_publicacion`. Si está vacía
-se usa la fecha de modificación del CSV. Esa fecha se asigna tanto a la publicación
-como a su métrica. Para registrar la observación real aunque vuelvas a guardar el
-archivo, completa `fecha_captura`; reimportarlo no demuestra crecimiento.
+`fecha_captura` acepta los mismos formatos que `fecha_publicacion` y es **obligatoria
+en las filas con métricas**: es el día en que viste esos números. Editar el CSV cambia
+su fecha de modificación, así que no sirve para fechar métricas. En filas sin métricas
+puede quedar vacía y se usa la fecha de modificación del archivo para la publicación.
 
 Desde Python, `leer_con_metricas(ruta)` devuelve `(publicaciones, metricas)`.
 `buscar_publicaciones(...)` y `leer_publicaciones(ruta)` conservan la salida de

@@ -177,12 +177,16 @@ def leer_con_metricas(ruta: str | Path) -> tuple[list[Publicacion], list[Metrica
                 continue
             try:
                 fecha_captura = (fila.get("fecha_captura") or "").strip()
-                captura = _fecha(fecha_captura, "fecha_captura") if fecha_captura else captura_archivo
-                publicacion = _publicacion(fila, sal, captura)
-                conteos = {campo: _numero(fila.get(columna, ""), columna)
+                conteos = {campo: _numero(fila.get(columna) or "", columna)
                     for campo, columna in (("vistas", "vistas"), ("likes", "reacciones"),
                                            ("comentarios", "comentarios"), ("compartidos", "compartidos"))}
-                if any(v is not None for v in conteos.values()):
+                hay_metricas = any(v is not None for v in conteos.values())
+                if hay_metricas and not fecha_captura:
+                    # La fecha de modificación cambia al editar el CSV y fecharía mal métricas viejas.
+                    raise ValueError("fecha_captura: obligatoria si anotas métricas; pon el día en que viste los números")
+                captura = _fecha(fecha_captura, "fecha_captura") if fecha_captura else captura_archivo
+                publicacion = _publicacion(fila, sal, captura)
+                if hay_metricas:
                     metricas.append(Metrica(publicacion_id=publicacion.id,
                         capturada_en=publicacion.capturada_en, origen=publicacion.origen, **conteos))
                 publicaciones.append(publicacion)

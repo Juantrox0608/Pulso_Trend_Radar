@@ -1,4 +1,4 @@
-﻿url,fecha_publicacion,texto,formato,autor,hashtags,tipo_autor,idioma,pais,vistas,reacciones,comentarios,compartidos
-https://www.tiktok.com/@usuario_ficticio/video/1234567890123456789,2026-01-01,"Gancho ficticio, con coma",video_corto,,,,,,"1,2 mil",0,,12K
+﻿url,fecha_publicacion,texto,formato,autor,hashtags,tipo_autor,idioma,pais,vistas,reacciones,comentarios,compartidos,fecha_captura
+https://www.tiktok.com/@usuario_ficticio/video/1234567890123456789,2026-01-01,"Gancho ficticio, con coma",video_corto,,,,,,"1,2 mil",0,,12K,2026-01-05
 https://www.linkedin.com/posts/autor-ficticio_ejemplo-activity-2234567890123456789-abcd,2026-01-02T10:00:00-05:00,"Texto sintético
-segunda línea",post_texto,,"#IA, agentes #ia",empresa,es-419,mx,,2,0,
+segunda línea",post_texto,,"#IA, agentes #ia",empresa,es-419,mx,,2,0,,2026-01-05
