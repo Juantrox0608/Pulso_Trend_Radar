@@ -43,7 +43,12 @@ def _pedir(request):
         return json.load(respuesta)
 
 
-def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None):
+def _validar_post(url):
+    linkedin._validar_url(url, final=True)
+
+
+def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None,
+                dominio="linkedin.com", validar_url=_validar_post):
     """Devuelve (URLs únicas de posts, costo USD); pedir recibe un Request y devuelve JSON."""
     _entero(max_resultados, 1, 10, "max_resultados")
     if not isinstance(consulta, str) or not consulta.strip():
@@ -53,7 +58,7 @@ def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None):
     cuerpo = {
         "model": "deepseek/deepseek-v4-flash-0731", "reasoning": {"enabled": False}, "max_tokens": 300,
         "plugins": [{"id": "web", "engine": "exa", "max_results": max_resultados,
-                     "include_domains": ["linkedin.com"], "search_prompt": "Resultados:"}],
+                     "include_domains": [dominio], "search_prompt": "Resultados:"}],
         "messages": [{"role": "user", "content": consulta.strip()}],
     }
     try:
@@ -69,7 +74,7 @@ def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None):
         for anotacion in anotaciones:
             try:
                 url = anotacion["url_citation"]["url"]
-                linkedin._validar_url(url, final=True)
+                validar_url(url)
                 identificador = id_contrato(*id_desde_url(url))
             except (KeyError, TypeError, ValueError, AttributeError):
                 continue

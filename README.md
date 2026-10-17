@@ -309,3 +309,116 @@ $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 El último comando debe salir con código 1, sin JSON y con `Falta OPENROUTER_API_KEY en el entorno`.
 Con el entorno real configurado, la misma sintaxis ejecuta búsquedas de pago y lecturas públicas;
 la comprobación real de cobertura y costo del paso 7b queda pendiente de revisión.
+
+## TikTok en segundo plano (paso 8)
+
+Descubre cuentas semilla y lista sus videos públicos con yt-dlp, sin sesión, cookies ni descarga.
+Es una vía **no oficial**. La cobertura depende de las cuentas semilla: no es un censo de TikTok.
+Solo usa yt-dlp y OpenRouter; no añade dependencias. `AUTOR_HASH_SAL` debe estar cargada en el entorno
+para capturar. Los comandos no cargan archivos de secretos.
+
+Mediciones del 17/10/2026: listar `tiktokuser:<channel_id>` devolvió 30 videos en 2,3 s,
+todos de los últimos 7 días, con descripción, fecha, duración y métricas en la misma lista;
+no hace falta consultar cada video. Consultar el perfil por `@usuario` falló.
+Exa encontró videos del tema con mediana de 114 días: se usa para descubrir cuentas,
+y después se listan sus videos nuevos. Son mediciones del prototipo, no garantías.
+
+Crear semillas desde las URLs del CSV (acepta Excel con `;`, BOM o CP1252):
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas semillas --desde-csv data\raw\publicaciones_manual.csv
+```
+
+Descubrir cuentas por tema con Exa, buscador de terceros a través de OpenRouter (requiere
+`OPENROUTER_API_KEY` y saldo para la búsqueda; esta parte no es gratis):
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas semillas --consulta "agentes de IA en empresas"
+```
+
+`--consulta` se puede repetir hasta 20 veces. Ambas vías añaden como máximo 50 cuentas nuevas
+por corrida, sin duplicados; esperan 1,5 s entre videos consultados para obtener la cuenta.
+Una URL fallida se cuenta y se continúa. Las semillas se guardan en `data/raw/tiktok_cuentas.txt`,
+un identificador por línea, sin nombres ni usuarios; `data/raw/` está fuera de Git.
+`--semillas RUTA` permite elegir otro archivo tanto en `semillas` como en `capturar`.
+
+Captura única; por defecto usa los últimos 7 días, 30 entradas por cuenta y hasta 300 videos únicos:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --dias 7 --por-cuenta 30 --max 300 --salida-dir data\raw\tiktok
+```
+
+Una consulta plana por cuenta, con pausa de 3 s entre cuentas. Descarta videos antiguos por
+la fecha del ID (`int(id) >> 32`, segundos Unix) antes de convertirlos; también comprueba la
+fecha publicada. Omite entradas incompletas. Una cuenta fallida se cuenta y se sigue;
+tres fallos consecutivos o un HTTP 403/429 detienen la captura sin reintentar y guardan lo reunido.
+También se detiene la repetición periódica ante ese bloqueo. Ctrl+C conserva las cuentas ya leídas.
+
+Cada corrida escribe un JSON UTF-8 `data/raw/tiktok/tiktok_AAAA-MM-DDTHHMM.json` con
+`publicaciones` y `metricas`. Si ya existe un archivo del mismo minuto, añade segundos y microsegundos.
+La escritura es temporal y luego se renombra; no publica JSON incompleto. No guarda respuestas crudas.
+La salida contiene hash del autor, menciones `@[usuario]` y URL canónica sin usuario.
+El resumen por stderr cuenta cuentas, cuentas fallidas, videos guardados, fuera de fecha, omitidos,
+descartados por tema y lotes sin filtrar. Cada captura nueva conserva otra observación de métricas
+para el mismo video, útil para comparar crecimiento, velocidad y aceleración.
+
+Filtro opcional de relevancia, con `OPENROUTER_API_KEY` cargada:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --tema "inteligencia artificial en la educación"
+```
+
+Usa `nvidia/nemotron-3-super-120b-a12b:free`, razonamiento desactivado, hasta 30 textos por pedido.
+Al modelo solo llegan textos anonimizados: sin enlaces ni datos de autor. Conserva los `SI`/`SÍ`.
+Una respuesta vacía, incompleta o mal formada se reintenta una vez; si vuelve a fallar,
+conserva ese lote sin filtrar y lo cuenta. Un HTTP 429 detiene el filtro durante esa corrida,
+conserva los lotes pendientes y avisa. La siguiente captura puede volver a intentarlo.
+Sin `--tema` no se hacen llamadas a OpenRouter durante la captura.
+
+La prueba histórica de este filtro dio 30/30 respuestas en 3,5 s, USD 0 y coincidencia en 30/30;
+no garantiza la clasificación futura ni disponibilidad. El límite indicado del plan gratis es
+20 pedidos/minuto y 50/día: el comando espacia pedidos al menos 3,1 s y persiste el contador diario
+UTC en `data/raw/tiktok_filtro_cuota.json`, incluidos reintentos y reinicios. Al agotarlo conserva
+sin filtrar. Ese contador solo conoce pedidos de este comando: otros usos de la clave también
+consumen la cuota del proveedor. Ejecuta una sola instancia del recolector por clave.
+
+Para repetir en primer plano hasta Ctrl+C (intervalo mínimo: una hora después de cada corrida):
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --cada-horas 3 --tema "inteligencia artificial en la educación"
+```
+
+Para lanzarlo oculto desde PowerShell, situado en el repo y con las variables ya cargadas
+(el proceso hijo las hereda), sin crear tareas programadas:
+
+```powershell
+New-Item -ItemType Directory -Force data\raw\tiktok | Out-Null
+$captura = Start-Process -FilePath (Resolve-Path .\.venv\Scripts\python.exe) -WorkingDirectory (Get-Location).Path -ArgumentList '-u -m radar.recoleccion.tiktok_cuentas capturar --cada-horas 3 --tema "inteligencia artificial en la educación"' -WindowStyle Hidden -PassThru -RedirectStandardOutput data\raw\tiktok\proceso.stdout.log -RedirectStandardError data\raw\tiktok\proceso.stderr.log
+$captura.Id
+```
+
+Para detener ese proceso oculto desde la misma sesión:
+
+```powershell
+Stop-Process -Id $captura.Id
+```
+
+`Stop-Process` es una parada forzada: las capturas terminadas quedan guardadas, pero se puede perder
+la captura en curso. En primer plano usa Ctrl+C para guardar lo reunido. El directorio de salida
+se protege con `.captura.lock`; si tras una parada forzada queda ese archivo, comprueba que el
+proceso terminó antes de borrarlo. No ejecutes dos capturas simultáneas en el mismo directorio.
+
+Comprobaciones sin red; los dos últimos comandos deben terminar con código 1 y mensaje claro
+por falta de clave y de semillas, respectivamente. No ejecutan búsquedas ni capturas reales:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas --help
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas semillas --help
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --help
+Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas semillas --consulta "agentes de IA en empresas"
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --semillas tests\fixtures\tiktok_sin_semillas.txt
+```
+
+La corrida real con las semillas del CSV, el filtro y dos observaciones separadas queda para revisión.
+YouTube también anonimiza ahora las menciones y el nombre del canal en título y descripción.
