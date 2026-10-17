@@ -5,6 +5,25 @@ import sys
 import unicodedata
 
 
+def terminos_tema(tema):
+    """Una frase amplia o hasta cinco términos precisos separados por comas."""
+    terminos = {}
+    for parte in tema.split(','):
+        termino = parte.strip()
+        if termino:
+            terminos.setdefault(termino.casefold(), termino)
+    if not 1 <= len(terminos) <= 5:
+        raise ValueError('El tema requiere entre 1 y 5 términos distintos')
+    if any(t.startswith('#') and not normalizar_hashtag(t) for t in terminos.values()):
+        raise ValueError('Los términos hashtag deben contener texto después de #')
+    return list(terminos.values())
+
+
+def normalizar_hashtag(valor):
+    sin_acentos = unicodedata.normalize('NFKD', valor.lstrip('#').casefold())
+    return ''.join(c for c in sin_acentos if not unicodedata.combining(c))
+
+
 def segundos_iso8601(duracion: str) -> int:
     partes = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", duracion)
     if not partes or not any(p is not None for p in partes.groups()):

@@ -208,6 +208,9 @@ El texto y la fecha no vacíos del CSV tienen prioridad; se completan los ausent
 Se aceptan `SocialMediaPosting` y `VideoObject` del JSON-LD (posts de texto y video).
 Las reacciones, comentarios y compartidos vienen de `interactionStatistic`; si falta
 `CommentAction`, se usa `commentCount`. El autor se obtiene de `author` o `creator`.
+En LinkedIn, `likes` es el **total de todas las reacciones** (`LikeAction`), no solo
+«Me gusta». Coincidió con el contador visible `data-num-reactions` en tres posts
+comprobados por Claude (42/42, 40/40 y 941/941); la página pública no separa los tipos.
 El texto se toma de `articleBody`, `text` o `description`, nunca de `headline`;
 no se inventan vistas ni conteos ocultos. Todas estas capturas usan `pagina_publica`,
 con fecha actual UTC y sin exigir `fecha_captura` ni usar los números antiguos del CSV.
@@ -368,6 +371,20 @@ Filtro opcional de relevancia, con `OPENROUTER_API_KEY` cargada:
 ./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --tema "inteligencia artificial en la educación"
 ```
 
+`--tema` sin comas conserva el modo amplio: el modelo puede aceptar piezas sobre una
+parte de la frase (por ejemplo, IA en «ciberseguridad e inteligencia artificial»).
+Con comas activa el modo preciso: debe tratar **específicamente de al menos uno**
+de los términos. Quita espacios, vacíos y repetidos (sin distinguir mayúsculas);
+admite hasta cinco términos distintos y rechaza más de cinco antes de consultar.
+Por ejemplo, `--tema "ciberseguridad, hacking, fraude digital"`.
+
+Un término que empieza con `#` exige coincidencia exacta con `hashtags` de la pieza,
+sin `#`, mayúsculas ni acentos. `#ciberseguridad` no coincide con `#ciberseguridadextra`.
+Estas coincidencias se conservan sin enviar sus textos al modelo. Si hay términos
+sin `#`, solo los videos restantes pasan por Nemotron para esos términos; se aplica
+la unión de ambos filtros. Con solo hashtags no se usa el modelo ni hace falta su clave.
+Esto filtra los videos de las cuentas semilla; no descubre nuevas cuentas.
+
 Usa `nvidia/nemotron-3-super-120b-a12b:free`, razonamiento desactivado, hasta 30 textos por pedido.
 Al modelo solo llegan textos anonimizados: sin enlaces ni datos de autor. Conserva los `SI`/`SÍ`.
 Una respuesta vacía, incompleta o mal formada se reintenta una vez; si vuelve a fallar,
@@ -451,7 +468,7 @@ que falla se cuenta en stderr y las demás consultas siguen; si todas fallan, te
 El resumen incluye avisos de capturas parciales, bloqueo o lotes que se conservaron sin filtrar.
 
 Necesita `AUTOR_HASH_SAL`, `YOUTUBE_API_KEY` para YouTube y `OPENROUTER_API_KEY` para LinkedIn y
-el filtro de TikTok. TikTok requiere semillas en `data/raw/tiktok_cuentas.txt`; su cobertura depende
+el filtro de texto de TikTok (con solo hashtags no necesita OpenRouter). TikTok requiere semillas en `data/raw/tiktok_cuentas.txt`; su cobertura depende
 de esas cuentas. LinkedIn y TikTok usan las vías públicas no oficiales descritas arriba, sin sesión
 ni cookies. Exa tiene costo; el filtro comparte el contador diario existente de Nemotron.
 
@@ -462,9 +479,45 @@ Ejemplos para ejecutar con variables y semillas ya preparadas (usan red):
 ./.venv/Scripts/python -m radar.recoleccion.buscar --tema "inteligencia artificial en la educación" --dias 7 --redes youtube,linkedin --paises MX,CO --salida data\raw\busqueda.json
 ```
 
-TikTok y LinkedIn ahora entregan título desde `title` o `headline`; si falta, usan la primera línea
-útil del texto, anonimizada, sin enlaces y hasta 120 caracteres en un límite de palabra. Si queda
-vacío, el título es `null`. El CSV manual conserva su comportamiento.
+TikTok usa la primera línea útil de la descripción; `title` de yt-dlp solo sirve de respaldo
+si no queda descripción útil, porque suele venir cortado. LinkedIn usa `headline` y, si falta,
+la primera línea útil del texto. Los títulos se anonimizan, sin enlaces y hasta 120 caracteres
+en un límite de palabra. Si queda vacío, el título es `null`. El CSV manual conserva su comportamiento.
+
+## Temas y filtros del front (paso 10)
+
+El filtro `query` del front corresponde a `buscar --tema`: acepta palabras clave,
+un tema amplio o hashtags. `platform` corresponde a `--redes youtube,tiktok,linkedin`.
+La categoría editorial (`category`) queda pendiente de acordar su lista y quién la asigna;
+este paso no incorpora ese filtro ni cambia el front del otro equipo.
+
+Con comas, YouTube y LinkedIn buscan cada término por separado, conservando el `#`
+tal cual, y reúnen resultados sin repetir ids. TikTok usa el filtro preciso y los
+hashtags exactos descritos arriba. Sin comas se mantiene una consulta amplia por red
+(y por país en YouTube). Ejemplos con red, para revisión del equipo:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "ciberseguridad, hacking, fraude digital" --redes youtube,linkedin,tiktok --paises MX,CO --salida data\raw\busqueda_precisa.json
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "#ciberseguridad, fraude" --salida data\raw\busqueda_hashtag.json
+```
+
+Cuota de YouTube: términos × países búsquedas, **100 unidades por búsqueda**, sobre
+10.000 unidades diarias, más los detalles de videos. Tres términos en cinco países
+consumen 1.500 unidades de búsqueda; dos en dos países, 400. Limita `--paises` y
+`--redes` según lo que necesites. LinkedIn también multiplica las consultas de Exa por término.
+
+Comprobaciones del paso 10 sin red: las ayudas salen con 0 y la búsqueda sin claves
+con 1, antes de pedir datos. Estos comandos no ejecutan los ejemplos reales anteriores:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --help
+./.venv/Scripts/python -m radar.recoleccion.buscar --help
+Remove-Item Env:YOUTUBE_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:AUTOR_HASH_SAL -ErrorAction SilentlyContinue
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "#ciberseguridad, fraude" --redes youtube --paises MX
+```
+
+### Envío de la búsqueda
 
 Para enviar a la API, añade `--enviar` con su URL base. Este ejemplo hace POST al servidor local:
 

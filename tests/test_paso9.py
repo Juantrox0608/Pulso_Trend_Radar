@@ -40,9 +40,12 @@ def test_limite_palabra():
 def test_titulo_tiktok_y_respaldo():
     info = json.loads(Path('tests/fixtures/tiktok_video.json').read_text(encoding='utf-8'))
     info['title'] = 'Título de Nombre Ficticio @persona https://ejemplo.test'
+    assert tiktok.convertir_entrada(info, sal='f')[0].titulo.startswith('Agentes IA')
+    info['description'] = ''
     assert tiktok.convertir_entrada(info, sal='f')[0].titulo == 'Título de [autor] @[usuario]'
     info['title'] = ' '
-    assert tiktok.convertir_entrada(info, sal='f')[0].titulo.startswith('Agentes IA')
+    info['description'] = 'Descripción sin título preferido'
+    assert tiktok.convertir_entrada(info, sal='f')[0].titulo == info['description']
 
 
 @pytest.mark.parametrize('tipo', ['SocialMediaPosting', 'VideoObject'])
