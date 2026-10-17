@@ -1,32 +1,37 @@
 # Radar de tendencias
 
-Solución de bajo costo para detectar tendencias de inteligencia artificial **cuando apenas empiezan a crecer** en
-YouTube, TikTok y LinkedIn, entender por qué funcionan y filtrar lo que le sirve a una audiencia concreta:
-ejecutivos y equipos de Latinoamérica que están aprendiendo IA.
+Buscador de tendencias de bajo costo: encuentra los temas que **apenas empiezan a crecer** en YouTube, TikTok y
+LinkedIn, explica por qué está funcionando cada uno y filtra lo que le sirve a una audiencia concreta.
 
 ## Qué pregunta responde
 
-> ¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué y cómo los adaptamos?
+> ¿Qué temas están creciendo esta semana sobre lo que me interesa, por qué y cómo los aprovecho?
+
+El tema lo elige quien busca: una industria, una tecnología, una marca o un formato. Por ejemplo: "inteligencia
+artificial en México", "finanzas personales en TikTok" o "videos cortos de educación".
 
 ## Qué hace
 
-1. **Detecta temprano.** Compara el crecimiento de cada tema con su propia historia reciente y marca los que
+1. **Busca.** Escribes un tema o una palabra clave y el radar revisa lo que se está publicando en las tres
+   plataformas.
+2. **Detecta temprano.** Compara el crecimiento de cada subtema con su propia historia reciente y marca los que
    aceleran mientras todavía tienen poco volumen.
-2. **Explica por qué funcionó.** Para las piezas que más crecen analiza el gancho, el formato, el tema, el momento y
+3. **Explica por qué funcionó.** Para las piezas que más crecen analiza el gancho, el formato, el tema, el momento y
    el tipo de autor.
-3. **Filtra por audiencia.** Prioriza lo relevante para ejecutivos y equipos de LatAm, por país e industria.
+4. **Filtra por audiencia.** Prioriza por país, industria y tipo de público.
 
 ## Cómo funciona
 
 ```
-Recolectar  →  Agrupar en temas  →  Medir crecimiento  →  Explicar  →  Top 10 semanal
+Buscar  →  Recolectar  →  Agrupar en temas  →  Medir crecimiento  →  Explicar  →  Ranking
 ```
 
+- **Buscar:** el usuario define el tema, el país y la audiencia.
 - **Recolectar:** datos públicos de YouTube, TikTok y LinkedIn.
-- **Agrupar en temas:** cada pieza se asigna a un tema de IA.
-- **Medir crecimiento:** velocidad, aceleración y cantidad de autores distintos por tema.
-- **Explicar:** un modelo de IA resume por qué crece cada tema y cómo adaptarlo.
-- **Top 10 semanal:** el resultado se muestra en un dashboard y en un informe corto.
+- **Agrupar en temas:** cada pieza se asigna a un subtema.
+- **Medir crecimiento:** velocidad, aceleración y cantidad de autores distintos por subtema.
+- **Explicar:** un modelo de IA resume por qué crece cada subtema y cómo aprovecharlo.
+- **Ranking:** el resultado se muestra en un dashboard y en un informe corto.
 
 ## Principios
 
