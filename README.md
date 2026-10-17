@@ -243,3 +243,101 @@ $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 
 Corrida real (2026-10-17): 13 de 13 posts completos (texto, fecha, reacciones y comentarios; LinkedIn no
 publica compartidos). Los `CHECK` de `pagina_publica` de ambos contratos se comprobaron en DuckDB.
+
+## LinkedIn: descubrir por tema (paso 7)
+
+Busca URLs de posts mediante OpenRouter con el plugin web y Exa, un buscador de terceros.
+Solo usa las citas de LinkedIn: descarta perfiles, empresas y artículos; el texto y los nombres
+de los resultados de Exa no se guardan ni se imprimen. Deduplica por ID de publicación entre
+consultas y completa cada post con el recolector público del paso 6, sin sesión ni cookies.
+La lectura de LinkedIn es no oficial y contraria a su Acuerdo de Usuario, con el alcance pequeño
+del prototipo. Todas las publicaciones y métricas obtenidas usan `pagina_publica`.
+
+Configura `OPENROUTER_API_KEY` y `AUTOR_HASH_SAL` en el entorno del proceso, fuera del repositorio;
+el comando no lee archivos de secretos. Con ambas variables configuradas, este comando hace
+consultas reales con costo:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --consulta "Posts en español sobre agentes de IA en Latinoamérica" --consulta "Automatización con IA para equipos de Latinoamérica" --dias 7 --max 100 --resultados 10
+```
+
+Máximo 20 consultas y entre 1 y 10 resultados por consulta. Se hace una llamada de OpenRouter
+por consulta; la medición del prototipo del 2026-10-17 fue **≈ USD 0,007 por consulta de 10
+resultados** (no es una tarifa garantizada). El costo total reportado suma `usage.cost` del proveedor.
+El modelo utilizado es `deepseek/deepseek-v4-flash-0731`, con razonamiento desactivado.
+
+Se consultan como máximo 100 posts únicos por corrida (`--max` permite bajar el límite),
+con pausa de 3 segundos entre intentos, también si falla un post. Un post caído o sin JSON-LD
+se omite y se cuenta. Un HTTP 429/999 o redirección a acceso restringido detiene las consultas
+a LinkedIn sin reintentar: devuelve lo ya reunido con un aviso por stderr. La búsqueda de URLs
+se hace antes de completar los posts; encontrar más URLs no aumenta el máximo de intentos.
+`--dias` filtra por fecha real de publicación, sin asegurar que el buscador encuentre posts recientes.
+Sin esa opción se conservan todas las fechas.
+
+Stdout contiene solo el JSON UTF-8 habitual (`publicaciones`, `metricas`). Stderr resume consultas,
+URLs únicas encontradas, posts completados, omitidos, fuera de fecha y costo en USD. Completados
+cuenta extracciones correctas antes del filtro de fecha y de posibles duplicados tras redirecciones;
+omitidos cuenta errores de posts. Los posts sin consultar por tope o bloqueo no cuentan como omitidos.
+La salida aplica la misma anonimización del paso 6 y no guarda HTML ni respuestas crudas de Exa.
+
+Comprobaciones sin red: la ayuda funciona sin credenciales; el comando anterior, en un proceso
+sin `OPENROUTER_API_KEY`, termina con código 1 y mensaje de variable faltante antes de consultar.
+Para comprobarlo en una sesión de prueba sin credenciales:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --help
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --consulta "IA"
+```
+
+Desde Python, `buscar_urls(consulta, clave=...)` devuelve `(urls, costo)` y
+`descubrir(consultas, clave=..., sal=...)` devuelve `(publicaciones, metricas, resumen)`.
+`costo` y `resumen['costo_usd']` son `Decimal` en USD. Para pruebas, `pedir` recibe un `Request`
+y devuelve el diccionario JSON; `obtener` y `pausa` permiten simular LinkedIn y la espera.
+La corrida real de descubrimiento y su costo quedan pendientes de revisión.
+
+## LinkedIn: descubrir por tema (paso 7)
+
+El módulo `radar.recoleccion.linkedin_buscar` busca URLs por tema mediante OpenRouter con
+el plugin web de Exa, un buscador de terceros, y completa los posts con el recolector público
+de LinkedIn. Solo usa las citas de la respuesta de búsqueda: no guarda ni imprime los textos,
+nombres o resúmenes que devuelva Exa. La lectura de LinkedIn sigue siendo no oficial, sin
+sesión ni cookies, con las limitaciones del paso 6.
+
+Necesita `OPENROUTER_API_KEY` y `AUTOR_HASH_SAL` ya definidas en el entorno; el programa
+no carga archivos `.env`. Usa el modelo `deepseek/deepseek-v4-flash-0731` sin razonamiento.
+En la prueba del 17/10/2026 se midieron aproximadamente **USD 0,007 por consulta de 10 resultados**;
+es una referencia, no una tarifa garantizada. El resumen muestra el costo que reporta `usage.cost`.
+Cada consulta hace una llamada a OpenRouter; no hay reintentos automáticos.
+
+`--consulta` se puede repetir hasta 20 veces; `--resultados` admite 1–10 resultados por consulta.
+Se descartan perfiles, empresas y artículos, y se reúnen posts únicos por ID entre consultas.
+`--max` limita los intentos de lectura a 1–100, incluso si algunos posts fallan, con pausa de
+3 segundos entre intentos. Tras resolver redirecciones también se deduplica la salida.
+`--dias N` conserva solo publicaciones de los últimos N días según su fecha real, no según Exa.
+No se garantiza que el buscador encuentre posts recientes ni que reúna la cantidad solicitada.
+
+Un post caído o sin JSON-LD se omite y se cuenta. Un HTTP 429/999 o una redirección de acceso
+detiene las lecturas de LinkedIn, sin reintentar, y devuelve lo reunido con un aviso en stderr.
+Las búsquedas de OpenRouter se reúnen antes de empezar las lecturas de LinkedIn.
+La salida JSON de siempre (`publicaciones`, `metricas`) va a stdout en UTF-8, con `pagina_publica`.
+Por stderr se informa: consultas, URLs únicas encontradas, posts completados, omitidos,
+fuera de fecha y costo total USD. Completados cuenta lecturas válidas antes de filtrar fecha
+y deduplicar redirecciones; puede superar el número de publicaciones devueltas.
+
+Comprobación sin red ni credenciales:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --help
+```
+
+Ejemplo de sintaxis con dos consultas y comprobación del error por falta de clave, sin gasto:
+
+```powershell
+Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+$env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --consulta "agentes de IA en español LatAm" --consulta "automatización con IA para empresas LatAm" --dias 7 --max 100 --resultados 10
+```
+
+El último comando debe salir con código 1, sin JSON y con `Falta OPENROUTER_API_KEY en el entorno`.
+Con el entorno real configurado, la misma sintaxis ejecuta búsquedas de pago y lecturas públicas;
+la comprobación real de cobertura y costo queda pendiente de revisión.
