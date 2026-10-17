@@ -422,3 +422,74 @@ Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
 
 La corrida real con las semillas del CSV, el filtro y dos observaciones separadas queda para revisión.
 YouTube también anonimiza ahora las menciones y el nombre del canal en título y descripción.
+
+## Recaptura de métricas de YouTube (paso 9)
+
+Consulta estadísticas de videos conocidos sin volver a buscarlos. Requiere `YOUTUBE_API_KEY`
+en el entorno; no necesita la sal. Acepta uno o varios JSON: tanto listas de publicaciones como
+objetos `{publicaciones, metricas}`. Ignora otras plataformas y elimina ids repetidos.
+
+Ejemplo para ejecutar con la clave ya cargada (usa red):
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.youtube_metricas data\raw\youtube_2026-10-17.json --salida data\raw\youtube_metricas.json
+```
+
+Hace `videos.list` con `part=statistics`, hasta 50 ids por llamada (1 unidad de cuota por llamada).
+Escribe `{publicaciones: [], metricas: [...]}`; sin `--salida`, imprime JSON en stdout. Cada lote lleva
+la hora UTC de su consulta. Contador ausente significa `null`; cero sigue siendo cero. Un video sin
+ningún contador no crea una métrica. El resumen en stderr indica ids, llamadas, métricas y videos
+faltantes (ya no devueltos por YouTube). Conserva cada captura en un archivo distinto si quieres
+comparar observaciones; las métricas de YouTube deben borrarse a los 30 días.
+
+## Búsqueda general por tema (paso 9)
+
+YouTube busca en MX, CO, AR, CL y PE; LinkedIn descubre publicaciones por tema; TikTok captura las
+cuentas semilla existentes y aplica el filtro gratis de Nemotron. Por defecto son las tres redes,
+los últimos 7 días y un único JSON sin repetir publicaciones ni métricas por id. Una red o un país
+que falla se cuenta en stderr y las demás consultas siguen; si todas fallan, termina con error.
+El resumen incluye avisos de capturas parciales, bloqueo o lotes que se conservaron sin filtrar.
+
+Necesita `AUTOR_HASH_SAL`, `YOUTUBE_API_KEY` para YouTube y `OPENROUTER_API_KEY` para LinkedIn y
+el filtro de TikTok. TikTok requiere semillas en `data/raw/tiktok_cuentas.txt`; su cobertura depende
+de esas cuentas. LinkedIn y TikTok usan las vías públicas no oficiales descritas arriba, sin sesión
+ni cookies. Exa tiene costo; el filtro comparte el contador diario existente de Nemotron.
+
+Ejemplos para ejecutar con variables y semillas ya preparadas (usan red):
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "inteligencia artificial en la educación" --salida data\raw\busqueda.json
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "inteligencia artificial en la educación" --dias 7 --redes youtube,linkedin --paises MX,CO --salida data\raw\busqueda.json
+```
+
+TikTok y LinkedIn ahora entregan título desde `title` o `headline`; si falta, usan la primera línea
+útil del texto, anonimizada, sin enlaces y hasta 120 caracteres en un límite de palabra. Si queda
+vacío, el título es `null`. El CSV manual conserva su comportamiento.
+
+Para enviar a la API, añade `--enviar` con su URL base. Este ejemplo hace POST al servidor local:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "inteligencia artificial en la educación" --salida data\raw\busqueda.json --enviar http://localhost:8000
+```
+
+Antes del primer POST guarda el JSON UTF-8. Sin `--salida`, al enviar crea una copia en
+`data/raw/busqueda_<fecha UTC>.json`. Envía a `/api/publicaciones` en lotes de hasta 200 publicaciones
+con sus métricas, con timeout de 30 s y sin reintentos. Si un lote falla, intenta los restantes,
+conserva el archivo y termina con código 1 indicando los números de lotes no confirmados (desde 1).
+Un timeout puede ocurrir después de que el servidor guarde el lote: comprueba la API antes de repetirlo.
+Sin `--enviar` no hace POST.
+
+Comprobaciones sin red: las ayudas terminan con código 0; los comandos sin clave terminan con 1.
+Retiran las claves solo del entorno del proceso actual, sin leer archivos de secretos:
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.youtube_metricas --help
+./.venv/Scripts/python -m radar.recoleccion.buscar --help
+Remove-Item Env:YOUTUBE_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:AUTOR_HASH_SAL -ErrorAction SilentlyContinue
+./.venv/Scripts/python -m radar.recoleccion.youtube_metricas data\raw\youtube_2026-10-17.json
+./.venv/Scripts/python -m radar.recoleccion.buscar --tema "inteligencia artificial en la educación" --redes youtube
+```
+
+Las corridas reales en tres redes, la recaptura de los 1.010 videos y la integración con trends/IA
+quedan para la revisión del equipo.

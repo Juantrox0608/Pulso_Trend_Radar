@@ -54,3 +54,18 @@ def texto_publico(texto: str, *autores: str) -> tuple[str, tuple[str, ...]]:
     for autor in sorted(filter(None, autores), key=len, reverse=True):
         texto = re.sub(r"(?<!\w)" + re.escape(autor) + r"(?!\w)", "[autor]", texto, flags=re.I)
     return texto, etiquetas
+
+
+def titulo_publico(titulo, texto, *autores):
+    """Título breve anonimizado; si falta, primera línea útil del contenido."""
+    for candidato in (titulo or '', texto or ''):
+        limpio = texto_publico(candidato, *autores)[0]
+        limpio = re.sub(r'(?i)\b(?:https?://|www\.)\S+', '', limpio)
+        linea = next((l.strip() for l in limpio.splitlines() if l.strip()), '')
+        linea = ' '.join(linea.split())
+        if linea:
+            if len(linea) > 120:
+                corte = linea.rfind(' ', 0, 121)
+                linea = linea[:corte] if corte > 0 else ''
+            return linea or None
+    return None

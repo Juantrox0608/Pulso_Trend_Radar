@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 import yt_dlp
 
 from radar.contrato import Metrica, Plataforma, Publicacion, calcular_autor_hash, id_contrato, id_desde_url
-from radar.recoleccion import texto_publico
+from radar.recoleccion import texto_publico, titulo_publico
 
 
 class _SinLog:
@@ -54,6 +54,7 @@ def convertir_entrada(info, *, sal, ahora=None, texto=None, publicada_en=None,
     duracion = int(duracion) if duracion is not None else None
     ahora = ahora or datetime.now(timezone.utc)
     p = Publicacion(id=id_contrato(plataforma, nativo), plataforma=plataforma,
+        titulo=titulo_publico(info.get('title'), contenido, *autores),
         texto=contenido, hashtags=hashtags, duracion_segundos=duracion,
         # shortcut: la duración aproxima el formato, no identifica excepciones editoriales.
         formato="video_corto" if duracion is None or duracion <= 180 else "video_largo",
