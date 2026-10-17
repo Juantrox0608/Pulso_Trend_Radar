@@ -52,6 +52,11 @@ Buscar  →  Recolectar  →  Agrupar en temas  →  Medir crecimiento  →  Exp
 
 En desarrollo.
 
+## Contrato de datos
+
+Formato único de cada publicación, campos, tabla sugerida y reglas para guardar:
+[docs/contrato_publicacion.md](docs/contrato_publicacion.md).
+
 ## Recolección YouTube (paso 1)
 
 Desde PowerShell en la raíz del repositorio:
