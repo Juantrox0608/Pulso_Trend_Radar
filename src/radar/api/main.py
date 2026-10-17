@@ -1,19 +1,23 @@
 """Servidor FastAPI principal para Radar de Tendencias (30X Media)."""
 
 import os
+import tempfile
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from starlette.concurrency import run_in_threadpool
 
+from pydantic import BaseModel
+
 from radar.api.mock_data import SEED_TRENDS
-from radar.contrato import Opportunity, OpportunityUpdate, Publicacion, Trend
+from radar.contrato import Metrica, Opportunity, OpportunityUpdate, Publicacion, Trend
 from radar.db.database import get_session, init_db
-from radar.db.models import OpportunityDB, PublicacionDB, TrendDB
+from radar.db.models import MetricaDB, OpportunityDB, PublicacionDB, TrendDB
+from radar.recoleccion.csv_manual import leer_publicaciones
 
 
 def _calcular_score_velocidad(views: int, likes: int, comments: int, published_iso: str) -> float:
@@ -216,12 +220,25 @@ def update_opportunity_status(
     return op.to_contract()
 
 
+class LoteRecoleccion(BaseModel):
+    """Payload enriquecido con publicaciones y métricas de recolección."""
+    publicaciones: list[Publicacion] = []
+    metricas: list[Metrica] = []
+
+
 @app.post("/api/publicaciones", status_code=status.HTTP_201_CREATED, tags=["Recolección"])
 def registrar_publicaciones(
-    publicaciones: list[Publicacion],
+    payload: list[Publicacion] | LoteRecoleccion,
     session: Session = Depends(get_session),
 ):
-    """Recibe un lote de publicaciones recolectadas por YouTube/TikTok/LinkedIn y las guarda en base de datos."""
+    """Recibe publicaciones y métricas recolectadas por YouTube/TikTok/LinkedIn y las guarda en base de datos."""
+    if isinstance(payload, list):
+        publicaciones = payload
+        metricas = []
+    else:
+        publicaciones = payload.publicaciones
+        metricas = payload.metricas
+
     guardadas = 0
     actualizadas = 0
     for pub in publicaciones:
@@ -229,6 +246,7 @@ def registrar_publicaciones(
         if not existente:
             pub_db = PublicacionDB(
                 id=pub.id,
+                schema_version=pub.schema_version,
                 plataforma=pub.plataforma.value,
                 titulo=pub.titulo,
                 texto=pub.texto,
@@ -277,8 +295,80 @@ def registrar_publicaciones(
             session.add(existente)
             actualizadas += 1
 
+    # Procesar métricas asociadas
+    metricas_guardadas = 0
+    for met in metricas:
+        met_id = (met.publicacion_id, met.capturada_en.isoformat())
+        met_existente = session.get(MetricaDB, met_id)
+        if not met_existente:
+            met_db = MetricaDB(
+                publicacion_id=met.publicacion_id,
+                capturada_en=met.capturada_en.isoformat(),
+                vistas=met.vistas,
+                likes=met.likes,
+                comentarios=met.comentarios,
+                compartidos=met.compartidos,
+                origen=met.origen.value,
+            )
+            session.add(met_db)
+            metricas_guardadas += 1
+
+        # Actualizar contadores consolidados en PublicacionDB y TrendDB
+        pub_db = session.get(PublicacionDB, met.publicacion_id)
+        if pub_db:
+            if met.vistas is not None:
+                pub_db.views = met.vistas
+            if met.likes is not None:
+                pub_db.likes = met.likes
+            if met.comentarios is not None:
+                pub_db.comments = met.comentarios
+            session.add(pub_db)
+
+        trend_db = session.get(TrendDB, met.publicacion_id)
+        if trend_db:
+            if met.vistas is not None:
+                trend_db.views = met.vistas
+            if met.likes is not None:
+                trend_db.likes = met.likes
+            if met.comentarios is not None:
+                trend_db.comments = met.comentarios
+            trend_db.engagement_score = _calcular_score_velocidad(
+                trend_db.views, trend_db.likes, trend_db.comments, trend_db.published_at
+            )
+            session.add(trend_db)
+
     session.commit()
-    return {"guardadas": guardadas, "actualizadas": actualizadas, "recibidas": len(publicaciones)}
+    return {
+        "guardadas": guardadas,
+        "actualizadas": actualizadas,
+        "recibidas": len(publicaciones),
+        "metricas_guardadas": metricas_guardadas,
+    }
+
+
+@app.post("/api/publicaciones/csv", status_code=status.HTTP_201_CREATED, tags=["Recolección"])
+def importar_publicaciones_csv(
+    archivo: UploadFile = File(..., description="Archivo CSV con enlaces de TikTok o LinkedIn"),
+    session: Session = Depends(get_session),
+):
+    """Importa publicaciones desde un archivo CSV manual y las guarda en Neon DB."""
+    if not os.environ.get("AUTOR_HASH_SAL"):
+        os.environ["AUTOR_HASH_SAL"] = "sal_radar_30x_hackathon_secreta"
+
+    contenido = archivo.file.read()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
+        tmp.write(contenido)
+        tmp_path = tmp.name
+
+    try:
+        publicaciones = leer_publicaciones(tmp_path)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+    return registrar_publicaciones(publicaciones, session)
 
 
 @app.post("/api/trends/{trend_id}/analizar", response_model=Trend, tags=["IA"])

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: radar-api
+    runtime: python
+    buildCommand: pip install -e .
+    startCommand: uvicorn radar.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTOR_HASH_SAL
+        value: sal_radar_30x_hackathon_secreta

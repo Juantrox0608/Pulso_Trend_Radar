@@ -84,3 +84,57 @@ def test_post_publicaciones_endpoint(client):
     assert resp.status_code == 201
     datos = resp.json()
     assert (datos["guardadas"] + datos["actualizadas"]) >= 1
+
+
+def test_importar_publicaciones_csv(client, monkeypatch):
+    monkeypatch.setenv("AUTOR_HASH_SAL", "sal_de_prueba_ficticia_123")
+    csv_content = (
+        "url,fecha_publicacion,texto,formato,autor\n"
+        "https://www.tiktok.com/@creador_demo/video/7412345678901234567,2026-10-15,Video demo de agentes,video_corto,creador_demo\n"
+    )
+    files = {"archivo": ("test.csv", csv_content.encode("utf-8"), "text/csv")}
+    resp = client.post("/api/publicaciones/csv", files=files)
+    assert resp.status_code == 201
+    datos = resp.json()
+    assert (datos["guardadas"] + datos["actualizadas"]) >= 1
+
+
+def test_post_lote_recoleccion_con_metricas(client):
+    ahora = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "publicaciones": [
+            {
+                "id": "yt:loteTest99x",
+                "plataforma": "youtube",
+                "titulo": "Prueba Lote con Métricas",
+                "texto": "Probando integración de métricas en vivo",
+                "hashtags": ["ia", "metricas"],
+                "formato": "video_corto",
+                "duracion_segundos": 60,
+                "idioma": "es",
+                "pais": "PE",
+                "tipo_autor": "creador",
+                "autor_hash": "abcdef0123456789",
+                "publicada_en": ahora,
+                "capturada_en": ahora,
+                "origen": "api_oficial"
+            }
+        ],
+        "metricas": [
+            {
+                "publicacion_id": "yt:loteTest99x",
+                "capturada_en": ahora,
+                "vistas": 25000,
+                "likes": 1200,
+                "comentarios": 85,
+                "compartidos": 40,
+                "origen": "api_oficial"
+            }
+        ]
+    }
+    resp = client.post("/api/publicaciones", json=payload)
+    assert resp.status_code == 201
+    datos = resp.json()
+    assert (datos["guardadas"] + datos["actualizadas"]) >= 1
+    assert datos.get("metricas_guardadas", 0) >= 1
+

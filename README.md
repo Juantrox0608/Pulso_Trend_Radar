@@ -92,7 +92,8 @@ Una vez levantado:
 | `GET` | `/api/trends/{id}` | Detalle de una tendencia individual con métricas y ganchos. |
 | `GET` | `/api/opportunities` | Listado de oportunidades editoriales guardadas o propuestas. |
 | `PATCH` | `/api/opportunities/{id}` | Actualización de estado editorial (`Pendiente`, `Aprobada`, `Descartada`). |
-| `POST` | `/api/publicaciones` | Ingesta de publicaciones validadas desde el módulo de recolección (YouTube, TikTok, LinkedIn). |
+| `POST` | `/api/publicaciones` | Ingesta de publicaciones validadas en JSON desde el módulo de recolección (YouTube, TikTok, LinkedIn). |
+| `POST` | `/api/publicaciones/csv` | Carga e ingesta directa de archivo CSV exportado de Excel con publicaciones de TikTok y LinkedIn. |
 | `POST` | `/api/trends/{id}/analizar` | Disparo del enriquecimiento editorial por IA. |
 
 ### 5. Pruebas automáticas

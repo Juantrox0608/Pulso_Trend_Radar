@@ -86,6 +86,7 @@ class PublicacionDB(SQLModel, table=True):
     __tablename__ = "publicaciones"
 
     id: str = Field(primary_key=True, index=True)
+    schema_version: str = Field(default="1.0")
     plataforma: str = Field(index=True)
     titulo: str | None = Field(default=None)
     texto: str | None = Field(default=None)
@@ -103,3 +104,18 @@ class PublicacionDB(SQLModel, table=True):
     views: int = Field(default=0)
     likes: int = Field(default=0)
     comments: int = Field(default=0)
+
+
+class MetricaDB(SQLModel, table=True):
+    """Captura de métricas públicas de una publicación para series de tiempo e historial."""
+
+    __tablename__ = "metricas"
+
+    publicacion_id: str = Field(primary_key=True, index=True)
+    capturada_en: str = Field(primary_key=True, index=True)
+    vistas: int | None = Field(default=None)
+    likes: int | None = Field(default=None)
+    comentarios: int | None = Field(default=None)
+    compartidos: int | None = Field(default=None)
+    origen: str = Field(default="api_oficial")
+
