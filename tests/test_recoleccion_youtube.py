@@ -87,6 +87,14 @@ def test_texto_largo_e_idioma_opcional(api):
     assert recolectar(api)[0].idioma is None
     assert recolectar(api)[0].hashtags == ()
 
+@pytest.mark.parametrize("estado", ["live", "upcoming"])
+def test_salta_transmisiones_en_vivo_y_programadas(api, estado):
+    api[0]["videos"]["items"][0]["snippet"]["liveBroadcastContent"] = estado
+    api[0]["videos"]["items"][1]["snippet"]["liveBroadcastContent"] = "none"
+    publicaciones = recolectar(api)
+    assert [p.id for p in publicaciones] == ["yt:vid_test02B"]
+    assert "liveBroadcastContent" in api[1][1][1]["fields"]
+
 def test_sin_resultados_no_pide_videos(api):
     api[0]["search"]["items"] = []
     assert recolectar(api) == []

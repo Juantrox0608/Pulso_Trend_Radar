@@ -64,8 +64,14 @@ python -m venv .venv
 ```
 
 Juan configura `YOUTUBE_API_KEY` y `AUTOR_HASH_SAL` en el entorno del proceso,
-fuera del repositorio. El recolector no carga `.env`. No pegues credenciales en
-comandos que queden guardados en el historial. Mantén la misma sal entre capturas
+fuera del repositorio. El recolector no carga `.env`: si las claves están en
+`%USERPROFILE%\secretos_hackaton\.env`, cárgalas en la sesión de PowerShell antes de correrlo:
+
+```powershell
+Get-Content "$env:USERPROFILE\secretos_hackaton\.env" | ForEach-Object { $k, $v = $_ -split '=', 2; Set-Item "env:$k" $v }
+```
+
+No pegues credenciales en comandos que queden guardados en el historial. Mantén la misma sal entre capturas
 para que el seudónimo del autor sea estable.
 
 Devuelve un array JSON de `radar.contrato.Publicacion`. Para usarlo desde Python:

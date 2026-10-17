@@ -92,7 +92,7 @@ def buscar_publicaciones(
         return []
     videos = pedir("videos", {
         "part": "snippet,contentDetails", "id": ",".join(ids),
-        "fields": "items(id,snippet(title,description,tags,publishedAt,channelId,defaultAudioLanguage,defaultLanguage),contentDetails/duration)",
+        "fields": "items(id,snippet(title,description,tags,publishedAt,channelId,defaultAudioLanguage,defaultLanguage,liveBroadcastContent),contentDetails/duration)",
     })
     capturada_en = datetime.now(timezone.utc)
     publicaciones = []
@@ -101,6 +101,9 @@ def buscar_publicaciones(
             if video["id"] not in ids:
                 raise ValueError("Video ajeno a la búsqueda")
             snippet = video["snippet"]
+            # En vivo o programado: todavía no es una pieza publicada con métricas reales.
+            if snippet.get("liveBroadcastContent", "none") != "none":
+                continue
             segundos = _segundos(video["contentDetails"]["duration"])
             # shortcut: <=180 s aproxima video corto; usar metadata de Shorts cuando esté disponible.
             formato = Formato.VIDEO_CORTO if segundos <= 180 else Formato.VIDEO_LARGO
