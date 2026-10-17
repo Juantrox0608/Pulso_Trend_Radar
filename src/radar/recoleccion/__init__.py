@@ -20,7 +20,14 @@ def reparar_texto(texto: str) -> str:
     try:
         return texto.encode("cp1252").decode("utf-8")
     except UnicodeError:
-        return texto
+        # Excel también puede mezclar texto correcto y mojibake en una misma celda.
+        def reparar_grupo(coincidencia):
+            valor = coincidencia.group()
+            try:
+                return valor.encode("cp1252").decode("utf-8")
+            except UnicodeError:
+                return valor
+        return re.sub(r"[^\x00-\x7f]+", reparar_grupo, texto)
 
 
 def texto_publico(texto: str, *autores: str) -> tuple[str, tuple[str, ...]]:

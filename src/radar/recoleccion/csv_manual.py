@@ -14,7 +14,8 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from pydantic import ValidationError
 
 from radar.contrato import Metrica, Publicacion, calcular_autor_hash, id_contrato, id_desde_url
-from radar.recoleccion import sin_autor
+from radar.recoleccion import sin_autor, reparar_texto
+from radar.recoleccion.linkedin import BloqueoLinkedIn
 
 _OBLIGATORIAS = {"url", "fecha_publicacion", "texto", "formato"}
 _PAISES = dict(zip(
@@ -110,7 +111,7 @@ def _publicacion(fila: dict, sal: str, ahora: datetime) -> Publicacion:
     pais = None if pais in ("", "n/d") else _PAISES.get(pais, pais.upper())
     return Publicacion(
         id=id_contrato(plataforma, nativo), plataforma=plataforma,
-        texto=d["texto"], formato=formato, duracion_segundos=duracion,
+        texto=reparar_texto(d["texto"]), formato=formato, duracion_segundos=duracion,
         tipo_autor=(d.get("tipo_autor") or "desconocido").split()[0],
         idioma=idioma or None, pais=pais,
         hashtags=sin_autor(filter(None, re.split(r"[\s,]+", d.get("hashtags", ""))), autor, del_enlace),
@@ -142,7 +143,7 @@ def _numero(valor: str, campo: str) -> int | None:
     return resultado
 
 
-def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, pausa=sleep) -> tuple[list[Publicacion], list[Metrica]]:
+def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, completar_linkedin=False, pausa=sleep) -> tuple[list[Publicacion], list[Metrica]]:
     """Valida el CSV completo; si alguna fila falla no devuelve resultados parciales."""
     sal = os.environ.get("AUTOR_HASH_SAL")
     if not sal or not sal.strip():
@@ -161,7 +162,7 @@ def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, pausa=sleep) 
         raise ValueError("CSV: encabezado inválido; usa columnas separadas por coma o punto y coma") from None
     reader = csv.DictReader(StringIO(contenido, newline=""), delimiter=separador, strict=True)
     nombres = reader.fieldnames or []
-    faltan = ({"url"} if completar_tiktok else _OBLIGATORIAS) - set(nombres)
+    faltan = ({"url"} if completar_tiktok or completar_linkedin else _OBLIGATORIAS) - set(nombres)
     if faltan:
         raise ValueError("CSV: faltan columnas obligatorias: " + ", ".join(sorted(faltan)))
     if len(nombres) != len(set(nombres)):
@@ -180,25 +181,42 @@ def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, pausa=sleep) 
             filas.append((linea, fila))
     except csv.Error:
         errores.append(f"Línea {reader.line_num}: estructura CSV inválida; revisa comillas y separadores")
-    automaticas = [fila for _, fila in filas if completar_tiktok and "tiktok.com" in (fila.get("url") or "")]
-    if len(automaticas) > 100:
-        raise ValueError("TikTok: máximo 100 publicaciones por corrida")
-    intentos = 0
-    for linea, fila in filas:
+    def automatico(fila):
+        host = urlsplit((fila.get("url") or "").strip()).hostname or ""
+        if completar_tiktok and (host == "tiktok.com" or host.endswith(".tiktok.com")):
+            return "tiktok"
+        if completar_linkedin and (host == "lnkd.in" or host == "linkedin.com" or host.endswith(".linkedin.com")):
+            return "linkedin"
+        return None
+
+    cantidades = {"tiktok": 0, "linkedin": 0}
+    for _, fila in filas:
+        try:
+            plataforma = automatico(fila)
+        except ValueError:
+            continue  # El validador de fila detalla el error sin exponer su contenido.
+        if plataforma:
+            cantidades[plataforma] += 1
+    for plataforma, cantidad in cantidades.items():
+        if cantidad > 100:
+            raise ValueError(f"{plataforma}: máximo 100 publicaciones por corrida")
+    intentos = {"tiktok": 0, "linkedin": 0}
+    for indice, (linea, fila) in enumerate(filas):
         try:
             if None in fila or any(v is None for v in fila.values()):
                 raise ValueError("columnas: cantidad de celdas distinta al encabezado")
             url = (fila.get("url") or "").strip()
             _url_permitida(url)
-            host = urlsplit(url).hostname or ""
-            if completar_tiktok and (host == "tiktok.com" or host.endswith(".tiktok.com")):
-                from radar.recoleccion import tiktok
-                if intentos:
-                    pausa(1.5)
-                intentos += 1
+            plataforma = automatico(fila)
+            if plataforma:
+                from radar.recoleccion import tiktok, linkedin
+                recolector = tiktok if plataforma == "tiktok" else linkedin
+                if intentos[plataforma]:
+                    pausa(1.5 if plataforma == "tiktok" else 3)
+                intentos[plataforma] += 1
                 idioma = _etiqueta(fila.get("idioma", "").strip())
                 pais = _etiqueta(fila.get("pais", "").strip())
-                p, m = tiktok.recolectar(url, sal=sal,
+                p, m = recolector.recolectar(url, sal=sal,
                     texto=fila.get("texto", "").strip() or None,
                     publicada_en=_fecha(fila["fecha_publicacion"].strip(), "fecha_publicacion") if fila.get("fecha_publicacion", "").strip() else None,
                     tipo_autor=(fila.get("tipo_autor", "").strip() or "desconocido").split()[0],
@@ -225,6 +243,11 @@ def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, pausa=sleep) 
                 metricas.append(Metrica(publicacion_id=publicacion.id,
                     capturada_en=publicacion.capturada_en, origen=publicacion.origen, **conteos))
             publicaciones.append(publicacion)
+        except BloqueoLinkedIn as error:
+            errores.append(f"Línea {linea}: {error}")
+            pendientes = ", ".join(str(n) for n, _ in filas[indice:])
+            errores.append("Corrida detenida; filas sin completar: " + pendientes)
+            break
         except ValidationError as error:
             campos = sorted({str(e["loc"][0]) if e["loc"] else "metricas" for e in error.errors()})
             errores.append(f"Línea {linea}: valor inválido en " + ", ".join(campos))
@@ -244,9 +267,10 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Importa publicaciones públicas desde un CSV manual.")
     parser.add_argument("csv")
     parser.add_argument("--completar-tiktok", action="store_true", help="Consultar metadatos públicos de TikTok (no oficial)")
+    parser.add_argument("--completar-linkedin", action="store_true", help="Consultar la página pública de LinkedIn (no oficial)")
     args = parser.parse_args(argv)
     try:
-        publicaciones, metricas = leer_con_metricas(args.csv, completar_tiktok=args.completar_tiktok)
+        publicaciones, metricas = leer_con_metricas(args.csv, completar_tiktok=args.completar_tiktok, completar_linkedin=args.completar_linkedin)
     except ValueError as error:
         parser.exit(1, f"Error: {error}\n")
     except OSError:

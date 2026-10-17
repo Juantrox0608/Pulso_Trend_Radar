@@ -9,7 +9,7 @@ código, manda el código.
 La recolección devuelve una lista de `Publicacion` en JSON, ya validada:
 
 - **YouTube** por la API oficial (`origen = api_oficial`).
-- **TikTok y LinkedIn** desde un CSV cargado a mano (`origen = csv_manual`).
+- **TikTok y LinkedIn** desde un CSV cargado a mano (`origen = csv_manual`), o completando sus URL con páginas públicas (`origen = pagina_publica`).
 - **Sin datos personales:** el autor llega solo como `autor_hash`. Nunca nombre, usuario ni url original, y los
   hashtags iguales al autor se quitan.
 

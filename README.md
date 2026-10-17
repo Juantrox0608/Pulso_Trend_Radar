@@ -198,3 +198,35 @@ $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 ```
 
 Para la corrida real, Claude añadirá `--completar-tiktok` al comando del CSV local de Juan.
+
+## LinkedIn desde URL (paso 6)
+
+Añade `--completar-linkedin` al importador del CSV para leer la página pública sin sesión.
+En esas filas basta `url` (también acepta `lnkd.in`); el destino debe ser una publicación de
+`linkedin.com/posts/` o `linkedin.com/feed/update/`. Las opciones de TikTok y LinkedIn se pueden combinar.
+El texto y la fecha no vacíos del CSV tienen prioridad; se completan los ausentes.
+Las reacciones, comentarios y compartidos vienen de `SocialMediaPosting` del JSON-LD;
+no se inventan vistas ni conteos ocultos. Todas estas capturas usan `pagina_publica`,
+con fecha actual UTC y sin exigir `fecha_captura` ni usar los números antiguos del CSV.
+
+Esta vía no oficial es contraria al Acuerdo de Usuario de LinkedIn; Juan autorizó únicamente
+el volumen pequeño del prototipo. Hay una pausa de 3 segundos entre posts y máximo 100
+por corrida (el límite de TikTok se cuenta por separado). No usa cookies, login ni reintentos.
+Un HTTP 429/999 o una página que requiere acceso detiene toda la corrida, incluidas las
+filas posteriores de TikTok, y lista las líneas pendientes. No se devuelve salida parcial.
+Una página sin JSON-LD válido produce un error de fila. Los cambios del sitio pueden romper la extracción.
+
+Las menciones se sustituyen por `@[usuario]` y se eliminan del texto los nombres y usuarios
+conocidos del autor; eso no equivale a detectar todos los nombres que un post pueda mencionar.
+No se guardan HTML, cookies ni respuestas crudas. También se reparan los acentos del texto manual.
+
+Comprobación local sin activar las consultas, con datos y sal ficticios:
+
+```powershell
+$env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
+./.venv/Scripts/python -m radar.recoleccion.csv_manual tests/fixtures/manual_excel.csv
+./.venv/Scripts/python -m radar.recoleccion.csv_manual --help
+```
+
+Claude hará la corrida real añadiendo `--completar-linkedin` al comando del CSV local de Juan,
+y verificará los `CHECK` de `pagina_publica` de ambos contratos en DuckDB.
