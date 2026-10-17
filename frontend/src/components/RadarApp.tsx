@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {Radar,Search,ArrowRight,ArrowLeft,ChartNoAxesCombined,Lightbulb,Bookmark,Database,ExternalLink,Check, X,Copy,Info,SlidersHorizontal,Menu,Play,Heart,MessageCircle} from 'lucide-react';
 import {topics,trends,engagement} from '@/lib/mock-data';
+import {matchesTrend} from '@/lib/search';
 import type {Opportunity,Trend} from '@/types/trend';
 type Page='discover'|'trends'|'opportunities'|'saved'|'sources';
 const tabs:{id:Page;label:string;icon:typeof Radar}[]=[{id:'discover',label:'Descubrir',icon:Radar},{id:'trends',label:'Tendencias',icon:ChartNoAxesCombined},{id:'opportunities',label:'Oportunidades',icon:Lightbulb},{id:'saved',label:'Guardados',icon:Bookmark},{id:'sources',label:'Fuentes',icon:Database}];
@@ -13,7 +14,24 @@ export default function RadarApp(){
  const notify=(message:string)=>{setToast(message);window.setTimeout(()=>setToast(''),2500)};
  const openPage=(p:Page)=>{setPage(p);setSelected(null);window.scrollTo({top:0,behavior:'smooth'})};
  const runSearch=(value=query)=>{const q=value.trim();if(!q)return;setQuery(q);setSearch(q);setSelected(null);setPage('discover');window.scrollTo({top:0,behavior:'smooth'})};
- const results=useMemo(()=>{let arr=trends.filter(t=>{const q=search.toLowerCase().replace('#','');return !q||[t.title,t.category,t.creator,t.insight].some(s=>s.toLowerCase().includes(q))||q==='aiagents'&&t.id==='ai-agents-b2b'||q==='generativeai'&&t.id==='generative-ai'}).filter(t=>platform==='Todos'||t.platform===platform);if(sort==='Vistas')arr.sort((a,b)=>b.views-a.views);else if(sort==='Reciente')arr.sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt));else arr.sort((a,b)=>engagement(b)-engagement(a));return arr},[search,platform,sort]);
+
+const results = useMemo(() => {
+  const arr = trends
+    .filter(t => matchesTrend(t, search))
+    .filter(t => platform === 'Todos' || t.platform === platform);
+
+  if (sort === 'Vistas') {
+    arr.sort((a, b) => b.views - a.views);
+  } else if (sort === 'Reciente') {
+    arr.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  } else {
+    arr.sort((a, b) => engagement(b) - engagement(a));
+  }
+
+  return arr;
+}, [search, platform, sort]);
+
+ 
  const openTrend=(t:Trend)=>{setSelected(t);setPage('trends');window.scrollTo({top:0,behavior:'smooth'})};
  const status=(id:string)=>saved.find(s=>s.trendId===id)?.status;
  const mark=(t:Trend,s:'Pendiente'|'Aprobada'|'Descartada')=>{save([...saved.filter(x=>x.trendId!==t.id),{id:t.id,trendId:t.id,status:s,savedAt:new Date().toISOString()}]);notify(s==='Pendiente'?'Oportunidad guardada':`Decisión registrada: ${s}`)};
