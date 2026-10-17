@@ -1,0 +1,28 @@
+[project]
+name = "radar"
+version = "0.1.0"
+description = "Buscador de tendencias en YouTube, TikTok y LinkedIn"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.10",
+    "fastapi>=0.110",
+    "uvicorn>=0.28",
+    "sqlmodel>=0.0.16",
+    "psycopg2-binary>=2.9",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
