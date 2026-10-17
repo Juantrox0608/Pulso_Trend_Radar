@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from radar.contrato import Metrica, Publicacion, calcular_autor_hash, id_contrato, id_desde_url
-from radar.recoleccion import texto_publico, segundos_iso8601
+from radar.recoleccion import texto_publico, titulo_publico, segundos_iso8601
 
 
 class BloqueoLinkedIn(ValueError):
@@ -140,6 +140,10 @@ def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=Non
         limpio.feed(texto or post.get("articleBody") or post.get("text") or post.get("description") or "")
         contenido, hashtags = texto_publico("".join(limpio.partes).strip(),
             del_enlace, usuario, autor.get("name", ""), autor_url)
+        encabezado = _Texto()
+        encabezado.feed(post.get('headline') or '')
+        titulo = titulo_publico(''.join(encabezado.partes), contenido,
+            del_enlace, usuario, autor.get('name', ''), autor_url)
         fecha = publicada_en or datetime.fromisoformat(post["datePublished"])
         if fecha.utcoffset() is None:
             raise ValueError()
@@ -162,7 +166,7 @@ def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=Non
             # shortcut: <=180 s aproxima video corto; sin duración se mantiene corto, revisar con metadata mejor.
             formato = ("video_corto" if duracion is None or duracion <= 180 else "video_largo") if video else "post_texto"
         p = Publicacion(id=id_contrato(plataforma, nativo), plataforma=plataforma,
-            texto=contenido, hashtags=hashtags, formato=formato, duracion_segundos=duracion, publicada_en=fecha,
+            titulo=titulo, texto=contenido, hashtags=hashtags, formato=formato, duracion_segundos=duracion, publicada_en=fecha,
             capturada_en=ahora, origen="pagina_publica", tipo_autor=tipo_autor,
             idioma=idioma, pais=pais, autor_hash=calcular_autor_hash(plataforma, identidad, sal))
         conteos = {"likes": None, "comentarios": post.get("commentCount"), "compartidos": None}

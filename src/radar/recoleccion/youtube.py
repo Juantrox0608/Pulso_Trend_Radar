@@ -14,7 +14,7 @@ from radar.contrato import (
     Formato, Metrica, Origen, Plataforma, Publicacion, TipoAutor,
     calcular_autor_hash, id_contrato,
 )
-from radar.recoleccion import sin_autor, imprimir_json, segundos_iso8601 as _segundos
+from radar.recoleccion import texto_publico, sin_autor, imprimir_json, segundos_iso8601 as _segundos
 
 Peticion = Callable[[str, dict], dict]
 
@@ -101,10 +101,13 @@ def buscar_con_metricas(
             segundos = _segundos(video["contentDetails"]["duration"])
             # shortcut: <=180 s aproxima video corto; usar metadata de Shorts cuando esté disponible.
             formato = Formato.VIDEO_CORTO if segundos <= 180 else Formato.VIDEO_LARGO
+            autor = snippet.get("channelTitle", "")
+            titulo, _ = texto_publico(snippet["title"], autor)
+            texto, _ = texto_publico(snippet.get("description", ""), autor)
             publicaciones.append(Publicacion(
                 id=id_contrato(Plataforma.YOUTUBE, video["id"]),
                 plataforma=Plataforma.YOUTUBE,
-                titulo=snippet["title"], texto=snippet.get("description", "")[:5000],
+                titulo=titulo, texto=texto[:5000],
                 # channelTitle se usa solo aquí, para no guardar el nombre del canal como etiqueta.
                 hashtags=sin_autor(snippet.get("tags", ()), snippet.get("channelTitle", "")), formato=formato,
                 duracion_segundos=segundos,

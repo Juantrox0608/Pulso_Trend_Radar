@@ -219,3 +219,11 @@ def test_cli_error_claro(monkeypatch, capsys):
     assert exc.value.code != 0
     salida = capsys.readouterr()
     assert not salida.out and "YOUTUBE_API_KEY" in salida.err
+
+def test_menciones_y_nombre_en_titulo_y_descripcion(api):
+    snippet = api[0]['videos']['items'][0]['snippet']
+    snippet['title'] = 'CANAL_SINTETICO_NO_DEVOLVER con @mencion_ficticia'
+    snippet['description'] = 'CANAL_SINTETICO_NO_DEVOLVER presenta @mencion_ficticia #IA'
+    p = recolectar(api)[0]
+    assert p.titulo == '[autor] con @[usuario]'
+    assert p.texto == '[autor] presenta @[usuario] #IA'

@@ -131,7 +131,8 @@ def test_video_con_login_en_menu(video):
     assert p.autor_hash==calcular_autor_hash(Plataforma.LINKEDIN,"https://www.linkedin.com/in/autorficticio","sal")
     assert p.origen==m.origen=="pagina_publica"
     assert p.hashtags==("ia",) and "@[usuario]" in p.texto
-    for dato in ("Nombre Ficticio","autorficticio","mencion_ficticia","<form","titular"):
+    assert p.titulo == 'Este titular no sustituye el texto'
+    for dato in ("Nombre Ficticio","autorficticio","mencion_ficticia","<form"):
         assert dato not in p.model_dump_json()+m.model_dump_json()
 
 
@@ -154,9 +155,8 @@ def test_headline_no_es_texto(video):
     import json
     inicio=video.index('{');fin=video.index('</script>')
     post=json.loads(video[inicio:fin]);post.pop("description")
-    with pytest.raises(ValueError) as exc:
-        linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,'<script type="application/ld+json">'+json.dumps(post)+'</script>'))
-    assert not isinstance(exc.value,linkedin.BloqueoLinkedIn)
+    p, _ = linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,'<script type="application/ld+json">'+json.dumps(post)+'</script>'))
+    assert p.texto == '' and p.titulo == post['headline']
 
 
 def test_sin_jsonld_con_menu_es_error_de_fila():
