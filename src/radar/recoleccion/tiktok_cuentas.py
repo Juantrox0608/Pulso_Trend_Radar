@@ -16,7 +16,7 @@ from urllib.request import Request
 import yt_dlp
 
 from radar.contrato import Plataforma, id_desde_url
-from radar.recoleccion import imprimir_json, texto_publico, tiktok
+from radar.recoleccion import imprimir_json, texto_publico, terminos_tema, normalizar_hashtag, tiktok
 from radar.recoleccion.linkedin_buscar import buscar_urls, _consultas, _entero, _pedir
 
 SEMILLAS = Path('data/raw/tiktok_cuentas.txt')
@@ -198,10 +198,12 @@ def descubrir_cuentas(consultas, *, clave, pedir=None, extractor=None, pausa=sle
 class FiltroTema:
     """Cuota compartida entre vueltas; el comando la conserva en disco entre ejecuciones."""
     def __init__(self, tema, *, clave, pedir=None, pausa=sleep, reloj=None, contador=None):
-        if not clave or not clave.strip():
+        terminos = terminos_tema(tema)
+        self.hashtags = {normalizar_hashtag(t) for t in terminos if t.startswith('#')}
+        self.terminos = [t for t in terminos if not t.startswith('#')]
+        self.preciso = ',' in tema
+        if self.terminos and (not clave or not clave.strip()):
             raise ValueError('Falta OPENROUTER_API_KEY en el entorno para --tema')
-        if not tema.strip():
-            raise ValueError('El tema debe contener texto')
         self.tema, self.clave = tema, clave
         self.pedir, self.pausa = pedir or _pedir, pausa
         self.reloj = reloj or (lambda:datetime.now(timezone.utc))
@@ -238,8 +240,15 @@ class FiltroTema:
         return True
 
     def filtrar(self, pares):
-        salida = []
+        originales = pares
+        salida = [par for par in pares if self.hashtags.intersection(
+            normalizar_hashtag(h) for h in par[0].hashtags)]
+        directos = {p.id for p, _ in salida}
+        pares = [par for par in pares if par[0].id not in directos]
         r = {'descartados_tema': 0, 'lotes_sin_filtrar': 0, 'aviso': None}
+        if not self.terminos:
+            r['descartados_tema'] = len(pares)
+            return salida, r
         for inicio in range(0, len(pares), 30):
             lote = pares[inicio:inicio+30]
             decisiones = None
@@ -250,7 +259,9 @@ class FiltroTema:
                 # Los enlaces embebidos en la descripción tampoco se envían al modelo.
                 textos = [re.sub(r'(?i)\b(?:https?://|www\.)\S+', '', texto_publico(p.texto or '')[0])
                           for p, _ in lote]
-                prompt = (f"Para cada publicación, responde una línea 'n: SI' si trata de {self.tema}, "
+                criterio = ('específicamente de al menos uno de estos términos: ' +
+                            '; '.join(self.terminos)) if self.preciso else 'de ' + self.terminos[0]
+                prompt = (f"Para cada publicación, responde una línea 'n: SI' si trata {criterio}, "
                           "o 'n: NO' si no. Solo esas líneas, sin explicar.\n" +
                           '\n'.join(f'{i}: {texto}' for i, texto in enumerate(textos, 1)))
                 cuerpo = {'model': 'nvidia/nemotron-3-super-120b-a12b:free',
@@ -283,7 +294,8 @@ class FiltroTema:
             else:
                 salida.extend(par for i, par in enumerate(lote, 1) if decisiones[i])
                 r['descartados_tema'] += sum(not v for v in decisiones.values())
-        return salida, r
+        aceptados = {p.id for p, _ in salida}
+        return [par for par in originales if par[0].id in aceptados], r
 
 
 def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
@@ -407,7 +419,7 @@ def main(argv=None):
     captura.add_argument('--max', dest='maximo', type=int, default=300)
     captura.add_argument('--salida-dir', type=Path, default=Path('data/raw/tiktok'))
     captura.add_argument('--cada-horas', type=int)
-    captura.add_argument('--tema', help='Filtrar con Nemotron gratis; requiere OPENROUTER_API_KEY')
+    captura.add_argument('--tema', help='Frase amplia o hasta 5 términos por comas; #hashtag exacto sin modelo')
     args = parser.parse_args(argv)
     try:
         cuentas = leer_semillas(args.semillas)

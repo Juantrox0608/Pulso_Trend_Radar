@@ -54,7 +54,7 @@ def convertir_entrada(info, *, sal, ahora=None, texto=None, publicada_en=None,
     duracion = int(duracion) if duracion is not None else None
     ahora = ahora or datetime.now(timezone.utc)
     p = Publicacion(id=id_contrato(plataforma, nativo), plataforma=plataforma,
-        titulo=titulo_publico(info.get('title'), contenido, *autores),
+        titulo=titulo_publico(contenido, info.get('title'), *autores),
         texto=contenido, hashtags=hashtags, duracion_segundos=duracion,
         # shortcut: la duración aproxima el formato, no identifica excepciones editoriales.
         formato="video_corto" if duracion is None or duracion <= 180 else "video_largo",

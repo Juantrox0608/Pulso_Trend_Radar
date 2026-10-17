@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
-from radar.recoleccion import imprimir_json, youtube, linkedin_buscar, tiktok_cuentas
+from radar.recoleccion import imprimir_json, terminos_tema, youtube, linkedin_buscar, tiktok_cuentas
 
 REDES = ('youtube', 'linkedin', 'tiktok')
 PAISES = ('MX', 'CO', 'AR', 'CL', 'PE')
@@ -35,6 +35,7 @@ def _tiktok(tema, dias):
 def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
     if not tema.strip() or not 1 <= dias <= 36500:
         raise ValueError('Usa un tema con texto y --dias entre 1 y 36500')
+    terminos = terminos_tema(tema)
     redes = list(dict.fromkeys(redes))
     paises = list(dict.fromkeys(p.strip().upper() for p in paises))
     if not redes or any(r not in REDES for r in redes):
@@ -47,9 +48,11 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
     for red in redes:
         r = dict(publicaciones=0, metricas=0, fallidas=0)
         resumen[red] = r
-        for pais in paises if red == 'youtube' else [None]:
+        consultas = [(t, p) for t in terminos for p in paises] if red == 'youtube' else [
+            (t, None) for t in (terminos if red == 'linkedin' else [tema])]
+        for consulta, pais in consultas:
             try:
-                resultado = recolectores[red](tema, dias, pais) if pais else recolectores[red](tema, dias)
+                resultado = recolectores[red](consulta, dias, pais) if pais else recolectores[red](consulta, dias)
             except Exception:
                 r['fallidas'] += 1
                 r['aviso'] = ('No se completaron una o más consultas; revisa YOUTUBE_API_KEY y AUTOR_HASH_SAL'
@@ -59,7 +62,15 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
             exitos += 1
             ps, ms = resultado[:2]
             if len(resultado) > 2:
-                r['detalle'] = resultado[2]
+                detalle = resultado[2]
+                if red == 'linkedin' and 'detalle' in r:
+                    for campo in ('consultas', 'consultas_fallidas', 'urls', 'completados',
+                                  'omitidos', 'fuera_fecha', 'costo_usd'):
+                        r['detalle'][campo] = r['detalle'].get(campo, 0) + detalle.get(campo, 0)
+                    avisos = dict.fromkeys(filter(None, (r['detalle'].get('aviso'), detalle.get('aviso'))))
+                    r['detalle']['aviso'] = ' '.join(avisos) or None
+                else:
+                    r['detalle'] = dict(detalle)
             for p in ps:
                 if p.id not in publicaciones:
                     publicaciones[p.id] = p
@@ -104,7 +115,7 @@ def enviar(url, publicaciones, metricas, *, pedir=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Busca un tema en YouTube, LinkedIn y TikTok.')
-    parser.add_argument('--tema', required=True)
+    parser.add_argument('--tema', required=True, help='Frase amplia o hasta 5 términos por comas; admite #hashtag')
     parser.add_argument('--dias', type=int, default=7)
     parser.add_argument('--redes', default=','.join(REDES))
     parser.add_argument('--paises', default=','.join(PAISES))

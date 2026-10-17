@@ -12,7 +12,7 @@ es inmutable y rechaza campos extra.
 | `publicacion_id` | texto | Sí | Patrón de `Publicacion.id`: `yt:`, `tt:` o `li:` + identificador |
 | `capturada_en` | fecha y hora con zona | Sí | UTC; idéntica a la de su publicación en esa captura |
 | `vistas` | entero ≥ 0 o vacío | No | `None`/JSON `null` si no se ve |
-| `likes` | entero ≥ 0 o vacío | No | Reacciones en LinkedIn |
+| `likes` | entero ≥ 0 o vacío | No | Total de todas las reacciones en LinkedIn |
 | `comentarios` | entero ≥ 0 o vacío | No | No se sustituye lo oculto por cero |
 | `compartidos` | entero ≥ 0 o vacío | No | Siempre vacío en YouTube |
 | `origen` | texto | Sí | `api_oficial`, `csv_manual` o `pagina_publica` |
@@ -20,6 +20,11 @@ es inmutable y rechaza campos extra.
 **Vacío no es cero:** cero es una observación válida. El contrato exige al menos
 un contador con valor. Si todos faltan, el recolector conserva la publicación
 y no crea una métrica. Rechaza negativos, fracciones y booleanos.
+
+En LinkedIn, `LikeAction` del JSON-LD representa el **total de todas las reacciones**,
+no solo «Me gusta». Se comprobaron tres posts públicos contra el contador visible
+`data-num-reactions`: 42/42, 40/40 y 941/941 (17/10/2026). La página pública no separa
+las reacciones por tipo; se guarda ese total en `likes`, sin cambiar el contrato.
 
 ## Entrega
 
