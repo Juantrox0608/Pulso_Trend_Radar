@@ -24,3 +24,16 @@ data/raw/
 *.sqlite
 *.sqlite3
 radar.db
+
+# Entornos virtuales locales adicionales
+.venv-backend/
+.venv-radar/
+
+# Entornos virtuales adicionales
+.venv-backend/
+.venv-radar/
+
+# Next.js
+node_modules/
+.next/
+frontend/.venv/
