@@ -12,7 +12,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from pydantic import ValidationError
 
-from radar.contrato import Publicacion, calcular_autor_hash, id_contrato, id_desde_url
+from radar.contrato import Metrica, Publicacion, calcular_autor_hash, id_contrato, id_desde_url
 from radar.recoleccion import sin_autor
 
 _OBLIGATORIAS = {"url", "fecha_publicacion", "texto", "formato"}
@@ -47,6 +47,23 @@ def _url_permitida(url: str) -> None:
         raise ValueError("url: usa un enlace HTTPS de TikTok o LinkedIn")
 
 
+def _fecha(fecha: str, campo: str) -> datetime:
+    try:
+        if re.fullmatch(r"\d{1,2}/\d{1,2}/\d{4}", fecha):
+            publicada = datetime.strptime(fecha, "%d/%m/%Y").replace(tzinfo=timezone.utc)
+        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", fecha):
+            # shortcut: sin hora se usa 00:00 UTC; pedir hora exacta al medir velocidad intradía.
+            publicada = datetime.fromisoformat(fecha).replace(tzinfo=timezone.utc)
+        else:
+            publicada = datetime.fromisoformat(fecha)
+            if publicada.utcoffset() is None:
+                raise ValueError()
+    except ValueError:
+        raise ValueError(f"{campo}: usa AAAA-MM-DD, DD/MM/AAAA o fecha ISO con zona horaria") from None
+
+    return publicada
+
+
 def _publicacion(fila: dict, sal: str, ahora: datetime) -> Publicacion:
     if None in fila or any(v is None for v in fila.values()):
         raise ValueError("columnas: cantidad de celdas distinta al encabezado")
@@ -75,19 +92,7 @@ def _publicacion(fila: dict, sal: str, ahora: datetime) -> Publicacion:
     if not autor:
         raise ValueError("autor: completa la columna; no aparece en el enlace")
 
-    fecha = d["fecha_publicacion"]
-    try:
-        if re.fullmatch(r"\d{1,2}/\d{1,2}/\d{4}", fecha):
-            publicada = datetime.strptime(fecha, "%d/%m/%Y").replace(tzinfo=timezone.utc)
-        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", fecha):
-            # shortcut: sin hora se usa 00:00 UTC; pedir hora exacta al medir velocidad intradía.
-            publicada = datetime.fromisoformat(fecha).replace(tzinfo=timezone.utc)
-        else:
-            publicada = datetime.fromisoformat(fecha)
-            if publicada.utcoffset() is None:
-                raise ValueError()
-    except ValueError:
-        raise ValueError("fecha_publicacion: usa AAAA-MM-DD, DD/MM/AAAA o fecha ISO con zona horaria") from None
+    publicada = _fecha(d["fecha_publicacion"], "fecha_publicacion")
 
     formato = d["formato"]
     duracion = None
@@ -113,7 +118,30 @@ def _publicacion(fila: dict, sal: str, ahora: datetime) -> Publicacion:
     )
 
 
-def leer_publicaciones(ruta: str | Path) -> list[Publicacion]:
+def _numero(valor: str, campo: str) -> int | None:
+    valor = valor.strip()
+    if not valor:
+        return None
+    error = f"{campo}: usa un entero, miles con punto o una cantidad exacta con K/mil/M"
+    if len(valor) > 64:
+        raise ValueError(error)
+    if re.fullmatch(r"[0-9]+", valor):
+        return int(valor)
+    if re.fullmatch(r"[0-9]{1,3}(?:\.[0-9]{3})+", valor):
+        return int(valor.replace(".", ""))
+    abreviado = re.fullmatch(r"([0-9]+)(?:[.,]([0-9]+))?\s*(k|mil|m)", valor, flags=re.IGNORECASE)
+    if not abreviado:
+        raise ValueError(error)
+    entero, fraccion, sufijo = abreviado.groups()
+    fraccion = fraccion or ""
+    factor = 1000000 if sufijo.lower() == "m" else 1000
+    resultado, resto = divmod(int(entero + fraccion) * factor, 10 ** len(fraccion))
+    if resto:
+        raise ValueError(error)
+    return resultado
+
+
+def leer_con_metricas(ruta: str | Path) -> tuple[list[Publicacion], list[Metrica]]:
     """Valida el CSV completo; si alguna fila falla no devuelve resultados parciales."""
     sal = os.environ.get("AUTOR_HASH_SAL")
     if not sal or not sal.strip():
@@ -137,8 +165,8 @@ def leer_publicaciones(ruta: str | Path) -> list[Publicacion]:
         raise ValueError("CSV: faltan columnas obligatorias: " + ", ".join(sorted(faltan)))
     if len(nombres) != len(set(nombres)):
         raise ValueError("CSV: hay encabezados duplicados")
-    errores, publicaciones = [], []
-    ahora = datetime.now(timezone.utc)
+    errores, publicaciones, metricas = [], [], []
+    captura_archivo = datetime.fromtimestamp(Path(ruta).stat().st_mtime, timezone.utc)
     try:
         while True:
             linea = reader.line_num + 1
@@ -148,9 +176,18 @@ def leer_publicaciones(ruta: str | Path) -> list[Publicacion]:
             if all(isinstance(v, str) and not v.strip() for v in fila.values()):
                 continue
             try:
-                publicaciones.append(_publicacion(fila, sal, ahora))
+                fecha_captura = (fila.get("fecha_captura") or "").strip()
+                captura = _fecha(fecha_captura, "fecha_captura") if fecha_captura else captura_archivo
+                publicacion = _publicacion(fila, sal, captura)
+                conteos = {campo: _numero(fila.get(columna, ""), columna)
+                    for campo, columna in (("vistas", "vistas"), ("likes", "reacciones"),
+                                           ("comentarios", "comentarios"), ("compartidos", "compartidos"))}
+                if any(v is not None for v in conteos.values()):
+                    metricas.append(Metrica(publicacion_id=publicacion.id,
+                        capturada_en=publicacion.capturada_en, origen=publicacion.origen, **conteos))
+                publicaciones.append(publicacion)
             except ValidationError as error:
-                campos = sorted({str(e["loc"][0]) for e in error.errors()})
+                campos = sorted({str(e["loc"][0]) if e["loc"] else "metricas" for e in error.errors()})
                 errores.append(f"Línea {linea}: valor inválido en " + ", ".join(campos))
             except ValueError as error:
                 errores.append(f"Línea {linea}: {error}")
@@ -158,7 +195,12 @@ def leer_publicaciones(ruta: str | Path) -> list[Publicacion]:
         errores.append(f"Línea {reader.line_num}: estructura CSV inválida; revisa comillas y separadores")
     if errores:
         raise ValueError("CSV inválido; no se importó ninguna publicación:\n" + "\n".join(errores)) from None
-    return publicaciones
+    return publicaciones, metricas
+
+
+def leer_publicaciones(ruta: str | Path) -> list[Publicacion]:
+    """Compatibilidad: devuelve solo las publicaciones de la captura."""
+    return leer_con_metricas(ruta)[0]
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -166,12 +208,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("csv")
     args = parser.parse_args(argv)
     try:
-        publicaciones = leer_publicaciones(args.csv)
+        publicaciones, metricas = leer_con_metricas(args.csv)
     except ValueError as error:
         parser.exit(1, f"Error: {error}\n")
     except OSError:
         parser.exit(1, "Error: no se pudo leer el CSV; revisa la ruta y permisos.\n")
-    print(json.dumps([p.model_dump(mode="json") for p in publicaciones], ensure_ascii=False, indent=2))
+    print(json.dumps({"publicaciones": [p.model_dump(mode="json") for p in publicaciones],
+                      "metricas": [m.model_dump(mode="json") for m in metricas]}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

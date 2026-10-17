@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 
 from radar.contrato import (
-    Formato, Origen, Plataforma, Publicacion, TipoAutor,
+    Formato, Metrica, Origen, Plataforma, Publicacion, TipoAutor,
     calcular_autor_hash, id_contrato,
 )
 from radar.recoleccion import sin_autor
@@ -40,7 +40,7 @@ def _segundos(duracion: str) -> int:
     return sum(int(p or 0) * factor for p, factor in zip(partes.groups(), (86400, 3600, 60, 1)))
 
 
-def buscar_publicaciones(
+def buscar_con_metricas(
     consulta: str,
     pais: str,
     idioma: str,
@@ -48,7 +48,7 @@ def buscar_publicaciones(
     *,
     max_resultados: int = 50,
     peticion: Peticion = _pedir_json,
-) -> list[Publicacion]:
+) -> tuple[list[Publicacion], list[Metrica]]:
     """Devuelve hasta 50 publicaciones; peticion(recurso, parametros) permite probar sin red.
 
     El país corresponde a la búsqueda, no a la ubicación del autor. El idioma se
@@ -90,13 +90,14 @@ def buscar_publicaciones(
     except (KeyError, TypeError, ValueError):
         raise ValueError("Respuesta de búsqueda de YouTube inválida") from None
     if not ids:
-        return []
+        return [], []
     videos = pedir("videos", {
-        "part": "snippet,contentDetails", "id": ",".join(ids),
-        "fields": "items(id,snippet(title,description,tags,publishedAt,channelId,channelTitle,defaultAudioLanguage,defaultLanguage,liveBroadcastContent),contentDetails/duration)",
+        "part": "snippet,contentDetails,statistics", "id": ",".join(ids),
+        "fields": "items(id,snippet(title,description,tags,publishedAt,channelId,channelTitle,defaultAudioLanguage,defaultLanguage,liveBroadcastContent),contentDetails/duration,statistics(viewCount,likeCount,commentCount))",
     })
     capturada_en = datetime.now(timezone.utc)
     publicaciones = []
+    metricas = []
     try:
         for video in videos["items"]:
             if video["id"] not in ids:
@@ -121,9 +122,31 @@ def buscar_publicaciones(
                 publicada_en=snippet["publishedAt"], capturada_en=capturada_en,
                 origen=Origen.API_OFICIAL,
             ))
+            estadisticas = video.get("statistics", {})
+            if not isinstance(estadisticas, dict):
+                raise ValueError("Estadísticas inválidas")
+            conteos = {}
+            for campo, externo in (("vistas", "viewCount"), ("likes", "likeCount"), ("comentarios", "commentCount")):
+                valor = estadisticas.get(externo)
+                if valor is not None:
+                    if isinstance(valor, bool) or not re.fullmatch(r"[0-9]+", str(valor)):
+                        raise ValueError("Estadística inválida")
+                    conteos[campo] = int(valor)
+            if conteos:
+                metricas.append(Metrica(publicacion_id=publicaciones[-1].id,
+                    capturada_en=capturada_en, origen=Origen.API_OFICIAL, **conteos))
     except (KeyError, TypeError, ValueError):
         raise ValueError("Metadatos de video de YouTube inválidos para el contrato") from None
-    return publicaciones
+    return publicaciones, metricas
+
+
+def buscar_publicaciones(
+    consulta: str, pais: str, idioma: str, desde: datetime, *,
+    max_resultados: int = 50, peticion: Peticion = _pedir_json,
+) -> list[Publicacion]:
+    """Compatibilidad: devuelve solo las publicaciones de la captura."""
+    return buscar_con_metricas(consulta, pais, idioma, desde,
+        max_resultados=max_resultados, peticion=peticion)[0]
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -137,10 +160,11 @@ def main(argv: list[str] | None = None) -> None:
         parser.error("--dias debe ser mayor que cero")
     try:
         desde = datetime.now(timezone.utc) - timedelta(days=args.dias)
-        publicaciones = buscar_publicaciones(args.consulta, args.pais, args.idioma, desde)
+        publicaciones, metricas = buscar_con_metricas(args.consulta, args.pais, args.idioma, desde)
     except (ValueError, RuntimeError, OverflowError) as error:
         parser.exit(1, f"Error: {error}\n")
-    print(json.dumps([p.model_dump(mode="json") for p in publicaciones], ensure_ascii=False, indent=2))
+    print(json.dumps({"publicaciones": [p.model_dump(mode="json") for p in publicaciones],
+                      "metricas": [m.model_dump(mode="json") for m in metricas]}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

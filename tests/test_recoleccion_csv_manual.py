@@ -47,7 +47,7 @@ def test_fixtures_mapeo_y_privacidad(nombre):
     assert tt.id == "tt:1234567890123456789"
     assert tt.autor_hash == calcular_autor_hash(Plataforma.TIKTOK, "usuario_ficticio", "sal_sintetica")
     assert tt.publicada_en == datetime(2026, 1, 1, tzinfo=timezone.utc)
-    assert antes <= tt.capturada_en <= datetime.now(timezone.utc)
+    assert tt.capturada_en == datetime.fromtimestamp((FIXTURES / nombre).stat().st_mtime, timezone.utc)
     assert tt.origen == "csv_manual" and tt.tipo_autor == "desconocido"
     assert tt.hashtags == ()
     assert li.autor_hash == calcular_autor_hash(Plataforma.LINKEDIN, "autor-ficticio", "sal_sintetica")
@@ -168,7 +168,61 @@ def test_linkedin_activity_en_query(tmp_path, fila):
 
 def test_cli_json(capsys):
     csv_manual.main([str(FIXTURES / "manual_comas.csv")])
-    assert len(json.loads(capsys.readouterr().out)) == 2
+    datos = json.loads(capsys.readouterr().out)
+    assert len(datos["publicaciones"]) == 2
+    assert "metricas" in datos
+
+
+@pytest.mark.parametrize("valor,esperado", [("1200",1200), ("1.200",1200), ("1,2 mil",1200),
+    ("12K",12000), ("12 mil",12000), ("1,5M",1500000), ("1.5 M",1500000),
+    ("0",0), ("",None), ("1.234.567",1234567), ("0,001K",1)])
+def test_numeros_metricas(tmp_path, fila, valor, esperado):
+    fila.update(vistas=valor, reacciones="0", comentarios="", compartidos="2")
+    publicaciones, metricas = csv_manual.leer_con_metricas(archivo(tmp_path, [fila]))
+    assert len(publicaciones) == len(metricas) == 1
+    m = metricas[0]
+    assert (m.vistas, m.likes, m.comentarios, m.compartidos) == (esperado,0,None,2)
+    assert m.publicacion_id == publicaciones[0].id
+    assert m.capturada_en == publicaciones[0].capturada_en and m.origen == "csv_manual"
+
+
+@pytest.mark.parametrize("valor", ["-1", "12.5", "1,2345 mil", "1,200", "1e3", "NaN", "12KK", "1.2.3", "dato_privado"])
+def test_metricas_invalidas_sin_salida_parcial(tmp_path, fila, valor):
+    filas = [{**fila, "vistas":"0"}, {**fila, "vistas":valor}, {**fila, "vistas":"-1"}]
+    with pytest.raises(ValueError) as exc:
+        csv_manual.leer_con_metricas(archivo(tmp_path, filas))
+    assert "Línea 3" in str(exc.value) and "Línea 4" in str(exc.value)
+    assert "vistas" in str(exc.value) and "dato_privado" not in str(exc.value)
+
+
+def test_metricas_vacias_no_crean_fila(tmp_path, fila):
+    publicaciones, metricas = csv_manual.leer_con_metricas(archivo(tmp_path, [fila]))
+    assert len(publicaciones) == 1 and metricas == []
+
+
+@pytest.mark.parametrize("fecha,esperada", [("2026-01-03",datetime(2026,1,3,tzinfo=timezone.utc)),
+    ("3/01/2026",datetime(2026,1,3,tzinfo=timezone.utc)),
+    ("2026-01-03T10:00:00-05:00",datetime(2026,1,3,15,tzinfo=timezone.utc))])
+def test_fecha_captura_explicita(tmp_path, fila, fecha, esperada):
+    fila.update(fecha_captura=fecha, reacciones="2")
+    ps, ms = csv_manual.leer_con_metricas(archivo(tmp_path, [fila]))
+    assert ps[0].capturada_en == ms[0].capturada_en == esperada
+
+
+def test_fecha_captura_estable_por_archivo(tmp_path, fila):
+    fila.update(vistas="3", fecha_captura="")
+    ruta = archivo(tmp_path, [fila])
+    a = csv_manual.leer_con_metricas(ruta)
+    b = csv_manual.leer_con_metricas(ruta)
+    assert a == b
+    assert a[1][0].capturada_en == datetime.fromtimestamp(ruta.stat().st_mtime, timezone.utc)
+
+
+@pytest.mark.parametrize("fecha", ["ayer", "2026-01-02T12:00:00", "2025-01-01"])
+def test_fecha_captura_invalida(tmp_path, fila, fecha):
+    fila.update(fecha_captura=fecha, vistas="1")
+    with pytest.raises(ValueError, match="Línea 2"):
+        csv_manual.leer_con_metricas(archivo(tmp_path, [fila]))
 
 
 def test_cli_sin_salida_parcial(tmp_path, fila, capsys):

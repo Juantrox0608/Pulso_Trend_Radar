@@ -61,7 +61,7 @@ def test_mapeo_y_dos_peticiones(api):
     assert search["regionCode"] == "MX" and search["relevanceLanguage"] == "es"
     assert search["publishedAfter"] == "2026-01-01T00:00:00Z"
     assert search["maxResults"] == 50
-    assert videos["part"] == "snippet,contentDetails"
+    assert videos["part"] == "snippet,contentDetails,statistics"
     assert videos["id"] == "vid_test01A,vid_test02B"
 
 @pytest.mark.parametrize("duracion,segundos", [("PT0S",0), ("PT59S",59), ("PT1H2M3S",3723), ("P1DT2H",93600)])
@@ -157,15 +157,54 @@ def test_error_api_sin_copiar_respuesta(api):
     assert "clave_ficticia" not in str(exc.value)
 
 def test_cli_json(api, monkeypatch, capsys):
-    real = youtube.buscar_publicaciones
+    real = youtube.buscar_con_metricas
     def buscar(*args, **kwargs):
         assert args[:3] == ("agentes de IA", "MX", "es")
         assert 6.99 < (datetime.now(timezone.utc) - args[3]).total_seconds()/86400 < 7.01
         return real(*args, peticion=api[2], **kwargs)
-    monkeypatch.setattr(youtube, "buscar_publicaciones", buscar)
+    monkeypatch.setattr(youtube, "buscar_con_metricas", buscar)
     youtube.main(["agentes de IA", "--pais", "MX", "--dias", "7"])
     datos = json.loads(capsys.readouterr().out)
-    assert len(datos) == 2 and datos[0]["url"]
+    assert len(datos["publicaciones"]) == 2 and datos["publicaciones"][0]["url"]
+    assert len(datos["metricas"]) == 2
+
+
+def test_metricas_un_lote_y_ocultas(api):
+    publicaciones, metricas = youtube.buscar_con_metricas("IA", "MX", "es", DESDE, peticion=api[2])
+    assert len(publicaciones) == len(metricas) == 2
+    assert metricas[0].vistas == 1200 and metricas[0].likes == 0
+    assert metricas[0].comentarios == 5 and metricas[0].compartidos is None
+    assert metricas[1].likes is None and metricas[1].comentarios is None
+    for p, m in zip(publicaciones, metricas):
+        assert m.publicacion_id == p.id and m.capturada_en == p.capturada_en and m.origen == p.origen
+    assert [ruta for ruta, _ in api[1]].count("videos") == 1
+    assert "statistics(viewCount,likeCount,commentCount)" in api[1][1][1]["fields"]
+
+
+def test_sin_estadisticas_no_crea_metrica(api):
+    for v in api[0]["videos"]["items"]:
+        v.pop("statistics", None)
+    publicaciones, metricas = youtube.buscar_con_metricas("IA", "MX", "es", DESDE, peticion=api[2])
+    assert len(publicaciones) == 2 and metricas == []
+
+
+def test_sin_resultados_con_metricas(api):
+    api[0]["search"]["items"] = []
+    assert youtube.buscar_con_metricas("IA", "MX", "es", DESDE, peticion=api[2]) == ([], [])
+
+
+@pytest.mark.parametrize("valor", ["-1", "1.5", True, "dato_privado"])
+def test_estadistica_invalida_no_filtra_valor(api, valor):
+    api[0]["videos"]["items"][0]["statistics"]["likeCount"] = valor
+    with pytest.raises(ValueError) as exc:
+        youtube.buscar_con_metricas("IA", "MX", "es", DESDE, peticion=api[2])
+    assert "dato_privado" not in str(exc.value)
+
+
+def test_transmision_no_deja_metrica_huerfana(api):
+    api[0]["videos"]["items"][0]["snippet"]["liveBroadcastContent"] = "live"
+    publicaciones, metricas = youtube.buscar_con_metricas("IA", "MX", "es", DESDE, peticion=api[2])
+    assert [p.id for p in publicaciones] == [m.publicacion_id for m in metricas] == ["yt:vid_test02B"]
 
 @pytest.mark.parametrize("args", [["IA", "--dias", "0"], ["IA", "--dias", "-1"]])
 def test_cli_dias_invalidos(args):
