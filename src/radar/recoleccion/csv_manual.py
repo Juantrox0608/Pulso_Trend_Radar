@@ -1,7 +1,6 @@
 """Importa publicaciones manuales sin persistir autores ni enlaces originales."""
 import argparse
 import csv
-import json
 import os
 import re
 import unicodedata
@@ -14,7 +13,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from pydantic import ValidationError
 
 from radar.contrato import Metrica, Publicacion, calcular_autor_hash, id_contrato, id_desde_url
-from radar.recoleccion import sin_autor, reparar_texto
+from radar.recoleccion import sin_autor, reparar_texto, imprimir_json
 from radar.recoleccion.linkedin import BloqueoLinkedIn
 
 _OBLIGATORIAS = {"url", "fecha_publicacion", "texto", "formato"}
@@ -221,7 +220,8 @@ def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, completar_lin
                     publicada_en=_fecha(fila["fecha_publicacion"].strip(), "fecha_publicacion") if fila.get("fecha_publicacion", "").strip() else None,
                     tipo_autor=(fila.get("tipo_autor", "").strip() or "desconocido").split()[0],
                     idioma=_IDIOMAS.get(idioma, idioma) or None,
-                    pais=None if pais in ("", "n/d") else _PAISES.get(pais, pais.upper()))
+                    pais=None if pais in ("", "n/d") else _PAISES.get(pais, pais.upper()),
+                    **({"formato": fila.get("formato", "").strip() or None} if plataforma == "linkedin" else {}))
                 publicaciones.append(p)
                 if m is not None:
                     metricas.append(m)
@@ -275,8 +275,7 @@ def main(argv: list[str] | None = None) -> None:
         parser.exit(1, f"Error: {error}\n")
     except OSError:
         parser.exit(1, "Error: no se pudo leer el CSV; revisa la ruta y permisos.\n")
-    print(json.dumps({"publicaciones": [p.model_dump(mode="json") for p in publicaciones],
-                      "metricas": [m.model_dump(mode="json") for m in metricas]}, ensure_ascii=False, indent=2))
+    imprimir_json(publicaciones, metricas)
 
 
 if __name__ == "__main__":

@@ -94,3 +94,37 @@ def test_csv_gana_y_metricas_viejas_se_ignoran(tmp_path,recolector):
     ps,ms=csv_manual.leer_con_metricas(archivo(tmp_path,filas),completar_linkedin=True)
     assert ps[0].texto=="Texto manual #IA" and ps[0].publicada_en.day==1
     assert ms[0].likes==12 and ms[0].capturada_en==ps[0].capturada_en
+
+
+def test_sin_jsonld_con_menu_continua_y_no_devuelve_parciales(tmp_path,monkeypatch):
+    html=(Path(__file__).parent / "fixtures/linkedin_post.html").read_text(encoding="utf-8")
+    llamadas=[]
+    def obtener(url):
+        llamadas.append(url)
+        cuerpo='<form action="/uas/login-submit"><input name="session_password"></form>' if len(llamadas)==1 else html
+        return URL,cuerpo
+    monkeypatch.setattr(linkedin,"_obtener",obtener)
+    with pytest.raises(ValueError) as exc:
+        csv_manual.leer_con_metricas(archivo(tmp_path,[dict(url=URL)]*2),completar_linkedin=True,pausa=lambda _:None)
+    assert len(llamadas)==2
+    assert "Línea 2" in str(exc.value) and "Línea 3" not in str(exc.value)
+    assert "detenida" not in str(exc.value)
+
+
+@pytest.mark.parametrize("formato,esperado,segundos",[("carrusel","carrusel",181),("video 53s","video_corto",53),("","video_largo",181)])
+def test_formato_csv_gana_en_video(tmp_path,monkeypatch,formato,esperado,segundos):
+    html=(Path(__file__).parent / "fixtures/linkedin_video.html").read_text(encoding="utf-8")
+    monkeypatch.setattr(linkedin,"_obtener",lambda _: (URL,html))
+    ps,_=csv_manual.leer_con_metricas(archivo(tmp_path,[dict(url=URL,formato=formato)]),completar_linkedin=True)
+    assert ps[0].formato==esperado and ps[0].duracion_segundos==segundos
+
+
+def test_authwall_corta_corrida(tmp_path,monkeypatch):
+    llamadas=[]
+    def obtener(url):
+        llamadas.append(url)
+        return "https://www.linkedin.com/authwall",""
+    monkeypatch.setattr(linkedin,"_obtener",obtener)
+    with pytest.raises(ValueError,match="filas sin completar: 2, 3"):
+        csv_manual.leer_con_metricas(archivo(tmp_path,[dict(url=URL)]*2),completar_linkedin=True,pausa=lambda _:None)
+    assert len(llamadas)==1

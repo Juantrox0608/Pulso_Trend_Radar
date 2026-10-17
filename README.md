@@ -205,16 +205,29 @@ Añade `--completar-linkedin` al importador del CSV para leer la página públic
 En esas filas basta `url` (también acepta `lnkd.in`); el destino debe ser una publicación de
 `linkedin.com/posts/` o `linkedin.com/feed/update/`. Las opciones de TikTok y LinkedIn se pueden combinar.
 El texto y la fecha no vacíos del CSV tienen prioridad; se completan los ausentes.
-Las reacciones, comentarios y compartidos vienen de `SocialMediaPosting` del JSON-LD;
+Se aceptan `SocialMediaPosting` y `VideoObject` del JSON-LD (posts de texto y video).
+Las reacciones, comentarios y compartidos vienen de `interactionStatistic`; si falta
+`CommentAction`, se usa `commentCount`. El autor se obtiene de `author` o `creator`.
+El texto se toma de `articleBody`, `text` o `description`, nunca de `headline`;
 no se inventan vistas ni conteos ocultos. Todas estas capturas usan `pagina_publica`,
 con fecha actual UTC y sin exigir `fecha_captura` ni usar los números antiguos del CSV.
 
 Esta vía no oficial es contraria al Acuerdo de Usuario de LinkedIn; Juan autorizó únicamente
 el volumen pequeño del prototipo. Hay una pausa de 3 segundos entre posts y máximo 100
 por corrida (el límite de TikTok se cuenta por separado). No usa cookies, login ni reintentos.
-Un HTTP 429/999 o una página que requiere acceso detiene toda la corrida, incluidas las
-filas posteriores de TikTok, y lista las líneas pendientes. No se devuelve salida parcial.
-Una página sin JSON-LD válido produce un error de fila. Los cambios del sitio pueden romper la extracción.
+Solo un HTTP 429/999 o una redirección a `/login`, `/uas`, `/authwall` o `/checkpoint`
+detiene toda la corrida, incluidas las filas posteriores de TikTok, y lista las líneas pendientes.
+Un formulario de login en el menú no cuenta como bloqueo. Una página sin JSON-LD de post
+válido produce un error de fila y se siguen consultando las demás; al terminar se listan
+los errores sin devolver una importación parcial. Los cambios del sitio pueden romper la extracción.
+
+El `formato` no vacío del CSV tiene prioridad (también acepta `video Ns`). Sin formato manual,
+un `SocialMediaPosting` usa `post_texto`; un `VideoObject` usa la duración ISO 8601 para
+elegir `video_corto` hasta 180 segundos o `video_largo` por encima. Si falta la duración
+o no se entiende, queda vacía y se usa `video_corto`.
+
+Los comandos de CSV y YouTube escriben el JSON en UTF-8, incluidos acentos y emoji,
+también cuando stdout se redirige directamente a un archivo.
 
 Las menciones se sustituyen por `@[usuario]` y se eliminan del texto los nombres y usuarios
 conocidos del autor; eso no equivale a detectar todos los nombres que un post pueda mencionar.

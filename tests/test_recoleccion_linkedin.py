@@ -69,12 +69,12 @@ def test_bloqueos_no_se_reintentan(codigo):
     assert llamadas == [URL]
 
 
-@pytest.mark.parametrize("destino,cuerpo",[
-    ("https://www.linkedin.com/login",""),
-    (URL,'<form action="/uas/login-submit"><input name="session_password"></form>')])
-def test_pide_sesion(destino,cuerpo):
+@pytest.mark.parametrize("destino",[
+    "https://www.linkedin.com/login", "https://www.linkedin.com/authwall",
+    "https://www.linkedin.com/uas/login", "https://www.linkedin.com/checkpoint/challenge"])
+def test_pide_sesion(destino):
     with pytest.raises(linkedin.BloqueoLinkedIn):
-        linkedin.recolectar(URL,sal="sal",obtener=lambda _: (destino,cuerpo))
+        linkedin.recolectar(URL,sal="sal",obtener=lambda _: (destino,""))
 
 
 def test_http_sin_cookies_y_timeout(monkeypatch,html):
@@ -117,3 +117,49 @@ def test_html_en_texto_jsonld_no_sale(html):
     html=html.replace("Ideas IA", "<p>Ideas &amp; IA</p>")
     p,_=linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,html))
     assert "<p>" not in p.texto and "Ideas & IA" in p.texto
+
+
+@pytest.fixture
+def video():
+    return (Path(__file__).parent / "fixtures/linkedin_video.html").read_text(encoding="utf-8")
+
+
+def test_video_con_login_en_menu(video):
+    p,m=linkedin.recolectar(CORTA,sal="sal",obtener=lambda _: (URL,video))
+    assert p.formato=="video_largo" and p.duracion_segundos==181
+    assert m.likes==0 and m.comentarios==7 and m.vistas is None
+    assert p.autor_hash==calcular_autor_hash(Plataforma.LINKEDIN,"https://www.linkedin.com/in/autorficticio","sal")
+    assert p.origen==m.origen=="pagina_publica"
+    assert p.hashtags==("ia",) and "@[usuario]" in p.texto
+    for dato in ("Nombre Ficticio","autorficticio","mencion_ficticia","<form","titular"):
+        assert dato not in p.model_dump_json()+m.model_dump_json()
+
+
+@pytest.mark.parametrize("duracion,segundos,formato",[
+    ("PT3M",180,"video_corto"),("PT1H2M3S",3723,"video_largo"),
+    ("P1DT1S",86401,"video_largo"),("PT0S",0,"video_corto"),
+    ("inválida",None,"video_corto"),("P",None,"video_corto"),("",None,"video_corto")])
+def test_duracion_video(video,duracion,segundos,formato):
+    video=video.replace("PT3M1S",duracion)
+    p,_=linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,video))
+    assert (p.duracion_segundos,p.formato)==(segundos,formato)
+
+
+def test_comment_action_gana_sobre_comment_count(video):
+    video=video.replace('"LikeAction"','"CommentAction"')
+    assert linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,video))[1].comentarios==0
+
+
+def test_headline_no_es_texto(video):
+    import json
+    inicio=video.index('{');fin=video.index('</script>')
+    post=json.loads(video[inicio:fin]);post.pop("description")
+    with pytest.raises(ValueError) as exc:
+        linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,'<script type="application/ld+json">'+json.dumps(post)+'</script>'))
+    assert not isinstance(exc.value,linkedin.BloqueoLinkedIn)
+
+
+def test_sin_jsonld_con_menu_es_error_de_fila():
+    with pytest.raises(ValueError) as exc:
+        linkedin.recolectar(URL,sal="sal",obtener=lambda _: (URL,'<form action="/uas/login-submit"><input name="session_password"></form>'))
+    assert not isinstance(exc.value,linkedin.BloqueoLinkedIn)

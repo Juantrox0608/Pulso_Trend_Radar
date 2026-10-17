@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from radar.contrato import Metrica, Publicacion, calcular_autor_hash, id_contrato, id_desde_url
-from radar.recoleccion import texto_publico
+from radar.recoleccion import texto_publico, segundos_iso8601
 
 
 class BloqueoLinkedIn(ValueError):
@@ -47,16 +47,11 @@ class _Pagina(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.bloques = []
         self.partes = None
-        self.sesion = False
 
     def handle_starttag(self, tag, attrs):
         atributos = dict(attrs)
         if tag == "script" and atributos.get("type", "").lower() == "application/ld+json":
             self.partes = []
-        if tag == "form" and re.search(r"login|signin|checkpoint", atributos.get("action", ""), re.I):
-            self.sesion = True
-        if tag == "input" and atributos.get("name") == "session_password":
-            self.sesion = True
 
     def handle_data(self, data):
         if self.partes is not None:
@@ -90,7 +85,7 @@ def _buscar_post(valor):
     if isinstance(valor, dict):
         tipos = valor.get("@type", [])
         tipos = [tipos] if isinstance(tipos, str) else tipos
-        if any(str(t).rsplit("/", 1)[-1] == "SocialMediaPosting" for t in tipos):
+        if any(str(t).rsplit("/", 1)[-1] in ("SocialMediaPosting", "VideoObject") for t in tipos):
             return valor
         for hijo in valor.values():
             encontrado = _buscar_post(hijo)
@@ -105,7 +100,7 @@ def _buscar_post(valor):
 
 
 def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=None,
-               tipo_autor="desconocido", idioma=None, pais=None):
+               tipo_autor="desconocido", idioma=None, pais=None, formato=None):
     """El HTML solo vive en memoria; la salida contiene exclusivamente el contrato."""
     try:
         _validar_url(url)
@@ -121,9 +116,6 @@ def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=Non
                 continue
             if post is not None:
                 break
-        # Las páginas públicas pueden incluir un formulario de acceso en la navegación.
-        if post is None and pagina.sesion:
-            raise BloqueoLinkedIn("LinkedIn solicita iniciar sesión; corrida detenida")
         if post is None:
             raise ValueError()
         identificable = destino
@@ -131,7 +123,7 @@ def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=Non
         if re.fullmatch(r"urn:li:activity:\d{15,22}", destacado):
             identificable = "https://www.linkedin.com/feed/update/" + destacado + "/"
         plataforma, nativo = id_desde_url(identificable)
-        autor = post.get("author") or {}
+        autor = post.get("author") or post.get("creator") or {}
         if isinstance(autor, list):
             autor = autor[0] if autor else {}
         if isinstance(autor, str):
@@ -152,11 +144,28 @@ def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=Non
         if fecha.utcoffset() is None:
             raise ValueError()
         ahora = datetime.now(timezone.utc)
+        tipos = post.get("@type", [])
+        tipos = [tipos] if isinstance(tipos, str) else tipos
+        video = any(t.rsplit("/", 1)[-1] == "VideoObject" for t in tipos)
+        duracion = None
+        if video:
+            try:
+                duracion = segundos_iso8601(post.get("duration") or "")
+            except (TypeError, ValueError):
+                pass
+        if formato:
+            manual = re.fullmatch(r"video (\d+)s", formato)
+            if manual:
+                duracion = int(manual.group(1))
+                formato = "video_corto" if duracion <= 180 else "video_largo"
+        else:
+            # shortcut: <=180 s aproxima video corto; sin duración se mantiene corto, revisar con metadata mejor.
+            formato = ("video_corto" if duracion is None or duracion <= 180 else "video_largo") if video else "post_texto"
         p = Publicacion(id=id_contrato(plataforma, nativo), plataforma=plataforma,
-            texto=contenido, hashtags=hashtags, formato="post_texto", publicada_en=fecha,
+            texto=contenido, hashtags=hashtags, formato=formato, duracion_segundos=duracion, publicada_en=fecha,
             capturada_en=ahora, origen="pagina_publica", tipo_autor=tipo_autor,
             idioma=idioma, pais=pais, autor_hash=calcular_autor_hash(plataforma, identidad, sal))
-        conteos = {"likes": None, "comentarios": None, "compartidos": None}
+        conteos = {"likes": None, "comentarios": post.get("commentCount"), "compartidos": None}
         estadisticas = post.get("interactionStatistic") or []
         if isinstance(estadisticas, dict):
             estadisticas = [estadisticas]
@@ -167,7 +176,8 @@ def recolectar(url: str, *, sal: str, obtener=None, texto=None, publicada_en=Non
             campo = {"LikeAction": "likes", "CommentAction": "comentarios", "ShareAction": "compartidos"}.get(accion.rsplit("/",1)[-1])
             if campo:
                 valor = estadistica.get("userInteractionCount")
-                conteos[campo] = int(valor) if isinstance(valor, str) and valor.isdigit() else valor
+                conteos[campo] = valor
+        conteos = {k: int(v) if isinstance(v, str) and v.isdigit() else v for k,v in conteos.items()}
         m = Metrica(publicacion_id=p.id, capturada_en=ahora, origen=p.origen, **conteos) if any(
             v is not None for v in conteos.values()) else None
         return p, m

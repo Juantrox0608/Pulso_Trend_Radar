@@ -14,10 +14,9 @@ from radar.contrato import (
     Formato, Metrica, Origen, Plataforma, Publicacion, TipoAutor,
     calcular_autor_hash, id_contrato,
 )
-from radar.recoleccion import sin_autor
+from radar.recoleccion import sin_autor, imprimir_json, segundos_iso8601 as _segundos
 
 Peticion = Callable[[str, dict], dict]
-_DURACION = re.compile(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?")
 
 
 def _pedir_json(recurso: str, parametros: dict) -> dict:
@@ -31,13 +30,6 @@ def _pedir_json(recurso: str, parametros: dict) -> dict:
         raise RuntimeError("No se pudo conectar con YouTube; revisa la conexión e intenta de nuevo.") from None
     except (ValueError, UnicodeError):
         raise RuntimeError("YouTube devolvió una respuesta JSON inválida.") from None
-
-
-def _segundos(duracion: str) -> int:
-    partes = _DURACION.fullmatch(duracion)
-    if not partes or not any(p is not None for p in partes.groups()):
-        raise ValueError("Duración de YouTube inválida")
-    return sum(int(p or 0) * factor for p, factor in zip(partes.groups(), (86400, 3600, 60, 1)))
 
 
 def buscar_con_metricas(
@@ -163,8 +155,7 @@ def main(argv: list[str] | None = None) -> None:
         publicaciones, metricas = buscar_con_metricas(args.consulta, args.pais, args.idioma, desde)
     except (ValueError, RuntimeError, OverflowError) as error:
         parser.exit(1, f"Error: {error}\n")
-    print(json.dumps({"publicaciones": [p.model_dump(mode="json") for p in publicaciones],
-                      "metricas": [m.model_dump(mode="json") for m in metricas]}, ensure_ascii=False, indent=2))
+    imprimir_json(publicaciones, metricas)
 
 
 if __name__ == "__main__":

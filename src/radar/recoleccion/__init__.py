@@ -1,6 +1,23 @@
 """Recolectores de publicaciones públicas."""
 import re
+import json
+import sys
 import unicodedata
+
+
+def segundos_iso8601(duracion: str) -> int:
+    partes = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", duracion)
+    if not partes or not any(p is not None for p in partes.groups()):
+        raise ValueError("Duración ISO 8601 inválida")
+    return sum(int(p or 0) * factor for p, factor in zip(partes.groups(), (86400, 3600, 60, 1)))
+
+
+def imprimir_json(publicaciones, metricas):
+    # La redirección de stdout en Windows puede seleccionar cp1252.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    print(json.dumps({"publicaciones": [p.model_dump(mode="json") for p in publicaciones],
+                      "metricas": [m.model_dump(mode="json") for m in metricas]}, ensure_ascii=False, indent=2))
 
 
 def _clave(valor: str) -> str:
