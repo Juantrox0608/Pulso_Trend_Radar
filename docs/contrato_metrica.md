@@ -15,7 +15,7 @@ es inmutable y rechaza campos extra.
 | `likes` | entero ≥ 0 o vacío | No | Reacciones en LinkedIn |
 | `comentarios` | entero ≥ 0 o vacío | No | No se sustituye lo oculto por cero |
 | `compartidos` | entero ≥ 0 o vacío | No | Siempre vacío en YouTube |
-| `origen` | texto | Sí | `api_oficial` o `csv_manual` |
+| `origen` | texto | Sí | `api_oficial`, `csv_manual` o `pagina_publica` |
 
 **Vacío no es cero:** cero es una observación válida. El contrato exige al menos
 un contador con valor. Si todos faltan, el recolector conserva la publicación
@@ -63,7 +63,7 @@ CREATE TABLE metrica (
   likes           BIGINT      CHECK (likes >= 0),
   comentarios     BIGINT      CHECK (comentarios >= 0),
   compartidos     BIGINT      CHECK (compartidos >= 0),
-  origen          TEXT        NOT NULL CHECK (origen IN ('api_oficial','csv_manual')),
+  origen          TEXT        NOT NULL CHECK (origen IN ('api_oficial','csv_manual','pagina_publica')),
   PRIMARY KEY (publicacion_id, capturada_en),
   CHECK (vistas IS NOT NULL OR likes IS NOT NULL OR comentarios IS NOT NULL OR compartidos IS NOT NULL)
 );
@@ -82,3 +82,5 @@ volver a pedir el valor actual no renueva la antigüedad de una captura históri
 [Política oficial, sección III.E.4.b](https://developers.google.com/youtube/terms/developer-policies#e.-handling-youtube-data-and-content).
 La comprobación del SQL en DuckDB y la corrida real de YouTube quedan para la
 revisión de Claude; no se probaron aquí.
+
+Las capturas automatizadas de páginas públicas usan `pagina_publica`; no son una API oficial.

@@ -176,3 +176,25 @@ Si hay filas inválidas, el comando termina con código 1, lista sus líneas y
 motivos por stderr y no imprime publicaciones parciales. Los valores originales
 de los campos no aparecen en los errores. Los números corresponden al inicio
 de cada registro en el archivo; un texto con saltos de línea puede ocupar varias.
+
+## TikTok desde URL (paso 5)
+
+Instala las dependencias del proyecto, incluido `yt-dlp`, mediante el procedimiento de instalación anterior.
+Añade `--completar-tiktok` al importador para consultar metadatos públicos: basta `url` en esas filas;
+`texto` y `fecha_publicacion` del CSV tienen prioridad. `tipo_autor`, `idioma` y `pais` son opcionales.
+Las métricas son las obtenidas en la consulta y usan `pagina_publica`, con fecha de captura actual UTC.
+Sin la opción no se consulta internet. La salida sigue teniendo `publicaciones` y `metricas`.
+
+Es una vía no oficial, contraria a los términos de TikTok, sin sesión ni descarga del video.
+Se solicita la metadata de cada video (yt-dlp puede hacer varias peticiones HTTP internamente),
+con 1,5 segundos entre videos y máximo 100 por corrida. Los fallos se listan por línea y no se devuelve una importación parcial.
+El formato se aproxima por duración: hasta 180 segundos es `video_corto`.
+
+Comprobación local sin activar la consulta, con una sal ficticia y un CSV ficticio:
+
+```powershell
+$env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
+./.venv/Scripts/python -m radar.recoleccion.csv_manual tests/fixtures/manual_excel.csv
+```
+
+Para la corrida real, Claude añadirá `--completar-tiktok` al comando del CSV local de Juan.

@@ -30,6 +30,7 @@ class TipoAutor(StrEnum):
 class Origen(StrEnum):
     API_OFICIAL = "api_oficial"
     CSV_MANUAL = "csv_manual"
+    PAGINA_PUBLICA = "pagina_publica"
 
 
 class Publicacion(ModeloContrato):

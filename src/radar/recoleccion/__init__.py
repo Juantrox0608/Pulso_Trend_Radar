@@ -13,3 +13,20 @@ def sin_autor(etiquetas, *autores: str) -> tuple[str, ...]:
     # shortcut: solo coincidencia exacta (#AnaPerez); variantes como #AnaPerezIA pasan, revisar si aparecen.
     prohibidas = {_clave(a) for a in autores if a and _clave(a)}
     return tuple(e for e in etiquetas if _clave(e) not in prohibidas)
+
+
+def reparar_texto(texto: str) -> str:
+    """Repara UTF-8 leído como Windows-1252 conservando mayúsculas y acentos."""
+    try:
+        return texto.encode("cp1252").decode("utf-8")
+    except UnicodeError:
+        return texto
+
+
+def texto_publico(texto: str, *autores: str) -> tuple[str, tuple[str, ...]]:
+    texto = reparar_texto(texto)
+    etiquetas = sin_autor(re.findall(r"#(\w+)", texto), *autores)
+    texto = re.sub(r"@[\w.\-]+", "@[usuario]", texto)
+    for autor in sorted(filter(None, autores), key=len, reverse=True):
+        texto = re.sub(r"(?<!\w)" + re.escape(autor) + r"(?!\w)", "[autor]", texto, flags=re.I)
+    return texto, etiquetas

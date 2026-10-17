@@ -5,6 +5,7 @@ import json
 import os
 import re
 import unicodedata
+from time import sleep
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
@@ -141,7 +142,7 @@ def _numero(valor: str, campo: str) -> int | None:
     return resultado
 
 
-def leer_con_metricas(ruta: str | Path) -> tuple[list[Publicacion], list[Metrica]]:
+def leer_con_metricas(ruta: str | Path, *, completar_tiktok=False, pausa=sleep) -> tuple[list[Publicacion], list[Metrica]]:
     """Valida el CSV completo; si alguna fila falla no devuelve resultados parciales."""
     sal = os.environ.get("AUTOR_HASH_SAL")
     if not sal or not sal.strip():
@@ -155,18 +156,19 @@ def leer_con_metricas(ruta: str | Path) -> tuple[list[Publicacion], list[Metrica
             raise ValueError("CSV: codificación inválida; guarda como UTF-8") from None
     encabezado = contenido.splitlines()[0] if contenido else ""
     try:
-        separador = csv.Sniffer().sniff(encabezado, delimiters=",;").delimiter
+        separador = "," if encabezado.strip() == "url" else csv.Sniffer().sniff(encabezado, delimiters=",;").delimiter
     except csv.Error:
         raise ValueError("CSV: encabezado inválido; usa columnas separadas por coma o punto y coma") from None
     reader = csv.DictReader(StringIO(contenido, newline=""), delimiter=separador, strict=True)
     nombres = reader.fieldnames or []
-    faltan = _OBLIGATORIAS - set(nombres)
+    faltan = ({"url"} if completar_tiktok else _OBLIGATORIAS) - set(nombres)
     if faltan:
         raise ValueError("CSV: faltan columnas obligatorias: " + ", ".join(sorted(faltan)))
     if len(nombres) != len(set(nombres)):
         raise ValueError("CSV: hay encabezados duplicados")
     errores, publicaciones, metricas = [], [], []
     captura_archivo = datetime.fromtimestamp(Path(ruta).stat().st_mtime, timezone.utc)
+    filas = []
     try:
         while True:
             linea = reader.line_num + 1
@@ -175,28 +177,59 @@ def leer_con_metricas(ruta: str | Path) -> tuple[list[Publicacion], list[Metrica
                 break
             if all(isinstance(v, str) and not v.strip() for v in fila.values()):
                 continue
-            try:
-                fecha_captura = (fila.get("fecha_captura") or "").strip()
-                conteos = {campo: _numero(fila.get(columna) or "", columna)
-                    for campo, columna in (("vistas", "vistas"), ("likes", "reacciones"),
-                                           ("comentarios", "comentarios"), ("compartidos", "compartidos"))}
-                hay_metricas = any(v is not None for v in conteos.values())
-                if hay_metricas and not fecha_captura:
-                    # La fecha de modificación cambia al editar el CSV y fecharía mal métricas viejas.
-                    raise ValueError("fecha_captura: obligatoria si anotas métricas; pon el día en que viste los números")
-                captura = _fecha(fecha_captura, "fecha_captura") if fecha_captura else captura_archivo
-                publicacion = _publicacion(fila, sal, captura)
-                if hay_metricas:
-                    metricas.append(Metrica(publicacion_id=publicacion.id,
-                        capturada_en=publicacion.capturada_en, origen=publicacion.origen, **conteos))
-                publicaciones.append(publicacion)
-            except ValidationError as error:
-                campos = sorted({str(e["loc"][0]) if e["loc"] else "metricas" for e in error.errors()})
-                errores.append(f"Línea {linea}: valor inválido en " + ", ".join(campos))
-            except ValueError as error:
-                errores.append(f"Línea {linea}: {error}")
+            filas.append((linea, fila))
     except csv.Error:
         errores.append(f"Línea {reader.line_num}: estructura CSV inválida; revisa comillas y separadores")
+    automaticas = [fila for _, fila in filas if completar_tiktok and "tiktok.com" in (fila.get("url") or "")]
+    if len(automaticas) > 100:
+        raise ValueError("TikTok: máximo 100 publicaciones por corrida")
+    intentos = 0
+    for linea, fila in filas:
+        try:
+            if None in fila or any(v is None for v in fila.values()):
+                raise ValueError("columnas: cantidad de celdas distinta al encabezado")
+            url = (fila.get("url") or "").strip()
+            _url_permitida(url)
+            host = urlsplit(url).hostname or ""
+            if completar_tiktok and (host == "tiktok.com" or host.endswith(".tiktok.com")):
+                from radar.recoleccion import tiktok
+                if intentos:
+                    pausa(1.5)
+                intentos += 1
+                idioma = _etiqueta(fila.get("idioma", "").strip())
+                pais = _etiqueta(fila.get("pais", "").strip())
+                p, m = tiktok.recolectar(url, sal=sal,
+                    texto=fila.get("texto", "").strip() or None,
+                    publicada_en=_fecha(fila["fecha_publicacion"].strip(), "fecha_publicacion") if fila.get("fecha_publicacion", "").strip() else None,
+                    tipo_autor=(fila.get("tipo_autor", "").strip() or "desconocido").split()[0],
+                    idioma=_IDIOMAS.get(idioma, idioma) or None,
+                    pais=None if pais in ("", "n/d") else _PAISES.get(pais, pais.upper()))
+                publicaciones.append(p)
+                if m is not None:
+                    metricas.append(m)
+                continue
+            faltan = _OBLIGATORIAS - set(fila)
+            if faltan:
+                raise ValueError("faltan columnas obligatorias: " + ", ".join(sorted(faltan)))
+            fecha_captura = (fila.get("fecha_captura") or "").strip()
+            conteos = {campo: _numero(fila.get(columna) or "", columna)
+                for campo, columna in (("vistas", "vistas"), ("likes", "reacciones"),
+                                       ("comentarios", "comentarios"), ("compartidos", "compartidos"))}
+            hay_metricas = any(v is not None for v in conteos.values())
+            if hay_metricas and not fecha_captura:
+                # La fecha de modificación cambia al editar el CSV y fecharía mal métricas viejas.
+                raise ValueError("fecha_captura: obligatoria si anotas métricas; pon el día en que viste los números")
+            captura = _fecha(fecha_captura, "fecha_captura") if fecha_captura else captura_archivo
+            publicacion = _publicacion(fila, sal, captura)
+            if hay_metricas:
+                metricas.append(Metrica(publicacion_id=publicacion.id,
+                    capturada_en=publicacion.capturada_en, origen=publicacion.origen, **conteos))
+            publicaciones.append(publicacion)
+        except ValidationError as error:
+            campos = sorted({str(e["loc"][0]) if e["loc"] else "metricas" for e in error.errors()})
+            errores.append(f"Línea {linea}: valor inválido en " + ", ".join(campos))
+        except ValueError as error:
+            errores.append(f"Línea {linea}: {error}")
     if errores:
         raise ValueError("CSV inválido; no se importó ninguna publicación:\n" + "\n".join(errores)) from None
     return publicaciones, metricas
@@ -210,9 +243,10 @@ def leer_publicaciones(ruta: str | Path) -> list[Publicacion]:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Importa publicaciones públicas desde un CSV manual.")
     parser.add_argument("csv")
+    parser.add_argument("--completar-tiktok", action="store_true", help="Consultar metadatos públicos de TikTok (no oficial)")
     args = parser.parse_args(argv)
     try:
-        publicaciones, metricas = leer_con_metricas(args.csv)
+        publicaciones, metricas = leer_con_metricas(args.csv, completar_tiktok=args.completar_tiktok)
     except ValueError as error:
         parser.exit(1, f"Error: {error}\n")
     except OSError:

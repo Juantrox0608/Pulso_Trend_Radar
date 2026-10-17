@@ -32,7 +32,7 @@ La recolección devuelve una lista de `Publicacion` en JSON, ya validada:
 | `autor_hash` | 16 caracteres | Sí | Hexadecimal; sirve para contar autores distintos |
 | `publicada_en` | fecha y hora | Sí | UTC |
 | `capturada_en` | fecha y hora | Sí | UTC; nunca anterior a `publicada_en` |
-| `origen` | texto | Sí | `api_oficial`, `csv_manual` |
+| `origen` | texto | Sí | `api_oficial`, `csv_manual`, `pagina_publica` |
 
 ## Tabla sugerida
 
@@ -53,7 +53,7 @@ CREATE TABLE publicacion (
   autor_hash         CHAR(16)    NOT NULL,
   publicada_en       TIMESTAMPTZ NOT NULL,
   capturada_en       TIMESTAMPTZ NOT NULL,
-  origen             TEXT        NOT NULL CHECK (origen IN ('api_oficial','csv_manual')),
+  origen             TEXT        NOT NULL CHECK (origen IN ('api_oficial','csv_manual','pagina_publica')),
   CHECK (titulo IS NOT NULL OR texto IS NOT NULL),
   CHECK (capturada_en >= publicada_en)
 );
@@ -100,3 +100,5 @@ en Postgres no se probó.
 
 Tablas que todavía no tienen contrato: `metrica` (vistas, likes, comentarios y compartidos por captura; YouTube solo
 permite guardar sus estadísticas 30 días), `tema`, `tendencia`, `analisis_ia` y `senal_plataforma`.
+
+Las capturas automatizadas de páginas públicas usan `pagina_publica`; no son una API oficial.

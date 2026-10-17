@@ -5,6 +5,7 @@ description = "Buscador de tendencias en YouTube, TikTok y LinkedIn"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.12",
+    "yt-dlp>=2026.8.19",
 ]
 
 [project.optional-dependencies]
