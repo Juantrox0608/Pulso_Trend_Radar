@@ -1,5 +1,8 @@
 # Microservicio IA de 30X RADAR
 
+Para probar las exportaciones reales del equipo, consulta
+[preparación y Postman con cinco videos](examples/REAL_DATA.md).
+
 Recibe videos desde el JSON de cada solicitud, calcula el ranking con Python y pide
 una interpretación real a Groq. No consulta YouTube, no descarga URLs y no usa base
 de datos. Los ejemplos son ficticios. No mide crecimiento histórico ni viralidad global.
