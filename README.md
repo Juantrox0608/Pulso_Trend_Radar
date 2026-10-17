@@ -104,7 +104,7 @@ de las etiquetas el nombre del canal; ninguno de los dos se devuelve ni se guard
 No guarda respuestas crudas ni agrega dependencias.
 
 El paso 1 ya se comprobó con YouTube real. La nueva salida con métricas del paso 4
-se comprueba con respuestas ficticias; Claude realiza la corrida real en su revisión.
+se comprueba con respuestas ficticias y se corrió con YouTube real (1.010 videos, 2026-10-17).
 
 ## Recolección CSV manual (paso 2)
 
@@ -197,7 +197,7 @@ $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 ./.venv/Scripts/python -m radar.recoleccion.csv_manual tests/fixtures/manual_excel.csv
 ```
 
-Para la corrida real, Claude añadirá `--completar-tiktok` al comando del CSV local de Juan.
+Corrida real (2026-10-17): 13 de 13 TikToks completos, con duración y métricas.
 
 ## LinkedIn desde URL (paso 6)
 
@@ -241,5 +241,5 @@ $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 ./.venv/Scripts/python -m radar.recoleccion.csv_manual --help
 ```
 
-Claude hará la corrida real añadiendo `--completar-linkedin` al comando del CSV local de Juan,
-y verificará los `CHECK` de `pagina_publica` de ambos contratos en DuckDB.
+Corrida real (2026-10-17): 13 de 13 posts completos (texto, fecha, reacciones y comentarios; LinkedIn no
+publica compartidos). Los `CHECK` de `pagina_publica` de ambos contratos se comprobaron en DuckDB.

@@ -80,7 +80,7 @@ Las estadísticas públicas de YouTube obtenidas sin autorización del propietar
 no se conservan más de 30 días. El consumidor debe borrar las capturas vencidas;
 volver a pedir el valor actual no renueva la antigüedad de una captura histórica.
 [Política oficial, sección III.E.4.b](https://developers.google.com/youtube/terms/developer-policies#e.-handling-youtube-data-and-content).
-La comprobación del SQL en DuckDB y la corrida real de YouTube quedan para la
-revisión de Claude; no se probaron aquí.
+El SQL se comprobó en DuckDB con capturas reales de YouTube, TikTok y LinkedIn (2026-10-17);
+en PostgreSQL no se probó.
 
 Las capturas automatizadas de páginas públicas usan `pagina_publica`; no son una API oficial.
