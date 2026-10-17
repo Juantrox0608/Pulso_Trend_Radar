@@ -1,0 +1,1598 @@
+<!-- Oportunidades — 30X RADAR -->
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#a7d385", "on-tertiary-fixed-variant": "#573f56", "on-primary-fixed": "#0b2000", "surface-container-lowest": "#0d0f0e", "on-primary-fixed-variant": "#2b5010", "error": "#ffb4ab", "primary": "#ffffff", "surface": "#121413", "on-secondary-fixed": "#082100", "primary-fixed": "#c2f09f", "border-subtle": "#303630", "on-secondary-container": "#95c17a", "accent-glow": "rgba(199, 245, 163, 0.15)", "on-error": "#690005", "outline": "#8d9384", "on-primary-container": "#486e2c", "surface-tint": "#a7d385", "surface-container-highest": "#333534", "surface-base": "#0B0D0C", "text-tertiary": "#606862", "outline-variant": "#43493d", "status-critical": "#FF6B6B", "on-background": "#e2e3e0", "on-tertiary": "#3f293f", "surface-container-low": "#1a1c1b", "secondary-fixed-dim": "#a6d389", "on-tertiary-fixed": "#281429", "on-secondary": "#143801", "tertiary-fixed-dim": "#ddbdd9", "on-primary": "#173800", "surface-card": "#202421", "error-container": "#93000a", "on-tertiary-container": "#765c74", "text-secondary": "#929A94", "border-strong": "#414B42", "surface-variant": "#333534", "inverse-primary": "#426827", "primary-container": "#c2f09f", "tertiary-fixed": "#fad8f5", "secondary-fixed": "#c2f0a3", "surface-container": "#1e201f", "background": "#121413", "on-secondary-fixed-variant": "#2a5015", "surface-bright": "#383a38", "tertiary-container": "#fad8f5", "surface-container-high": "#282a29", "surface-secondary": "#171A18", "surface-card-hover": "#262C28", "on-surface": "#e2e3e0", "text-primary": "#F5F7F3", "on-error-container": "#ffdad6", "surface-dim": "#121413", "tertiary": "#ffffff", "inverse-on-surface": "#2f312f", "inverse-surface": "#e2e3e0", "secondary-container": "#2a5015", "on-surface-variant": "#c3c9b9", "secondary": "#a6d389" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter-desktop": "1.5rem", "space-xs": "0.25rem", "margin-desktop": "2rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, "fontFamily": { "body-md": ["Inter"], "code-metric": ["Geist"], "display": ["Geist"], "label-md": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Geist"], "headline-sm": ["Geist"], "label-sm": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["0.875rem", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }], "code-metric": ["0.875rem", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500" }], "display": ["3rem", { "lineHeight": "1.1", "letterSpacing": "-0.035em", "fontWeight": "600" }], "label-md": ["0.8125rem", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500" }], "body-sm": ["0.75rem", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["1.25rem", { "lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "500" }], "headline-sm": ["1rem", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-sm": ["0.6875rem", { "lineHeight": "1.15", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-lg": ["1rem", { "lineHeight": "1.5", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-lg": ["2rem", { "lineHeight": "1.2", "letterSpacing": "-0.025em", "fontWeight": "600" }], "headline-lg-mobile": ["1.5rem", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0B0D0C;color:#F5F7F3;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-base font-body-md text-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-fixed-dim selection:text-surface-base"><header class="fixed top-0 inset-x-0 z-50 bg-surface-secondary/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-24 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="30X RADAR Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VFv_CSWwbVxaegzJR5kx5buPrIzk3IWn4sq3gsMCMDqW6VYWLbr35N5WniFfw6-auBoYyHnLZv1qqHhmltkipj4f3FDSf0yCVuQaSjN9KyPEM2_fBXYhYyTyyLHx-yZxLEO2WCjteyHlLt_yFyqjQn525ouXLuk3jGBLh9jMyesufEsYLqdmJQ_yC9ZDLq1nIZNQK6rAGoiuir6LIayHW7J4dlbM7X4F_J_PtO-U811LWHxfhehChQnA"/><span class="font-headline-sm text-headline-sm uppercase tracking-tight text-text-primary">30X RADAR</span></div><div class="flex items-center gap-space-sm"><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-card"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">SISTEMAS ACTIVOS</span></div><div class="flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaq1o96pI6YpaHEGl61bYgnkii8bw4FCr2P8JcZ7JuS2Iuaeo2JliL8K9j96ZM-kE8a4U_XEPIQacZDxnCsTti-LYK60aVF2xU8fuXSBM3bayjjE9XAx9bI6lebftg9xjV7uEVKk0kE0Fsm0tDCCK06wbpPmJQTPKEekYDcwbewqLM2-MEG-7fFTMk4W3-W9ZNN89Xmlg3Mnvp0WdJm9WmMps3F4uVRXm2Ao3qFdSrkzA52u45S6bx"/></div></div></div><div class="flex items-center justify-between text-text-secondary font-code-metric text-body-sm"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-text-tertiary">sync</span><span>Última sincronización: hace 4 min</span></div><span class="font-label-sm text-label-sm text-text-tertiary uppercase">LATAM Executive</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-24 pb-20 bg-surface-base"><div class="flex flex-col w-full pb-10">
+<!-- Top Ambient Halo -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-16 left-1/2 -translate-x-1/2 w-80 h-36 bg-primary-fixed-dim/10 rounded-full blur-3xl pointer-events-none"></div>
+</div>
+<!-- Workspace Header & Meta -->
+<section class="px-margin pt-space-md pb-space-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high">
+<span class="material-symbols-outlined text-primary-fixed text-[14px]">auto_awesome</span>
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">Motor Editorial 30X</span>
+</div>
+<span class="font-code-metric text-body-sm text-text-tertiary">Ciclo: Q2-2025</span>
+</div>
+<div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Oportunidades Editoriales</h1>
+<p class="font-body-md text-body-md text-text-secondary mt-0.5">
+<span class="text-primary-fixed font-headline-sm">4 oportunidades detectadas hoy</span> para el equipo de medios 30X
+      </p>
+</div>
+<!-- Segmented Status Tabs -->
+<div class="flex items-center bg-surface-container-lowest p-1 rounded-xl mt-space-xs shadow-inner">
+<button class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-surface-card text-primary font-label-md text-label-md shadow-sm transition-all duration-150" id="tab-pendientes" onclick="setTab('pendientes')">
+<span class="w-2 h-2 rounded-full bg-primary-fixed"></span>
+<span>Pendientes</span>
+<span class="px-1.5 py-0.2 bg-surface-container text-primary-fixed font-code-metric text-body-sm rounded">4</span>
+</button>
+<button class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-text-secondary hover:text-text-primary font-label-md text-label-md transition-all duration-150" id="tab-aprobadas" onclick="setTab('aprobadas')">
+<span>Aprobadas</span>
+<span class="px-1.5 py-0.2 bg-surface-container-low text-text-tertiary font-code-metric text-body-sm rounded">12</span>
+</button>
+<button class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-text-secondary hover:text-text-primary font-label-md text-label-md transition-all duration-150" id="tab-rechazadas" onclick="setTab('rechazadas')">
+<span>Rechazadas</span>
+</button>
+</div>
+</section>
+<!-- Main Feed Stream -->
+<div class="flex flex-col gap-space-lg px-margin mt-space-sm" id="cards-container">
+<!-- CARD 1: Alta Afinidad (96%) -->
+<article class="bg-surface-card rounded-xl overflow-hidden shadow-lg shadow-black/40 transition-all duration-200">
+<!-- Card Banner / Signal Header -->
+<div class="p-space-md bg-surface-container-high/60 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-fixed-dim/15 text-primary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span>
+            ALTA AFINIDAD (96%)
+          </span>
+<div class="flex items-center gap-1 text-text-tertiary">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="font-code-metric text-body-sm text-text-secondary">95% IA Match</span>
+</div>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary font-medium tracking-tight mt-1">
+          Agentes Autónomos en Ventas B2B
+        </h2>
+<!-- Reference Sources Grid -->
+<div class="bg-surface-base/80 p-space-sm rounded-lg flex items-center justify-between mt-1">
+<div class="flex items-center gap-2">
+<div class="flex -space-x-1.5">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] font-code-metric text-primary-fixed">TL</div>
+<div class="w-5 h-5 rounded-full bg-surface-container-high flex items-center justify-center text-[10px] font-code-metric text-text-secondary">BG</div>
+<div class="w-5 h-5 rounded-full bg-surface-variant flex items-center justify-center text-[10px] font-code-metric text-secondary-fixed">AI</div>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary">3 videos virales analizados</span>
+</div>
+<span class="font-code-metric text-body-sm text-primary-fixed font-semibold">620K vistas</span>
+</div>
+</div>
+<!-- Editorial Strategy Body -->
+<div class="p-space-md flex flex-col gap-space-md bg-surface-card">
+<!-- Target Audience Fit -->
+<div class="flex items-start gap-2.5">
+<div class="p-1 rounded bg-surface-container-high text-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">groups</span>
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary block">Fit de Audiencia</span>
+<p class="font-body-md text-body-md text-text-primary mt-0.5">CEOs, Directores Comerciales y Fundadores en LATAM</p>
+</div>
+</div>
+<!-- Angle -->
+<div class="flex items-start gap-2.5">
+<div class="p-1 rounded bg-surface-container-high text-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">psychology_alt</span>
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary block">Ángulo Editorial Sugerido</span>
+<p class="font-body-md text-body-md text-text-primary mt-0.5 leading-snug">
+              “El fin del equipo de prospección tradicional: Cómo estructurar una célula comercial híbrida con IA”
+            </p>
+</div>
+</div>
+<!-- Format Tag -->
+<div class="bg-surface-secondary p-space-sm rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">smart_display</span>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary block">Formato Recomendado</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium truncate block">Video Formato Medio (6-8 min en YouTube) + Hilo/Carrusel LinkedIn</span>
+</div>
+</div>
+<!-- Hook Card Component -->
+<div class="p-space-sm bg-surface-container-lowest rounded-lg">
+<div class="flex items-center justify-between mb-1.5">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-fixed text-[16px]">campaign</span>
+<span class="font-label-sm text-label-sm uppercase text-primary-fixed font-semibold">Hook de Apertura Propuesto</span>
+</div>
+<button class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-card hover:bg-surface-card-hover text-text-secondary text-[11px] font-label-sm transition-colors" onclick="copyHook(this)">
+<span class="material-symbols-outlined text-[13px]">content_copy</span>
+<span>Copiar</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-text-primary italic leading-relaxed">
+            “Tu competidor ya no contrata 5 prospectadores: tiene 1 líder comercial orquestando 4 agentes. Este es el mapa exacto de cómo lo hacen.”
+          </p>
+</div>
+<!-- Supporting Evidence Spark Metric -->
+<div class="p-space-sm bg-surface-container-low rounded-lg flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 min-w-0">
+<div class="p-1 rounded bg-secondary-container/40 text-primary-fixed">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+</div>
+<div class="min-w-0">
+<span class="font-label-sm text-label-sm text-text-tertiary block">Evidencia de Búsqueda</span>
+<span class="font-body-sm text-body-sm text-text-secondary block truncate">‘AI SDR’ creció en MX y CO</span>
+</div>
+</div>
+<div class="flex flex-col items-end shrink-0">
+<span class="font-code-metric text-headline-sm text-primary-fixed font-bold">+210%</span>
+<span class="font-label-sm text-label-sm text-text-tertiary">este trimestre</span>
+</div>
+</div>
+<!-- Action / Decision Console -->
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between pb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">shield_person</span>
+              Decisión Editorial Humana
+            </span>
+<span class="font-code-metric text-body-sm text-primary-fixed">Confianza 95%</span>
+</div>
+<div class="grid grid-cols-1 gap-2">
+<button class="w-full h-10 px-4 rounded-xl bg-primary-fixed hover:bg-primary-fixed-dim text-on-primary-fixed font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all" onclick="handleAction(this, 'approved')">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+              Aprobar para Producción
+            </button>
+<div class="grid grid-cols-2 gap-2">
+<button class="h-9 px-3 rounded-xl bg-surface-secondary hover:bg-surface-container-high text-text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors" onclick="handleAction(this, 'review')">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">edit_note</span>
+                Revisar / Editar
+              </button>
+<button class="h-9 px-3 rounded-xl bg-surface-secondary hover:bg-surface-container-high text-status-critical font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors" onclick="handleAction(this, 'reject')">
+<span class="material-symbols-outlined text-[16px]">close</span>
+                Descartar
+              </button>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Visual Storytelling Teaser / Asset Preview Card -->
+<div class="relative rounded-xl overflow-hidden bg-surface-card p-space-md flex flex-col gap-space-sm shadow-md">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-primary-fixed">palette</span>
+          Moodboard &amp; Arte Sugerido
+        </span>
+<span class="font-code-metric text-body-sm text-text-secondary">Fórmula Visual 30X</span>
+</div>
+<div class="relative w-full h-40 rounded-lg overflow-hidden bg-surface-base">
+<img class="w-full h-full object-cover" data-alt="A modern cinematic dark studio photo representing autonomous artificial intelligence sales agents for Latin American corporate leaders, obsidian aesthetic with neon soft lime accents, subtle data glyphs, high-end editorial lighting, shot on 35mm lens." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-8yKPFFy2_jGnU_0pt4bSVQ14ZpxVHbWqaenqySS8-6rafzqW1FieyjDY3hRm9MknR7kXWQw4mjcHRafXa9AqbwL98eAg9_OnYCh4RaPU-gyC834GuPKgfsQGaslL2362rXMKcI0ycVKgbeuxueCur5fhil0nCUCQ2WoDbgtOO-f9LV7NT6X2CdFJSvn5ydLOH0yurBddTiJnmD0MXGQ6zYv57EAhjB-6Csk85kM1VJ7I3ITYxRf0"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-base via-surface-base/30 to-transparent"></div>
+<div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-card/90 backdrop-blur font-code-metric text-body-sm text-text-primary">Thumbnail Ref: Concept Alpha</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-primary-fixed bg-surface-base/90 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[12px]">check</span> Prompt Listo
+          </span>
+</div>
+</div>
+</div>
+<!-- CARD 2: Tendencia Emergente (89%) -->
+<article class="bg-surface-card rounded-xl overflow-hidden shadow-lg shadow-black/40 transition-all duration-200">
+<!-- Signal Header -->
+<div class="p-space-md bg-surface-container-high/60 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-fixed/15 text-secondary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
+            TENDENCIA EMERGENTE (89%)
+          </span>
+<div class="flex items-center gap-1 text-text-tertiary">
+<span class="material-symbols-outlined text-[16px]">speed</span>
+<span class="font-code-metric text-body-sm text-text-secondary">88% Confianza</span>
+</div>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary font-medium tracking-tight mt-1">
+          Gobernanza de Datos para GenAI en FinTech LATAM
+        </h2>
+<!-- Reference Sources Grid -->
+<div class="bg-surface-base/80 p-space-sm rounded-lg flex items-center justify-between mt-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">subscriptions</span>
+<span class="font-body-sm text-body-sm text-text-secondary">2 videos técnicos en YouTube</span>
+</div>
+<span class="font-code-metric text-body-sm text-secondary-fixed font-semibold">48K vistas técnicas</span>
+</div>
+</div>
+<!-- Editorial Strategy Body -->
+<div class="p-space-md flex flex-col gap-space-md bg-surface-card">
+<!-- Target Audience Fit -->
+<div class="flex items-start gap-2.5">
+<div class="p-1 rounded bg-surface-container-high text-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary block">Fit de Audiencia</span>
+<p class="font-body-md text-body-md text-text-primary mt-0.5">CTOs, Oficiales de Cumplimiento y Líderes FinTech</p>
+</div>
+</div>
+<!-- Angle -->
+<div class="flex items-start gap-2.5">
+<div class="p-1 rounded bg-surface-container-high text-secondary-fixed">
+<span class="material-symbols-outlined text-[18px]">policy</span>
+</div>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary block">Ángulo Editorial Sugerido</span>
+<p class="font-body-md text-body-md text-text-primary mt-0.5 leading-snug">
+              “Qué hacer antes de conectar tus datos financieros a LLMs externos: Guía de cumplimiento 2025”
+            </p>
+</div>
+</div>
+<!-- Format Tag -->
+<div class="bg-surface-secondary p-space-sm rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">menu_book</span>
+<div class="min-w-0 flex-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary block">Formato Recomendado</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium truncate block">Informe Especial Descargable + Video Explicativo (10 min)</span>
+</div>
+</div>
+<!-- Supporting Evidence Metric -->
+<div class="p-space-sm bg-surface-container-lowest rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-tertiary text-[18px]">account_balance</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Riesgo Regulatorio CNBV/BACEN</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary-fixed bg-surface-card px-2 py-0.5 rounded font-code-metric">Urgencia Alta</span>
+</div>
+<!-- Action / Decision Console -->
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between pb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">gavel</span>
+              Validación Estratégica
+            </span>
+<span class="font-code-metric text-body-sm text-secondary-fixed">Confianza 88%</span>
+</div>
+<div class="grid grid-cols-1 gap-2">
+<button class="w-full h-10 px-4 rounded-xl bg-primary-fixed hover:bg-primary-fixed-dim text-on-primary-fixed font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all" onclick="handleAction(this, 'approved')">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+              Aprobar para Producción
+            </button>
+<div class="grid grid-cols-2 gap-2">
+<button class="h-9 px-3 rounded-xl bg-surface-secondary hover:bg-surface-container-high text-text-primary font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors" onclick="handleAction(this, 'review')">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">edit_note</span>
+                Revisar Propuesta
+              </button>
+<button class="h-9 px-3 rounded-xl bg-surface-secondary hover:bg-surface-container-high text-status-critical font-label-md text-label-md flex items-center justify-center gap-1.5 transition-colors" onclick="handleAction(this, 'reject')">
+<span class="material-symbols-outlined text-[16px]">close</span>
+                Rechazar
+              </button>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- Inline Strategic Assistant Callout -->
+<section class="p-space-md rounded-xl bg-surface-secondary flex items-start gap-3 shadow-md">
+<div class="w-9 h-9 rounded-full bg-primary-fixed/20 flex items-center justify-center shrink-0 text-primary-fixed">
+<span class="material-symbols-outlined text-[20px]">lightbulb</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-sm text-headline-sm text-text-primary">¿Deseas agregar un tema personalizado?</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">
+          Ingresa un enlace de YouTube, hilo de X o documento de investigación para que 30X RADAR extraiga ángulos viables.
+        </p>
+<button class="mt-space-sm inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-card hover:bg-surface-card-hover text-primary-fixed font-label-md text-label-md transition-colors" onclick="openCustomTopicPrompt()">
+<span class="material-symbols-outlined text-[16px]">add</span>
+          Analizar Fuente Externa
+        </button>
+</div>
+</section>
+</div>
+<!-- Notification Toast Container -->
+<div class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-200 flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container-highest/95 backdrop-blur shadow-2xl text-text-primary font-label-md text-label-md" id="toast">
+<span class="material-symbols-outlined text-primary-fixed text-[18px]" id="toast-icon">check_circle</span>
+<span id="toast-message">Decisión editorial registrada</span>
+</div>
+</div>
+<script>
+  function showToast(message, icon = 'check_circle') {
+    const toast = document.getElementById('toast');
+    const msg = document.getElementById('toast-message');
+    const ico = document.getElementById('toast-icon');
+    if (!toast || !msg) return;
+    msg.textContent = message;
+    ico.textContent = icon;
+    toast.classList.remove('opacity-0');
+    toast.classList.add('opacity-100');
+    setTimeout(() => {
+      toast.classList.remove('opacity-100');
+      toast.classList.add('opacity-0');
+    }, 2400);
+  }
+
+  function handleAction(btn, type) {
+    const card = btn.closest('article');
+    if (!card) return;
+
+    if (type === 'approved') {
+      card.style.transform = 'scale(0.98)';
+      card.style.opacity = '0.7';
+      showToast('Oportunidad enviada a Cola de Producción 30X', 'rocket_launch');
+      setTimeout(() => {
+        card.style.display = 'none';
+      }, 350);
+    } else if (type === 'reject') {
+      card.style.opacity = '0.4';
+      showToast('Oportunidad descartada del radar actual', 'delete');
+      setTimeout(() => {
+        card.style.display = 'none';
+      }, 350);
+    } else if (type === 'review') {
+      showToast('Abriendo panel de refinamiento editorial...', 'edit');
+    }
+  }
+
+  function copyHook(btn) {
+    const text = 'Tu competidor ya no contrata 5 prospectadores: tiene 1 líder comercial orquestando 4 agentes. Este es el mapa exacto de cómo lo hacen.';
+    navigator.clipboard?.writeText(text);
+    btn.innerHTML = '<span class="material-symbols-outlined text-[13px] text-primary-fixed">done</span><span class="text-primary-fixed">Copiado</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-[13px]">content_copy</span><span>Copiar</span>';
+    }, 2000);
+    showToast('Hook copiado al portapapeles', 'content_paste');
+  }
+
+  function setTab(tabKey) {
+    const tabs = ['pendientes', 'aprobadas', 'rechazadas'];
+    tabs.forEach(t => {
+      const el = document.getElementById('tab-' + t);
+      if (!el) return;
+      if (t === tabKey) {
+        el.className = 'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-surface-card text-primary font-label-md text-label-md shadow-sm transition-all duration-150';
+      } else {
+        el.className = 'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-text-secondary hover:text-text-primary font-label-md text-label-md transition-all duration-150';
+      }
+    });
+
+    if (tabKey !== 'pendientes') {
+      showToast('Cargando registros históricos (' + tabKey + ')...', 'folder_open');
+    }
+  }
+
+  function openCustomTopicPrompt() {
+    showToast('Conectando con el motor de ingestión de fuentes...', 'hub');
+  }
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-secondary/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-fixed bg-surface-card/60"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="descubrir" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-sm text-label-sm">Descubrir</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="tendencias" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span class="font-label-sm text-label-sm">Tendencias</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 transition-colors text-primary-fixed bg-surface-card/60" data-path="oportunidades" href="#"><span class="material-symbols-outlined text-[20px]">lightbulb</span><span class="font-label-sm text-label-sm">Oportunidades</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="guardados" href="#"><span class="material-symbols-outlined text-[20px]">bookmark</span><span class="font-label-sm text-label-sm">Guardados</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="fuentes-y-estado" href="#"><span class="material-symbols-outlined text-[20px]">dataset</span><span class="font-label-sm text-label-sm truncate">Fuentes/Estado</span></a></div></nav></body></html>
+
+<!-- Análisis de Tendencia — 30X RADAR -->
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#a7d385", "on-tertiary-fixed-variant": "#573f56", "on-primary-fixed": "#0b2000", "surface-container-lowest": "#0d0f0e", "on-primary-fixed-variant": "#2b5010", "error": "#ffb4ab", "primary": "#ffffff", "surface": "#121413", "on-secondary-fixed": "#082100", "primary-fixed": "#c2f09f", "border-subtle": "#303630", "on-secondary-container": "#95c17a", "accent-glow": "rgba(199, 245, 163, 0.15)", "on-error": "#690005", "outline": "#8d9384", "on-primary-container": "#486e2c", "surface-tint": "#a7d385", "surface-container-highest": "#333534", "surface-base": "#0B0D0C", "text-tertiary": "#606862", "outline-variant": "#43493d", "status-critical": "#FF6B6B", "on-background": "#e2e3e0", "on-tertiary": "#3f293f", "surface-container-low": "#1a1c1b", "secondary-fixed-dim": "#a6d389", "on-tertiary-fixed": "#281429", "on-secondary": "#143801", "tertiary-fixed-dim": "#ddbdd9", "on-primary": "#173800", "surface-card": "#202421", "error-container": "#93000a", "on-tertiary-container": "#765c74", "text-secondary": "#929A94", "border-strong": "#414B42", "surface-variant": "#333534", "inverse-primary": "#426827", "primary-container": "#c2f09f", "tertiary-fixed": "#fad8f5", "secondary-fixed": "#c2f0a3", "surface-container": "#1e201f", "background": "#121413", "on-secondary-fixed-variant": "#2a5015", "surface-bright": "#383a38", "tertiary-container": "#fad8f5", "surface-container-high": "#282a29", "surface-secondary": "#171A18", "surface-card-hover": "#262C28", "on-surface": "#e2e3e0", "text-primary": "#F5F7F3", "on-error-container": "#ffdad6", "surface-dim": "#121413", "tertiary": "#ffffff", "inverse-on-surface": "#2f312f", "inverse-surface": "#e2e3e0", "secondary-container": "#2a5015", "on-surface-variant": "#c3c9b9", "secondary": "#a6d389" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter-desktop": "1.5rem", "space-xs": "0.25rem", "margin-desktop": "2rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, "fontFamily": { "body-md": ["Inter"], "code-metric": ["Geist"], "display": ["Geist"], "label-md": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Geist"], "headline-sm": ["Geist"], "label-sm": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["0.875rem", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }], "code-metric": ["0.875rem", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500" }], "display": ["3rem", { "lineHeight": "1.1", "letterSpacing": "-0.035em", "fontWeight": "600" }], "label-md": ["0.8125rem", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500" }], "body-sm": ["0.75rem", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["1.25rem", { "lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "500" }], "headline-sm": ["1rem", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-sm": ["0.6875rem", { "lineHeight": "1.15", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-lg": ["1rem", { "lineHeight": "1.5", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-lg": ["2rem", { "lineHeight": "1.2", "letterSpacing": "-0.025em", "fontWeight": "600" }], "headline-lg-mobile": ["1.5rem", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0B0D0C;color:#F5F7F3;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-base font-body-md text-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-fixed-dim selection:text-surface-base"><header class="fixed top-0 inset-x-0 z-50 bg-surface-secondary/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-24 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="30X RADAR Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VFv_CSWwbVxaegzJR5kx5buPrIzk3IWn4sq3gsMCMDqW6VYWLbr35N5WniFfw6-auBoYyHnLZv1qqHhmltkipj4f3FDSf0yCVuQaSjN9KyPEM2_fBXYhYyTyyLHx-yZxLEO2WCjteyHlLt_yFyqjQn525ouXLuk3jGBLh9jMyesufEsYLqdmJQ_yC9ZDLq1nIZNQK6rAGoiuir6LIayHW7J4dlbM7X4F_J_PtO-U811LWHxfhehChQnA"/><span class="font-headline-sm text-headline-sm uppercase tracking-tight text-text-primary">30X RADAR</span></div><div class="flex items-center gap-space-sm"><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-card"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">SISTEMAS ACTIVOS</span></div><div class="flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaq1o96pI6YpaHEGl61bYgnkii8bw4FCr2P8JcZ7JuS2Iuaeo2JliL8K9j96ZM-kE8a4U_XEPIQacZDxnCsTti-LYK60aVF2xU8fuXSBM3bayjjE9XAx9bI6lebftg9xjV7uEVKk0kE0Fsm0tDCCK06wbpPmJQTPKEekYDcwbewqLM2-MEG-7fFTMk4W3-W9ZNN89Xmlg3Mnvp0WdJm9WmMps3F4uVRXm2Ao3qFdSrkzA52u45S6bx"/></div></div></div><div class="flex items-center justify-between text-text-secondary font-code-metric text-body-sm"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-text-tertiary">sync</span><span>Última sincronización: hace 4 min</span></div><span class="font-label-sm text-label-sm text-text-tertiary uppercase">LATAM Executive</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-24 pb-20 bg-surface-base"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md">
+<!-- Breadcrumbs & Quick Context -->
+<div class="flex items-center justify-between pt-space-xs">
+<div class="flex items-center gap-1.5 font-code-metric text-body-sm text-text-tertiary">
+<span class="hover:text-text-secondary transition-colors cursor-pointer">Descubrir</span>
+<span class="text-[10px] text-text-tertiary">/</span>
+<span class="text-secondary hover:text-primary-fixed-dim transition-colors cursor-pointer">#AIAgents</span>
+<span class="text-[10px] text-text-tertiary">/</span>
+<span class="text-text-primary">Análisis</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-card">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">VERIFICADO API • Hace 2h</span>
+</div>
+</div>
+<!-- Main Analyzed Entity Card with Rich Visual Preview -->
+<div class="relative overflow-hidden rounded-xl bg-surface-card shadow-md flex flex-col">
+<!-- Visual contextual banner & thumbnail preview -->
+<div class="relative w-full h-44 bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover opacity-60 mix-blend-screen" data-alt="Futuristic glowing holographic user interface dashboard showing autonomous AI software agents orchestrating sales analytics on dark obsidian screen with soft emerald lime laser data charts" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNL3-h05kNutn2SjrXlEZIgbZT4-tHg_O2sN_DOj1mHdVyeUaxGUSK-zdZlqohI8pAosyp8n17lrIZ_XCTHkRD1ORgL9sgvBS9hoRRcj5sqtc4T_BNBTLlT4KfARWFEAhg-1ZeTEogx8go7OfcomgJBg58xlX87uQtr8H0e9gZjbKLEHvaZuz44bwn5866Ek7VaOIdCndkWDWE6zVlhVnwVtxD35KDV-SF76AXDCDUBQiCH9b7Q2J1"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/60 to-transparent"></div>
+<!-- Video Duration pill & source tag overlay -->
+<div class="absolute top-3 left-3 flex items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-base/80 backdrop-blur-md text-text-primary font-code-metric text-body-sm">
+<span class="material-symbols-outlined text-[14px] text-status-critical" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+          58s Shorts
+        </span>
+<span class="px-2 py-1 rounded bg-surface-secondary/90 backdrop-blur-md text-secondary font-label-sm text-label-sm uppercase tracking-wide">
+          Percentil 94
+        </span>
+</div>
+<div class="absolute top-3 right-3">
+<button class="w-8 h-8 rounded-full bg-surface-base/75 backdrop-blur-md flex items-center justify-center text-text-secondary hover:text-primary-fixed-dim transition-colors" id="quickSaveBtn">
+<span class="material-symbols-outlined text-[18px]">bookmark_add</span>
+</button>
+</div>
+<!-- Channel & Outlink info on graphic overlay -->
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-sm text-secondary">smart_toy</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-text-primary">TechLatam Strategy</span>
+<span class="font-body-sm text-body-sm text-text-tertiary">YouTube Shorts</span>
+</div>
+</div>
+<a class="inline-flex items-center gap-1 text-secondary hover:text-primary-fixed-dim font-code-metric text-body-sm transition-colors bg-surface-base/60 px-2 py-1 rounded" href="#">
+<span>Abrir fuente</span>
+<span class="material-symbols-outlined text-[14px]">north_east</span>
+</a>
+</div>
+</div>
+<!-- Title and Core Value Proposition -->
+<div class="p-space-md space-y-space-xs">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">
+        Cómo implementar Agentes IA autónomos en ventas B2B en 2025
+      </h1>
+<p class="font-body-md text-body-md text-text-secondary">
+        Demostración táctica de flujos agentic multimodales integrados con CRM para calificación instantánea de prospectos enterprise sin intervención humana.
+      </p>
+</div>
+</div>
+<!-- Verified Metrics Performance Grid (2x2 Density) -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Stat 1: Views -->
+<div class="p-space-md rounded-xl bg-surface-card flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary">Vistas Totales</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">visibility</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary">142,800</span>
+<div class="inline-flex items-center gap-1 font-code-metric text-body-sm text-secondary mt-0.5">
+<span class="material-symbols-outlined text-[13px]">trending_up</span>
+<span>+340% vs canal</span>
+</div>
+</div>
+</div>
+<!-- Stat 2: Likes & Ratio -->
+<div class="p-space-md rounded-xl bg-surface-card flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary">Reacciones</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">thumb_up</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary">18,420</span>
+<div class="inline-flex items-center gap-1 font-code-metric text-body-sm text-text-secondary mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">pie_chart</span>
+<span>12.9% ratio de likes</span>
+</div>
+</div>
+</div>
+<!-- Stat 3: Engagement Rate -->
+<div class="p-space-md rounded-xl bg-surface-card flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary">Engagement</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">bolt</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-secondary">8.64%</span>
+<div class="inline-flex items-center gap-1 font-code-metric text-body-sm text-text-secondary mt-0.5">
+<span>Top 6% LATAM Tech</span>
+</div>
+</div>
+</div>
+<!-- Stat 4: Saves / Bookmark Intent -->
+<div class="p-space-md rounded-xl bg-surface-card flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-tertiary">Guardados</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">bookmark</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary">2,130</span>
+<div class="inline-flex items-center gap-1 font-code-metric text-body-sm text-primary-fixed mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed"></span>
+<span>Intención de compra</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Historical Evolution Module with SVG Velocity Chart -->
+<div class="p-space-md rounded-xl bg-surface-card shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">show_chart</span>
+<span class="font-headline-sm text-headline-sm text-text-primary">Evolución de Velocidad</span>
+</div>
+<span class="font-label-sm text-label-sm text-text-tertiary font-code-metric uppercase">48 Horas Iniciales</span>
+</div>
+<!-- Subtle Line / Area Chart Vector -->
+<div class="relative w-full h-28 pt-2">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 320 80">
+<defs>
+<lineargradient id="velocityGlow" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#C7F5A3" stop-opacity="0.32"></stop>
+<stop offset="100%" stop-color="#C7F5A3" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Horizontal grid guides -->
+<line stroke="#303630" stroke-dasharray="2 3" stroke-width="0.75" x1="0" x2="320" y1="20" y2="20"></line>
+<line stroke="#303630" stroke-dasharray="2 3" stroke-width="0.75" x1="0" x2="320" y1="50" y2="50"></line>
+<line stroke="#303630" stroke-width="1" x1="0" x2="320" y1="78" y2="78"></line>
+<!-- Area fill under line -->
+<polygon fill="url(#velocityGlow)" points="0,75 25,72 60,68 100,64 140,54 180,48 220,32 260,18 290,10 320,6 320,78 0,78"></polygon>
+<!-- Main Velocity Trajectory -->
+<polyline fill="none" points="0,75 25,72 60,68 100,64 140,54 180,48 220,32 260,18 290,10 320,6" stroke="#C7F5A3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></polyline>
+<!-- Peak inflection node -->
+<circle cx="260" cy="18" fill="#C7F5A3" r="3.5"></circle>
+<circle cx="320" cy="6" fill="#F5F7F3" r="4"></circle>
+</svg>
+</div>
+<!-- Chart X Axis labels -->
+<div class="flex justify-between items-center font-code-metric text-body-sm text-text-tertiary pt-1">
+<span>T+0h (Lanzamiento)</span>
+<span>T+24h (Pico Algorítmico)</span>
+<span class="text-secondary font-medium">T+48h (Actual)</span>
+</div>
+<!-- Transparency & API status note -->
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-1.5 font-code-metric text-body-sm text-text-tertiary">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
+<span>Datos de crecimiento verificados vía YouTube API v3</span>
+</div>
+<button class="text-text-tertiary hover:text-text-secondary text-body-sm flex items-center" title="Información metodológica">
+<span class="material-symbols-outlined text-[14px]">info</span>
+</button>
+</div>
+</div>
+<!-- AI Editorial Intelligence Panel (Soft Neon Ambient Glow) -->
+<div class="p-space-lg rounded-xl bg-surface-card shadow-xl space-y-space-md shadow-[0_0_24px_rgba(199,245,163,0.08)]">
+<!-- Editorial AI Header Badge -->
+<div class="flex items-center justify-between pb-1">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container">
+<span class="material-symbols-outlined text-secondary text-[15px]">auto_awesome</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-secondary-container font-semibold">INTERPRETACIÓN IA • NO EDITAR CRÍTICO</span>
+</div>
+<span class="font-code-metric text-body-sm text-secondary font-medium">Confianza 98.4%</span>
+</div>
+<!-- Core Topic & Format -->
+<div class="grid grid-cols-1 gap-space-xs">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase tracking-wider">Tema Central</span>
+<span class="font-body-md text-body-md text-text-primary font-medium">Adopción práctica de agentes autónomos en workflows comerciales y reducción de CAC.</span>
+</div>
+<div class="flex items-center gap-4 pt-1 font-body-sm text-body-sm text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">timer</span> 58 segundos (Vertical)
+        </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">speed</span> Ritmo dinámico de corte rápido
+        </span>
+</div>
+</div>
+<!-- Hook Strategy Breakdown -->
+<div class="p-space-md rounded bg-surface-secondary space-y-space-xs">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px]">crisis_alert</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide font-medium">Estrategia de Hook / Apertura</span>
+</div>
+<p class="font-body-md text-body-md text-text-primary italic">
+        "En los primeros 3 segundos muestra un agente cerrando un lead real sin intervención humana — genera curiosidad inmediata y reduce el escepticismo inicial."
+      </p>
+<div class="flex items-center gap-2 pt-1 font-code-metric text-body-sm text-text-tertiary">
+<span class="text-secondary">Retención 0-3s: 81.2%</span>
+<span>•</span>
+<span>Caída post-hook: &lt; 4%</span>
+</div>
+</div>
+<!-- Key Drivers for Performance -->
+<div class="space-y-space-xs">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase tracking-wider">Razones del Rendimiento</span>
+<div class="space-y-2">
+<div class="flex items-start gap-2.5">
+<span class="w-5 h-5 rounded-full bg-surface-secondary text-secondary font-code-metric text-body-sm flex items-center justify-center shrink-0 mt-0.5">1</span>
+<span class="font-body-md text-body-md text-text-secondary"><strong class="text-text-primary">Utilidad inmediata:</strong> Enseña ejemplos concretos con stack no-code y CRM reales sin abstracciones teóricas.</span>
+</div>
+<div class="flex items-start gap-2.5">
+<span class="w-5 h-5 rounded-full bg-surface-secondary text-secondary font-code-metric text-body-sm flex items-center justify-center shrink-0 mt-0.5">2</span>
+<span class="font-body-md text-body-md text-text-secondary"><strong class="text-text-primary">Dolor agudo de mercado:</strong> Resuelve la presión sobre costos de adquisición de clientes (CAC) en un entorno recesivo.</span>
+</div>
+<div class="flex items-start gap-2.5">
+<span class="w-5 h-5 rounded-full bg-surface-secondary text-secondary font-code-metric text-body-sm flex items-center justify-center shrink-0 mt-0.5">3</span>
+<span class="font-body-md text-body-md text-text-secondary"><strong class="text-text-primary">Tono ejecutivo:</strong> Evita jerga técnica vacía o hype desmedido; comunica pragmatismo enfocado en ROI.</span>
+</div>
+</div>
+</div>
+<!-- Audience Fit Metric Bar -->
+<div class="space-y-1.5 pt-1">
+<div class="flex justify-between items-center font-label-md text-label-md">
+<span class="text-text-primary font-medium">Relevancia Audiencia 30X</span>
+<span class="font-code-metric text-secondary font-bold">96% Afinidad</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 96%"></div>
+</div>
+<p class="font-body-sm text-body-sm text-text-tertiary">
+        Directores de innovación, fundadores y líderes de marketing en México, Colombia y Chile.
+      </p>
+</div>
+<!-- Tactical Adaptation Suggestions -->
+<div class="space-y-2 pt-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">tips_and_updates</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-text-primary font-medium">Sugerencias de Adaptación Editorial</span>
+</div>
+<div class="p-space-md rounded bg-surface-secondary space-y-1">
+<div class="font-label-md text-label-md text-secondary font-semibold">Formato Largo / Carrusel Profundo</div>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          "Crear un carrusel técnico de 8 diapositivas o video explicativo de 7 minutos analizando la arquitectura del stack (Make + Claude 3.5 Sonnet + HubSpot) diseñado específicamente para ejecutivos no técnicos."
+        </p>
+</div>
+<div class="p-space-md rounded bg-surface-secondary space-y-1">
+<div class="font-label-md text-label-md text-secondary font-semibold">Ángulo Provocador Sugerido</div>
+<p class="font-body-sm text-body-sm text-text-secondary">
+          "Por qué tu equipo de ventas para 2025 no necesita más SDRs junior, sino 2 agentes autónomos bien configurados y auditados semanalmente."
+        </p>
+</div>
+</div>
+</div>
+<!-- Operational Action Controls -->
+<div class="pt-space-xs space-y-space-sm">
+<!-- Primary CTA: Convert into Editorial Opportunity -->
+<button class="w-full py-3 px-space-md rounded-lg bg-primary-fixed text-surface-base font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 shadow-lg active:scale-[0.99] transition-all hover:bg-primary-fixed-dim" id="convertOpportunityBtn">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+<span>Convertir en Oportunidad Editorial ✨</span>
+</button>
+<!-- Secondary Auxiliary CTAs in 2-column grid -->
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="py-2.5 px-space-md rounded-lg bg-surface-card hover:bg-surface-card-hover text-text-primary font-label-md text-label-md flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-[0.98]" id="saveRadarBtn">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">bookmark</span>
+<span>Guardar en Radar</span>
+</button>
+<button class="py-2.5 px-space-md rounded-lg bg-surface-card hover:bg-surface-card-hover text-text-primary font-label-md text-label-md flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-[0.98]" id="exportBriefBtn">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">ios_share</span>
+<span>Exportar Ficha</span>
+</button>
+</div>
+</div>
+<!-- Notification Toast Container (Dynamic micro-interaction) -->
+<div class="fixed top-28 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-surface-secondary text-text-primary text-body-sm font-label-md shadow-2xl flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none translate-y-2" id="toastNotification">
+<span class="material-symbols-outlined text-secondary text-[18px]" id="toastIcon">check_circle</span>
+<span id="toastMessage">Acción completada</span>
+</div>
+</div>
+<script>
+  (function() {
+    const toast = document.getElementById('toastNotification');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    function showToast(msg, icon = 'check_circle') {
+      if (!toast) return;
+      toastMessage.textContent = msg;
+      toastIcon.textContent = icon;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+      }, 2600);
+    }
+
+    const convertBtn = document.getElementById('convertOpportunityBtn');
+    if (convertBtn) {
+      convertBtn.addEventListener('click', () => {
+        showToast('Enviado al pipeline editorial con briefs y ganchos', 'auto_fix_high');
+      });
+    }
+
+    const saveRadarBtn = document.getElementById('saveRadarBtn');
+    const quickSaveBtn = document.getElementById('quickSaveBtn');
+    [saveRadarBtn, quickSaveBtn].forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', () => {
+          showToast('Guardado en la colección de #AIAgents', 'bookmark_added');
+        });
+      }
+    });
+
+    const exportBtn = document.getElementById('exportBriefBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        showToast('Ficha de análisis copiada en formato Markdown', 'description');
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-secondary/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-fixed bg-surface-card/60"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="descubrir" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-sm text-label-sm">Descubrir</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 transition-colors text-primary-fixed bg-surface-card/60" data-path="tendencias" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span class="font-label-sm text-label-sm">Tendencias</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="oportunidades" href="#"><span class="material-symbols-outlined text-[20px]">lightbulb</span><span class="font-label-sm text-label-sm">Oportunidades</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="guardados" href="#"><span class="material-symbols-outlined text-[20px]">bookmark</span><span class="font-label-sm text-label-sm">Guardados</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="fuentes-y-estado" href="#"><span class="material-symbols-outlined text-[20px]">dataset</span><span class="font-label-sm text-label-sm truncate">Fuentes/Estado</span></a></div></nav></body></html>
+
+<!-- Fuentes y Estado — 30X RADAR -->
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#a7d385", "on-tertiary-fixed-variant": "#573f56", "on-primary-fixed": "#0b2000", "surface-container-lowest": "#0d0f0e", "on-primary-fixed-variant": "#2b5010", "error": "#ffb4ab", "primary": "#ffffff", "surface": "#121413", "on-secondary-fixed": "#082100", "primary-fixed": "#c2f09f", "border-subtle": "#303630", "on-secondary-container": "#95c17a", "accent-glow": "rgba(199, 245, 163, 0.15)", "on-error": "#690005", "outline": "#8d9384", "on-primary-container": "#486e2c", "surface-tint": "#a7d385", "surface-container-highest": "#333534", "surface-base": "#0B0D0C", "text-tertiary": "#606862", "outline-variant": "#43493d", "status-critical": "#FF6B6B", "on-background": "#e2e3e0", "on-tertiary": "#3f293f", "surface-container-low": "#1a1c1b", "secondary-fixed-dim": "#a6d389", "on-tertiary-fixed": "#281429", "on-secondary": "#143801", "tertiary-fixed-dim": "#ddbdd9", "on-primary": "#173800", "surface-card": "#202421", "error-container": "#93000a", "on-tertiary-container": "#765c74", "text-secondary": "#929A94", "border-strong": "#414B42", "surface-variant": "#333534", "inverse-primary": "#426827", "primary-container": "#c2f09f", "tertiary-fixed": "#fad8f5", "secondary-fixed": "#c2f0a3", "surface-container": "#1e201f", "background": "#121413", "on-secondary-fixed-variant": "#2a5015", "surface-bright": "#383a38", "tertiary-container": "#fad8f5", "surface-container-high": "#282a29", "surface-secondary": "#171A18", "surface-card-hover": "#262C28", "on-surface": "#e2e3e0", "text-primary": "#F5F7F3", "on-error-container": "#ffdad6", "surface-dim": "#121413", "tertiary": "#ffffff", "inverse-on-surface": "#2f312f", "inverse-surface": "#e2e3e0", "secondary-container": "#2a5015", "on-surface-variant": "#c3c9b9", "secondary": "#a6d389" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter-desktop": "1.5rem", "space-xs": "0.25rem", "margin-desktop": "2rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, "fontFamily": { "body-md": ["Inter"], "code-metric": ["Geist"], "display": ["Geist"], "label-md": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Geist"], "headline-sm": ["Geist"], "label-sm": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["0.875rem", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }], "code-metric": ["0.875rem", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500" }], "display": ["3rem", { "lineHeight": "1.1", "letterSpacing": "-0.035em", "fontWeight": "600" }], "label-md": ["0.8125rem", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500" }], "body-sm": ["0.75rem", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["1.25rem", { "lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "500" }], "headline-sm": ["1rem", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-sm": ["0.6875rem", { "lineHeight": "1.15", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-lg": ["1rem", { "lineHeight": "1.5", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-lg": ["2rem", { "lineHeight": "1.2", "letterSpacing": "-0.025em", "fontWeight": "600" }], "headline-lg-mobile": ["1.5rem", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0B0D0C;color:#F5F7F3;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-base font-body-md text-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-fixed-dim selection:text-surface-base"><header class="fixed top-0 inset-x-0 z-50 bg-surface-secondary/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-24 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="30X RADAR Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VFv_CSWwbVxaegzJR5kx5buPrIzk3IWn4sq3gsMCMDqW6VYWLbr35N5WniFfw6-auBoYyHnLZv1qqHhmltkipj4f3FDSf0yCVuQaSjN9KyPEM2_fBXYhYyTyyLHx-yZxLEO2WCjteyHlLt_yFyqjQn525ouXLuk3jGBLh9jMyesufEsYLqdmJQ_yC9ZDLq1nIZNQK6rAGoiuir6LIayHW7J4dlbM7X4F_J_PtO-U811LWHxfhehChQnA"/><span class="font-headline-sm text-headline-sm uppercase tracking-tight text-text-primary">30X RADAR</span></div><div class="flex items-center gap-space-sm"><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-card"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">SISTEMAS ACTIVOS</span></div><div class="flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaq1o96pI6YpaHEGl61bYgnkii8bw4FCr2P8JcZ7JuS2Iuaeo2JliL8K9j96ZM-kE8a4U_XEPIQacZDxnCsTti-LYK60aVF2xU8fuXSBM3bayjjE9XAx9bI6lebftg9xjV7uEVKk0kE0Fsm0tDCCK06wbpPmJQTPKEekYDcwbewqLM2-MEG-7fFTMk4W3-W9ZNN89Xmlg3Mnvp0WdJm9WmMps3F4uVRXm2Ao3qFdSrkzA52u45S6bx"/></div></div></div><div class="flex items-center justify-between text-text-secondary font-code-metric text-body-sm"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-text-tertiary">sync</span><span>Última sincronización: hace 4 min</span></div><span class="font-label-sm text-label-sm text-text-tertiary uppercase">LATAM Executive</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-24 pb-20 bg-surface-base"><div class="flex flex-col w-full px-margin pb-space-xl">
+<!-- Page Header & Operational Status Overview -->
+<div class="pt-space-md pb-space-lg flex flex-col gap-space-xs">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-ping"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">Monitoreo En Tiempo Real</span>
+</div>
+<span class="font-code-metric text-body-sm text-text-tertiary">LATAM Mesh #04</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-semibold tracking-tight text-text-primary mt-space-xs">
+      Fuentes y Estado de Datos
+    </h1>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed">
+      Transparencia técnica de métricas, disponibilidad de API y límites de recolección en los ecosistemas de video.
+    </p>
+<!-- Global Pulse Status Banner -->
+<div class="mt-space-sm p-space-md rounded-xl bg-surface-container flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm shadow-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex items-center justify-center w-8 h-8 rounded-lg bg-surface-card shrink-0">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">dns</span>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-primary-fixed-dim"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase tracking-wider">Estado Global del Radar</span>
+<div class="flex items-center gap-2 truncate">
+<span class="inline-block w-2 h-2 rounded-full bg-primary-fixed"></span>
+<span class="font-headline-sm text-headline-sm text-text-primary truncate font-medium">OPERATIVO PARCIAL</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-md pt-space-xs sm:pt-0">
+<div class="flex flex-col items-start sm:items-end">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase">Latencia media</span>
+<span class="font-code-metric text-body-md text-primary-fixed font-medium">140ms</span>
+</div>
+<div class="w-px h-7 bg-surface-container-highest"></div>
+<div class="flex flex-col items-start sm:items-end">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase">Rendimiento</span>
+<span class="font-code-metric text-body-md text-text-primary font-medium">98.1%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Platform Cards Section -->
+<div class="flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-text-tertiary">hub</span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Conexiones de Ingesta Activa</h2>
+</div>
+<span class="font-code-metric text-body-sm text-text-secondary">2 Conectores</span>
+</div>
+<!-- YouTube Data API v3 Card -->
+<div class="rounded-xl bg-surface-card p-space-md shadow-md flex flex-col gap-space-md relative overflow-hidden">
+<!-- Glow Accent -->
+<div class="absolute -top-10 -right-10 w-28 h-28 bg-accent-glow rounded-full blur-2xl pointer-events-none"></div>
+<!-- Top Row: Icon, Service, Status Badge -->
+<div class="flex items-start justify-between gap-space-sm relative z-10">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px] text-status-critical">smart_display</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-text-primary truncate">YouTube Data API v3</span>
+<span class="font-code-metric text-body-sm text-text-tertiary truncate">Sincronizado hace 4 minutos</span>
+</div>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container text-on-primary-container shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">CONECTADO Y SINCRONIZADO</span>
+</div>
+</div>
+<!-- Reliability & Quota Grid -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-high flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase">Confiabilidad</span>
+<span class="material-symbols-outlined text-[14px] text-primary-fixed">verified</span>
+</div>
+<span class="font-code-metric text-headline-md text-text-primary">99.4%</span>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-primary-fixed h-full rounded-full" style="width: 99.4%;"></div>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-high flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase">Cuota Diaria</span>
+<span class="font-code-metric text-body-sm text-text-secondary">4.2k / 10k</span>
+</div>
+<span class="font-code-metric text-headline-md text-text-primary">42%</span>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-primary-fixed-dim h-full rounded-full" style="width: 42%;"></div>
+</div>
+</div>
+</div>
+<!-- Available Metrics Tags -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase tracking-wider">Métricas e Índices Disponibles</span>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Vistas públicas</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Likes</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Comentarios</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Fecha exacta</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Tags semánticos</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Transcripción de audio</span>
+</div>
+</div>
+</div>
+<!-- TikTok Research API Card -->
+<div class="rounded-xl bg-surface-card p-space-md shadow-md flex flex-col gap-space-md relative overflow-hidden">
+<!-- Amber Top Accent -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px] text-text-primary">music_note</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-text-primary truncate">TikTok Research API</span>
+<span class="font-code-metric text-body-sm text-text-tertiary truncate">Actualizado hace 22 minutos</span>
+</div>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-primary-fixed shrink-0">
+<span class="material-symbols-outlined text-[13px] text-primary-fixed">warning</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-semibold">MODO ESTIMACIÓN PARCIAL</span>
+</div>
+</div>
+<!-- Warning Disclaimer Box -->
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex gap-space-sm items-start">
+<span class="material-symbols-outlined text-[18px] text-text-secondary shrink-0 mt-0.5">info</span>
+<div class="flex flex-col gap-1 min-w-0">
+<span class="font-label-sm text-label-sm text-text-primary font-medium">Nota de Transparencia de Algoritmo</span>
+<p class="font-body-sm text-body-sm text-text-secondary leading-relaxed">
+            El engagement rate de TikTok se calcula sobre muestras públicas visibles. No refleja reproducciones completas privadas ni retención del usuario en feeds cerrados.
+          </p>
+</div>
+</div>
+<!-- Metrics and Limitations -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase tracking-wider">Métricas Disponibles</span>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Vistas estimadas</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Likes</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Compartidos</span>
+<span class="px-2 py-0.5 rounded bg-surface-container text-text-secondary font-label-md text-label-md">Hashtags</span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 rounded bg-surface-container text-status-critical">
+<span class="material-symbols-outlined text-[16px] shrink-0">report_problem</span>
+<span class="font-body-sm text-body-sm">Límite de paginación alcanzado para búsquedas históricas &gt;30 días.</span>
+</div>
+</div>
+</div>
+<!-- Editorial Transparency & Data Philosophy Section -->
+<div class="mt-space-xl flex flex-col gap-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">verified_user</span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Protocolo de Integridad Editorial</h2>
+</div>
+<!-- Editorial Principles List -->
+<div class="flex flex-col gap-space-sm">
+<!-- Item 1: No Synthetic Trends -->
+<div class="p-space-md rounded-xl bg-surface-container flex gap-space-sm items-start shadow-sm">
+<div class="w-8 h-8 rounded-full bg-surface-card flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">fact_check</span>
+</div>
+<div class="flex flex-col gap-1 min-w-0">
+<h3 class="font-label-md text-label-md text-text-primary font-medium">Métricas Fidedignas</h3>
+<p class="font-body-sm text-body-sm text-text-secondary leading-relaxed">
+            30X RADAR no inventa tendencias. Si una métrica de crecimiento no tiene histórico registrado comprobable, se etiquetará estrictamente como <span class="font-code-metric text-text-primary px-1 py-0.5 rounded bg-surface-card">"No disponible"</span> en lugar de proyectar números no sustentados.
+          </p>
+</div>
+</div>
+<!-- Item 2: AI Responsibility -->
+<div class="p-space-md rounded-xl bg-surface-container flex gap-space-sm items-start shadow-sm">
+<div class="w-8 h-8 rounded-full bg-surface-card flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">psychology</span>
+</div>
+<div class="flex flex-col gap-1 min-w-0">
+<h3 class="font-label-md text-label-md text-text-primary font-medium">Protocolo de Inteligencia Artificial (Human-in-the-loop)</h3>
+<p class="font-body-sm text-body-sm text-text-secondary leading-relaxed">
+            Los resúmenes y sugerencias de hook son generados por modelos LLM de última generación y deben ser revisados por un editor humano antes de su producción final o distribución masiva.
+          </p>
+</div>
+</div>
+<!-- Item 3: Scan Cadence -->
+<div class="p-space-md rounded-xl bg-surface-container flex gap-space-sm items-center shadow-sm justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-full bg-surface-card flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">update</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-text-primary">Frecuencia de escaneo activo</span>
+<span class="font-body-sm text-body-sm text-text-tertiary">Intervalo de refresco en canales rastreados</span>
+</div>
+</div>
+<span class="font-code-metric text-headline-sm text-primary-fixed shrink-0">Cada 15 min</span>
+</div>
+</div>
+</div>
+<!-- Manual Health Check Action -->
+<div class="mt-space-xl flex flex-col gap-space-sm">
+<button class="w-full h-12 px-space-md rounded-lg bg-primary-fixed text-on-primary-fixed font-headline-sm text-headline-sm font-semibold flex items-center justify-center gap-2 active:scale-[0.99] transition-all shadow-md hover:bg-primary-fixed-dim" id="check-health-btn" onclick="runHealthCheck()">
+<span class="material-symbols-outlined text-[20px] transition-transform" id="health-icon">sync</span>
+<span id="health-label">Ejecutar comprobación de estado manual ↻</span>
+</button>
+<div class="flex items-center justify-center gap-2 text-text-tertiary font-code-metric text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-text-tertiary"></span>
+<span>Checksum criptográfico: SHA-256 e8f412... verified</span>
+</div>
+</div>
+<!-- Delight Micro-Interaction Toast Container -->
+<div class="fixed bottom-24 left-4 right-4 z-50 transform translate-y-32 opacity-0 transition-all duration-300 pointer-events-none" id="status-toast">
+<div class="bg-surface-secondary text-text-primary p-space-md rounded-xl shadow-2xl flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-primary-fixed text-[20px]">check_circle</span>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-text-primary font-medium">Verificación Completa</span>
+<span class="font-body-sm text-body-sm text-text-secondary truncate">Endpoints de YouTube y TikTok responden en 138ms</span>
+</div>
+</div>
+<span class="font-code-metric text-body-sm text-primary-fixed font-medium">OK</span>
+</div>
+</div>
+</div>
+<script>
+function runHealthCheck() {
+  const btn = document.getElementById('check-health-btn');
+  const icon = document.getElementById('health-icon');
+  const label = document.getElementById('health-label');
+  const toast = document.getElementById('status-toast');
+
+  // Trigger feedback
+  icon.classList.add('animate-spin');
+  label.textContent = "Consultando nodos distribuidos...";
+  btn.disabled = true;
+
+  setTimeout(() => {
+    icon.classList.remove('animate-spin');
+    label.textContent = "Comprobación completada (100% verificado)";
+    
+    // Show toast
+    toast.classList.remove('translate-y-32', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      // Revert label after 3 seconds
+      label.textContent = "Ejecutar comprobación de estado manual ↻";
+      btn.disabled = false;
+      
+      // Hide toast
+      toast.classList.add('translate-y-32', 'opacity-0');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 3200);
+  }, 1200);
+}
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-secondary/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-fixed bg-surface-card/60"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="descubrir" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-sm text-label-sm">Descubrir</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="tendencias" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span class="font-label-sm text-label-sm">Tendencias</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="oportunidades" href="#"><span class="material-symbols-outlined text-[20px]">lightbulb</span><span class="font-label-sm text-label-sm">Oportunidades</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="guardados" href="#"><span class="material-symbols-outlined text-[20px]">bookmark</span><span class="font-label-sm text-label-sm">Guardados</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 transition-colors text-primary-fixed bg-surface-card/60" data-path="fuentes-y-estado" href="#"><span class="material-symbols-outlined text-[20px]">dataset</span><span class="font-label-sm text-label-sm truncate">Fuentes/Estado</span></a></div></nav></body></html>
+
+<!-- Guardados — 30X RADAR -->
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#a7d385", "on-tertiary-fixed-variant": "#573f56", "on-primary-fixed": "#0b2000", "surface-container-lowest": "#0d0f0e", "on-primary-fixed-variant": "#2b5010", "error": "#ffb4ab", "primary": "#ffffff", "surface": "#121413", "on-secondary-fixed": "#082100", "primary-fixed": "#c2f09f", "border-subtle": "#303630", "on-secondary-container": "#95c17a", "accent-glow": "rgba(199, 245, 163, 0.15)", "on-error": "#690005", "outline": "#8d9384", "on-primary-container": "#486e2c", "surface-tint": "#a7d385", "surface-container-highest": "#333534", "surface-base": "#0B0D0C", "text-tertiary": "#606862", "outline-variant": "#43493d", "status-critical": "#FF6B6B", "on-background": "#e2e3e0", "on-tertiary": "#3f293f", "surface-container-low": "#1a1c1b", "secondary-fixed-dim": "#a6d389", "on-tertiary-fixed": "#281429", "on-secondary": "#143801", "tertiary-fixed-dim": "#ddbdd9", "on-primary": "#173800", "surface-card": "#202421", "error-container": "#93000a", "on-tertiary-container": "#765c74", "text-secondary": "#929A94", "border-strong": "#414B42", "surface-variant": "#333534", "inverse-primary": "#426827", "primary-container": "#c2f09f", "tertiary-fixed": "#fad8f5", "secondary-fixed": "#c2f0a3", "surface-container": "#1e201f", "background": "#121413", "on-secondary-fixed-variant": "#2a5015", "surface-bright": "#383a38", "tertiary-container": "#fad8f5", "surface-container-high": "#282a29", "surface-secondary": "#171A18", "surface-card-hover": "#262C28", "on-surface": "#e2e3e0", "text-primary": "#F5F7F3", "on-error-container": "#ffdad6", "surface-dim": "#121413", "tertiary": "#ffffff", "inverse-on-surface": "#2f312f", "inverse-surface": "#e2e3e0", "secondary-container": "#2a5015", "on-surface-variant": "#c3c9b9", "secondary": "#a6d389" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter-desktop": "1.5rem", "space-xs": "0.25rem", "margin-desktop": "2rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, "fontFamily": { "body-md": ["Inter"], "code-metric": ["Geist"], "display": ["Geist"], "label-md": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Geist"], "headline-sm": ["Geist"], "label-sm": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["0.875rem", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }], "code-metric": ["0.875rem", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500" }], "display": ["3rem", { "lineHeight": "1.1", "letterSpacing": "-0.035em", "fontWeight": "600" }], "label-md": ["0.8125rem", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500" }], "body-sm": ["0.75rem", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["1.25rem", { "lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "500" }], "headline-sm": ["1rem", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-sm": ["0.6875rem", { "lineHeight": "1.15", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-lg": ["1rem", { "lineHeight": "1.5", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-lg": ["2rem", { "lineHeight": "1.2", "letterSpacing": "-0.025em", "fontWeight": "600" }], "headline-lg-mobile": ["1.5rem", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0B0D0C;color:#F5F7F3;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-base font-body-md text-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-fixed-dim selection:text-surface-base"><header class="fixed top-0 inset-x-0 z-50 bg-surface-secondary/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-24 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="30X RADAR Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VFv_CSWwbVxaegzJR5kx5buPrIzk3IWn4sq3gsMCMDqW6VYWLbr35N5WniFfw6-auBoYyHnLZv1qqHhmltkipj4f3FDSf0yCVuQaSjN9KyPEM2_fBXYhYyTyyLHx-yZxLEO2WCjteyHlLt_yFyqjQn525ouXLuk3jGBLh9jMyesufEsYLqdmJQ_yC9ZDLq1nIZNQK6rAGoiuir6LIayHW7J4dlbM7X4F_J_PtO-U811LWHxfhehChQnA"/><span class="font-headline-sm text-headline-sm uppercase tracking-tight text-text-primary">30X RADAR</span></div><div class="flex items-center gap-space-sm"><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-card"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">SISTEMAS ACTIVOS</span></div><div class="flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaq1o96pI6YpaHEGl61bYgnkii8bw4FCr2P8JcZ7JuS2Iuaeo2JliL8K9j96ZM-kE8a4U_XEPIQacZDxnCsTti-LYK60aVF2xU8fuXSBM3bayjjE9XAx9bI6lebftg9xjV7uEVKk0kE0Fsm0tDCCK06wbpPmJQTPKEekYDcwbewqLM2-MEG-7fFTMk4W3-W9ZNN89Xmlg3Mnvp0WdJm9WmMps3F4uVRXm2Ao3qFdSrkzA52u45S6bx"/></div></div></div><div class="flex items-center justify-between text-text-secondary font-code-metric text-body-sm"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-text-tertiary">sync</span><span>Última sincronización: hace 4 min</span></div><span class="font-label-sm text-label-sm text-text-tertiary uppercase">LATAM Executive</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-24 pb-20 bg-surface-base"><div class="flex flex-col w-full px-margin pb-space-xl">
+<!-- Cabecera de la Pantalla -->
+<header class="flex flex-col gap-space-xs pt-space-md mb-space-md">
+<div class="inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-full bg-surface-container">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">Pipeline Editorial</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">Ideas y Oportunidades Guardadas</h1>
+<p class="font-body-md text-body-md text-text-secondary">Pipeline editorial en preparación para la red de contenidos 30X</p>
+<!-- Micro-métricas tipo Ticker Editorial -->
+<div class="flex items-center gap-2 mt-space-xs p-2 rounded-lg bg-surface-container-low text-text-secondary font-code-metric text-body-sm overflow-x-auto whitespace-nowrap">
+<div class="flex items-center gap-1 text-text-primary">
+<span class="font-bold text-primary-fixed">8</span>
+<span class="text-text-secondary">En cola</span>
+</div>
+<span class="text-text-tertiary">•</span>
+<div class="flex items-center gap-1 text-text-primary">
+<span class="font-bold text-secondary-fixed">3</span>
+<span class="text-text-secondary">En producción</span>
+</div>
+<span class="text-text-tertiary">•</span>
+<div class="flex items-center gap-1 text-text-primary">
+<span class="font-bold text-on-surface">2</span>
+<span class="text-text-secondary">Publicadas este mes</span>
+</div>
+</div>
+</header>
+<!-- Filtros y Búsqueda Interactiva -->
+<section class="flex flex-col gap-space-sm mb-space-lg">
+<!-- Buscador -->
+<div class="relative flex items-center w-full">
+<span class="material-symbols-outlined absolute left-3 text-text-tertiary text-lg pointer-events-none">search</span>
+<input class="w-full bg-surface-container-low text-text-primary placeholder:text-text-tertiary text-body-md font-body-md pl-10 pr-9 py-2.5 rounded-xl focus:outline-none focus:bg-surface-container focus:text-text-primary transition-all duration-200" id="search-input" placeholder="Filtrar por guion, formato o analista..." type="text"/>
+<button class="absolute right-3 text-text-tertiary hover:text-text-primary flex items-center justify-center transition-colors hidden" id="clear-search-btn" onclick="const input = document.getElementById('search-input'); input.value=''; this.classList.add('hidden'); input.focus();" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+<!-- Tags horizontales desplazables -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 scrollbar-none" id="tag-filters">
+<button class="filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-fixed text-on-primary-fixed font-semibold shrink-0 transition-transform active:scale-95">
+        #Todos
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-text-secondary shrink-0 hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+        #AgentesIA
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-text-secondary shrink-0 hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+        #Estrategia
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-text-secondary shrink-0 hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+        #FinTech
+      </button>
+<button class="filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-text-secondary shrink-0 hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+        #Infraestructura
+      </button>
+</div>
+</section>
+<!-- Lista de Oportunidades Guardadas -->
+<div class="flex flex-col gap-space-md" id="cards-container">
+<!-- Item 1: En Producción -->
+<article class="flex flex-col bg-surface-card rounded-xl p-space-md gap-space-md relative overflow-hidden transition-all duration-300 hover:bg-surface-card-hover shadow-sm">
+<!-- Glow superior sutil -->
+<div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary-fixed to-transparent opacity-80"></div>
+<!-- Header de la tarjeta -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-primary-fixed font-label-sm text-label-sm font-semibold tracking-wide uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span>
+            En Producción
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px] text-text-tertiary">edit_note</span>
+            #AgentesIA
+          </span>
+</div>
+<button class="w-7 h-7 flex items-center justify-center rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">bookmark_added</span>
+</button>
+</div>
+<!-- Título y Formato -->
+<div class="flex flex-col gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold leading-tight">
+          Framework de 4 pasos para auditar código generado por IA en empresas
+        </h2>
+<div class="flex flex-wrap items-center gap-space-xs text-text-secondary font-body-sm text-body-sm">
+<span class="inline-flex items-center gap-1 text-primary-fixed bg-surface-container-lowest px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">smart_display</span>
+            YouTube (10 min)
+          </span>
+<span class="text-text-tertiary">+</span>
+<span class="inline-flex items-center gap-1 text-text-secondary bg-surface-container-lowest px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">mail</span>
+            Newsletter
+          </span>
+</div>
+</div>
+<!-- Visual Context Placeholder -->
+<div class="relative w-full h-28 rounded-lg overflow-hidden bg-surface-container-lowest flex items-end p-2.5">
+<img class="absolute inset-0 w-full h-full object-cover opacity-35" data-alt="Editorial visual mockup representing artificial intelligence source code auditing and software security flowcharts on deep dark screens with subtle lime green glowing vectors and clean analytical data graphs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYxT1RuwPW311mwFPFgI7Zxf9igbLI-YPvVk6Vvcx11s0WgGVpOzwVWSkbSaVld_0uAcWFnhFAEiU6gyMvxYicbx1Mg_QmDhZU8ZL6kcOUtgFe770guNwZSd642mb_ADO9HQ_EjOxPQxjJ7HoKXVcPwIT94vfLqAsCVE-kBdwfjlyLUOhxC_2zpOAbKtIIFEfNvnVVuvO3NjrPhsycmy1TyWM7k-JsZ-IsSmTDwqua3AY1nOZ2Pmsj"/>
+<div class="relative z-10 flex items-center justify-between w-full">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-surface-base/80 backdrop-blur-md text-text-primary font-code-metric text-body-sm">
+<span class="material-symbols-outlined text-sm text-primary-fixed">sensors</span>
+<span>4 videos analizados en Radar</span>
+</div>
+<span class="text-text-tertiary font-code-metric text-body-sm bg-surface-base/80 px-1.5 py-0.5 rounded">12 Oct 2025</span>
+</div>
+</div>
+<!-- Notas Editoriales & Avance de Guión -->
+<div class="flex flex-col gap-2 p-2.5 rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<img class="w-5 h-5 rounded-full object-cover" data-alt="Professional portrait of Camila R., modern media editor and content strategist in dark studio lighting with soft lime rim light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSCEm6xo3fAqXVgtDOyejKzCJPNWqEzAwjrJ9i1e34RpGdb8thMGTlNHpXKLQqZCO49x9jRacbi3UAq-f02Qlg3iHICyZEzdhWpzCsWqPWlPOBfgPanOajpOOAsZPJCNYTovjEMSrXLAXdp_yhoiT1Kqnh4cigAt4l6W7l4Vq-Y8bi2z0NdLjDVrKS5FK0ADYqsAVMPAlcBs-h0TF3vYR8FVj95CWd5ql9DSTnJrfmYWHP5mZKjQGm"/>
+<span class="font-label-sm text-label-sm text-text-primary font-medium">Camila R. (Editora)</span>
+</div>
+<span class="font-code-metric text-body-sm text-primary-fixed font-semibold">Guion 80%</span>
+</div>
+<!-- Barra de progreso -->
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-fixed rounded-full w-4/5"></div>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary line-clamp-2 italic">
+          "El guion está al 80%. Validar ejemplos con caso de éxito de banco regional."
+        </p>
+</div>
+<!-- Acciones Táctiles -->
+<div class="grid grid-cols-3 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-semibold transition-transform active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-base">description</span>
+<span>Ver Guion</span>
+</button>
+<button class="flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-text-primary font-label-md text-label-md font-medium hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base text-text-secondary">query_stats</span>
+<span class="truncate">Métricas</span>
+</button>
+<button class="flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-text-secondary font-label-md text-label-md hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base">published_with_changes</span>
+<span class="truncate">Estado</span>
+</button>
+</div>
+</article>
+<!-- Item 2: Aprobado -->
+<article class="flex flex-col bg-surface-card rounded-xl p-space-md gap-space-md relative overflow-hidden transition-all duration-300 hover:bg-surface-card-hover shadow-sm">
+<!-- Header de la tarjeta -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-highest text-text-primary font-label-sm text-label-sm font-semibold tracking-wide uppercase">
+<span class="material-symbols-outlined text-[13px] text-text-secondary">check_circle</span>
+            Aprobado
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px] text-text-tertiary">tag</span>
+            #Estrategia
+          </span>
+</div>
+<div class="flex items-center gap-1">
+<span class="px-2 py-0.5 rounded bg-error-container/40 text-error font-label-sm text-label-sm uppercase font-semibold">Prioridad Alta</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-lg">bookmark</span>
+</button>
+</div>
+</div>
+<!-- Título y Formato -->
+<div class="flex flex-col gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold leading-tight">
+          Soberanía de IA: Modelos locales vs API en la nube para empresas mexicanas
+        </h2>
+<div class="flex flex-wrap items-center gap-space-xs text-text-secondary font-body-sm text-body-sm">
+<span class="inline-flex items-center gap-1 text-text-primary bg-surface-container-lowest px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">view_carousel</span>
+            Carrusel Ejecutivo
+          </span>
+<span class="text-text-tertiary">+</span>
+<span class="inline-flex items-center gap-1 text-text-primary bg-surface-container-lowest px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">podcasts</span>
+            Podcast 30X
+          </span>
+</div>
+</div>
+<!-- Referencias & Meta -->
+<div class="grid grid-cols-2 gap-2 p-2 rounded-lg bg-surface-container-low font-code-metric text-body-sm">
+<div class="flex items-center gap-1.5 text-text-secondary">
+<span class="material-symbols-outlined text-sm text-primary-fixed">dynamic_feed</span>
+<span class="truncate">2 TikToks + 1 YouTube</span>
+</div>
+<div class="flex items-center justify-end gap-1 text-text-tertiary">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>Ayer</span>
+</div>
+</div>
+<!-- Asignación & Notas -->
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-text-tertiary border-dashed">
+<span class="material-symbols-outlined text-base">person_add</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-text-tertiary uppercase">Asignado</span>
+<span class="font-body-sm text-body-sm text-text-secondary font-medium">Sin asignar</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary max-w-[170px] text-right truncate">
+          Para edición del viernes
+        </p>
+</div>
+<!-- Acciones Táctiles -->
+<div class="grid grid-cols-3 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-text-primary font-label-md text-label-md font-medium hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base text-primary-fixed">person_add</span>
+<span class="truncate">Asignar</span>
+</button>
+<button class="flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-text-secondary font-label-md text-label-md hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base">edit</span>
+<span class="truncate">Editar</span>
+</button>
+<button class="flex items-center justify-center gap-1 py-2 px-2.5 rounded-lg bg-surface-container text-text-secondary font-label-md text-label-md hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base">analytics</span>
+<span class="truncate">Análisis</span>
+</button>
+</div>
+</article>
+<!-- Item 3: En Evaluación (Borrador) -->
+<article class="flex flex-col bg-surface-card rounded-xl p-space-md gap-space-md relative overflow-hidden transition-all duration-300 hover:bg-surface-card-hover shadow-sm">
+<!-- Header de la tarjeta -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-low text-text-tertiary font-label-sm text-label-sm font-semibold tracking-wide uppercase">
+<span class="material-symbols-outlined text-[12px]">hourglass_empty</span>
+            En Evaluación
+          </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[13px] text-text-tertiary">bolt</span>
+            #FinTech
+          </span>
+</div>
+<span class="font-code-metric text-body-sm text-text-tertiary">Hace 3 días</span>
+</div>
+<!-- Título y Formato -->
+<div class="flex flex-col gap-1.5">
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold leading-tight">
+          Automatización de atención a clientes con Voicebots de latencia ultra baja
+        </h2>
+<div class="flex items-center gap-space-xs text-text-secondary font-body-sm text-body-sm">
+<span class="inline-flex items-center gap-1 text-primary-fixed bg-surface-container-lowest px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">play_arrow</span>
+            Short / Reel vertical
+          </span>
+<span class="text-text-tertiary">•</span>
+<span class="text-text-tertiary">Score viral 89/100</span>
+</div>
+</div>
+<!-- Acciones Rápidas de Triage -->
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-surface-container-high text-primary-fixed hover:bg-surface-container-highest font-label-md text-label-md font-semibold transition-transform active:scale-95">
+<span class="material-symbols-outlined text-base">thumb_up</span>
+<span>Aprobar Idea</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-surface-container-lowest text-text-tertiary hover:text-error hover:bg-surface-container transition-transform active:scale-95 font-label-md text-label-md">
+<span class="material-symbols-outlined text-base">delete_outline</span>
+<span>Descartar</span>
+</button>
+</div>
+</article>
+</div>
+<!-- Botón Flotante / Acceso Rápido al final del stream -->
+<div class="flex items-center justify-between p-space-md mt-space-lg rounded-xl bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-text-primary">¿Tienes un nuevo ángulo?</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Guarda insights desde el Radar o redacta una idea libre</span>
+</div>
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-primary-fixed text-on-primary-fixed shrink-0 shadow-md transition-transform active:scale-90 hover:opacity-95">
+<span class="material-symbols-outlined text-xl">add</span>
+</button>
+</div>
+</div>
+<script>
+  // Micro-interacción: Búsqueda y toggle del botón limpiar
+  const searchInput = document.getElementById('search-input');
+  const clearBtn = document.getElementById('clear-search-btn');
+
+  if (searchInput && clearBtn) {
+    searchInput.addEventListener('input', (e) => {
+      if (e.target.value.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+    });
+  }
+
+  // Micro-interacción: Chips de filtro de etiquetas
+  const filterChips = document.querySelectorAll('.filter-chip');
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      filterChips.forEach(c => {
+        c.className = 'filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container text-text-secondary shrink-0 hover:text-text-primary hover:bg-surface-container-high transition-transform active:scale-95';
+      });
+      chip.className = 'filter-chip px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-fixed text-on-primary-fixed font-semibold shrink-0 transition-transform active:scale-95';
+    });
+  });
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-secondary/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-fixed bg-surface-card/60"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="descubrir" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-sm text-label-sm">Descubrir</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="tendencias" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span class="font-label-sm text-label-sm">Tendencias</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="oportunidades" href="#"><span class="material-symbols-outlined text-[20px]">lightbulb</span><span class="font-label-sm text-label-sm">Oportunidades</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 transition-colors text-primary-fixed bg-surface-card/60" data-path="guardados" href="#"><span class="material-symbols-outlined text-[20px]">bookmark</span><span class="font-label-sm text-label-sm">Guardados</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="fuentes-y-estado" href="#"><span class="material-symbols-outlined text-[20px]">dataset</span><span class="font-label-sm text-label-sm truncate">Fuentes/Estado</span></a></div></nav></body></html>
+
+<!-- Descubrir — 30X RADAR -->
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-fixed-dim": "#a7d385", "on-tertiary-fixed-variant": "#573f56", "on-primary-fixed": "#0b2000", "surface-container-lowest": "#0d0f0e", "on-primary-fixed-variant": "#2b5010", "error": "#ffb4ab", "primary": "#ffffff", "surface": "#121413", "on-secondary-fixed": "#082100", "primary-fixed": "#c2f09f", "border-subtle": "#303630", "on-secondary-container": "#95c17a", "accent-glow": "rgba(199, 245, 163, 0.15)", "on-error": "#690005", "outline": "#8d9384", "on-primary-container": "#486e2c", "surface-tint": "#a7d385", "surface-container-highest": "#333534", "surface-base": "#0B0D0C", "text-tertiary": "#606862", "outline-variant": "#43493d", "status-critical": "#FF6B6B", "on-background": "#e2e3e0", "on-tertiary": "#3f293f", "surface-container-low": "#1a1c1b", "secondary-fixed-dim": "#a6d389", "on-tertiary-fixed": "#281429", "on-secondary": "#143801", "tertiary-fixed-dim": "#ddbdd9", "on-primary": "#173800", "surface-card": "#202421", "error-container": "#93000a", "on-tertiary-container": "#765c74", "text-secondary": "#929A94", "border-strong": "#414B42", "surface-variant": "#333534", "inverse-primary": "#426827", "primary-container": "#c2f09f", "tertiary-fixed": "#fad8f5", "secondary-fixed": "#c2f0a3", "surface-container": "#1e201f", "background": "#121413", "on-secondary-fixed-variant": "#2a5015", "surface-bright": "#383a38", "tertiary-container": "#fad8f5", "surface-container-high": "#282a29", "surface-secondary": "#171A18", "surface-card-hover": "#262C28", "on-surface": "#e2e3e0", "text-primary": "#F5F7F3", "on-error-container": "#ffdad6", "surface-dim": "#121413", "tertiary": "#ffffff", "inverse-on-surface": "#2f312f", "inverse-surface": "#e2e3e0", "secondary-container": "#2a5015", "on-surface-variant": "#c3c9b9", "secondary": "#a6d389" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter-desktop": "1.5rem", "space-xs": "0.25rem", "margin-desktop": "2rem", "space-lg": "1.25rem", "margin": "1rem", "space-md": "0.75rem" }, "fontFamily": { "body-md": ["Inter"], "code-metric": ["Geist"], "display": ["Geist"], "label-md": ["Inter"], "body-sm": ["Inter"], "headline-md": ["Geist"], "headline-sm": ["Geist"], "label-sm": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Geist"], "headline-lg-mobile": ["Geist"] }, "fontSize": { "body-md": ["0.875rem", { "lineHeight": "1.5", "letterSpacing": "0em", "fontWeight": "400" }], "code-metric": ["0.875rem", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "500" }], "display": ["3rem", { "lineHeight": "1.1", "letterSpacing": "-0.035em", "fontWeight": "600" }], "label-md": ["0.8125rem", { "lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500" }], "body-sm": ["0.75rem", { "lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "400" }], "headline-md": ["1.25rem", { "lineHeight": "1.3", "letterSpacing": "-0.015em", "fontWeight": "500" }], "headline-sm": ["1rem", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-sm": ["0.6875rem", { "lineHeight": "1.15", "letterSpacing": "0.04em", "fontWeight": "600" }], "body-lg": ["1rem", { "lineHeight": "1.5", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-lg": ["2rem", { "lineHeight": "1.2", "letterSpacing": "-0.025em", "fontWeight": "600" }], "headline-lg-mobile": ["1.5rem", { "lineHeight": "1.25", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0B0D0C;color:#F5F7F3;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface-base font-body-md text-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-fixed-dim selection:text-surface-base"><header class="fixed top-0 inset-x-0 z-50 bg-surface-secondary/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-24 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="30X RADAR Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VFv_CSWwbVxaegzJR5kx5buPrIzk3IWn4sq3gsMCMDqW6VYWLbr35N5WniFfw6-auBoYyHnLZv1qqHhmltkipj4f3FDSf0yCVuQaSjN9KyPEM2_fBXYhYyTyyLHx-yZxLEO2WCjteyHlLt_yFyqjQn525ouXLuk3jGBLh9jMyesufEsYLqdmJQ_yC9ZDLq1nIZNQK6rAGoiuir6LIayHW7J4dlbM7X4F_J_PtO-U811LWHxfhehChQnA"/><span class="font-headline-sm text-headline-sm uppercase tracking-tight text-text-primary">30X RADAR</span></div><div class="flex items-center gap-space-sm"><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-card"><span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed">SISTEMAS ACTIVOS</span></div><div class="flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaq1o96pI6YpaHEGl61bYgnkii8bw4FCr2P8JcZ7JuS2Iuaeo2JliL8K9j96ZM-kE8a4U_XEPIQacZDxnCsTti-LYK60aVF2xU8fuXSBM3bayjjE9XAx9bI6lebftg9xjV7uEVKk0kE0Fsm0tDCCK06wbpPmJQTPKEekYDcwbewqLM2-MEG-7fFTMk4W3-W9ZNN89Xmlg3Mnvp0WdJm9WmMps3F4uVRXm2Ao3qFdSrkzA52u45S6bx"/></div></div></div><div class="flex items-center justify-between text-text-secondary font-code-metric text-body-sm"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-sm text-text-tertiary">sync</span><span>Última sincronización: hace 4 min</span></div><span class="font-label-sm text-label-sm text-text-tertiary uppercase">LATAM Executive</span></div></div></header><main class="flex-1 flex flex-col relative w-full pt-24 pb-20 bg-surface-base"><div class="flex flex-col w-full px-margin py-space-md gap-space-lg">
+<!-- Hero Section -->
+<section class="flex flex-col gap-space-sm relative overflow-hidden bg-surface-secondary rounded-xl p-space-md shadow-lg">
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary-fixed">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-ping"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">RADAR LATAM • V2.4</span>
+</div>
+<div class="flex items-center gap-1 text-text-secondary font-code-metric text-body-sm">
+<span class="material-symbols-outlined text-sm text-primary-fixed">bolt</span>
+<span>Tiempo real</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-text-primary tracking-tight">
+        Descubre lo que viene.
+      </h1>
+<p class="font-body-sm text-body-sm text-text-secondary">
+        Encuentra contenido que está despegando, entiende por qué funciona y descubre oportunidades para tu audiencia.
+      </p>
+</div>
+<!-- Buscador Central -->
+<div class="relative w-full mt-space-xs">
+<div class="relative flex items-center bg-surface-base rounded-lg transition-all focus-within:shadow-[0_0_12px_rgba(199,245,163,0.15)]">
+<span class="material-symbols-outlined absolute left-3 text-text-secondary text-lg">search</span>
+<input class="w-full bg-transparent pl-10 pr-14 py-2.5 font-body-sm text-body-sm text-text-primary placeholder:text-text-tertiary focus:outline-none" placeholder="Busca un tema, hashtag o tendencia..." type="text"/>
+<div class="absolute right-2 px-1.5 py-0.5 rounded bg-surface-container-highest text-text-secondary font-code-metric text-label-sm flex items-center gap-0.5">
+<span>⌘K</span>
+</div>
+</div>
+</div>
+<!-- Filtros Rápidos Segmentados -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<!-- Selector Fila 1: Plataformas & Período -->
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+<span class="font-label-sm text-label-sm uppercase text-text-tertiary tracking-wider shrink-0">Canal:</span>
+<div class="inline-flex bg-surface-base p-0.5 rounded-lg shrink-0">
+<button class="px-2.5 py-1 rounded bg-surface-card text-primary-fixed font-label-sm text-label-sm shadow-sm transition-all" type="button">Todos</button>
+<button class="px-2.5 py-1 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm transition-all" type="button">YouTube</button>
+<button class="px-2.5 py-1 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm transition-all" type="button">TikTok</button>
+</div>
+<div class="w-px h-4 bg-surface-container-highest shrink-0 mx-1"></div>
+<span class="font-label-sm text-label-sm uppercase text-text-tertiary tracking-wider shrink-0">Rango:</span>
+<div class="inline-flex bg-surface-base p-0.5 rounded-lg shrink-0">
+<button class="px-2.5 py-1 rounded bg-surface-card text-primary-fixed font-label-sm text-label-sm shadow-sm" type="button">7 días</button>
+<button class="px-2.5 py-1 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm" type="button">30 días</button>
+</div>
+</div>
+<!-- Selector Fila 2: Ordenar & Formato -->
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+<span class="font-label-sm text-label-sm uppercase text-text-tertiary tracking-wider shrink-0">Orden:</span>
+<div class="inline-flex bg-surface-base p-0.5 rounded-lg shrink-0">
+<button class="px-2 py-0.5 rounded bg-surface-card text-primary-fixed font-label-sm text-label-sm" type="button">Engagement</button>
+<button class="px-2 py-0.5 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm" type="button">Vistas</button>
+<button class="px-2 py-0.5 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm" type="button">Reciente</button>
+</div>
+<div class="w-px h-4 bg-surface-container-highest shrink-0 mx-1"></div>
+<span class="font-label-sm text-label-sm uppercase text-text-tertiary tracking-wider shrink-0">Tipo:</span>
+<div class="inline-flex bg-surface-base p-0.5 rounded-lg shrink-0">
+<button class="px-2 py-0.5 rounded bg-surface-card text-primary-fixed font-label-sm text-label-sm" type="button">Shorts/Reels</button>
+<button class="px-2 py-0.5 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm" type="button">Long-form</button>
+<button class="px-2 py-0.5 rounded text-text-secondary hover:text-text-primary font-label-sm text-label-sm" type="button">Todos</button>
+</div>
+</div>
+</div>
+<!-- Chips Trending Un Toque -->
+<div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+<span class="material-symbols-outlined text-text-tertiary text-sm shrink-0">trending_up</span>
+<button class="px-2.5 py-1 rounded-full bg-secondary-container text-primary-fixed font-label-sm text-label-sm whitespace-nowrap shadow-sm" type="button">
+        #AIAgents
+      </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-base text-text-secondary hover:text-text-primary font-label-sm text-label-sm whitespace-nowrap transition-colors" type="button">
+        #GenerativeAI
+      </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-base text-text-secondary hover:text-text-primary font-label-sm text-label-sm whitespace-nowrap transition-colors" type="button">
+        #Automation
+      </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-base text-text-secondary hover:text-text-primary font-label-sm text-label-sm whitespace-nowrap transition-colors" type="button">
+        #AIForBusiness
+      </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-base text-text-secondary hover:text-text-primary font-label-sm text-label-sm whitespace-nowrap transition-colors" type="button">
+        #DeepSeek
+      </button>
+</div>
+</section>
+<!-- Feed Header -->
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-text-primary">Descubrimiento Editorial</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-card text-primary-fixed font-code-metric text-label-sm">3 Señales</span>
+</div>
+<button class="flex items-center gap-1 text-text-secondary hover:text-text-primary font-label-sm text-label-sm" type="button">
+<span class="material-symbols-outlined text-sm">tune</span>
+<span>Ajustes</span>
+</button>
+</div>
+<!-- Cards Grid -->
+<div class="flex flex-col gap-space-md">
+<!-- Tarjeta 1: Autonomous AI Agents -->
+<article class="bg-surface-card rounded-xl p-space-md flex flex-col gap-space-sm shadow-md hover:bg-surface-card-hover transition-colors">
+<!-- Media Header & Tags -->
+<div class="relative w-full h-44 rounded-lg overflow-hidden bg-surface-base">
+<img class="w-full h-full object-cover" data-alt="Futuristic glowing AI workflow schematic on a modern dark interface display with neon lime nodes and interconnected automated B2B sales funnel data visualization, cinematic studio lighting with dark charcoal depth" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm6PQxvqIJhchhhFYwsE22ZZCMzKLnccxyHp_6YA7lW5Rxtku-l6BI6kUTcGIv0xFndOVajkxF8CVFDhjAnS4q7EXxbPqgSbKsDSDdivEgjlaHOEnwdohhGRqMb1EfZoO7KarYjUx0D_mUfpGLctEIq9j2mV3Jlvt9waA92jiBy7RVTIQC0_HlxmF3LpMZAkaCkmvdxG3qOEval0Rs2VRcuV69jAeruCb5rtRHEL2aJYO8_06hEoD1"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/30 to-transparent"></div>
+<!-- Platform & Format Badge -->
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-base/90 backdrop-blur-md text-status-critical font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-xs">smart_display</span>
+<span>YouTube Shorts</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-base/80 backdrop-blur-md text-primary-fixed font-label-sm text-label-sm">
+            +48% Vel
+          </span>
+</div>
+<!-- Confidence Indicator Overlay -->
+<div class="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-surface-base/90 backdrop-blur-md px-2 py-0.5 rounded text-primary-fixed font-code-metric text-label-sm">
+<span class="material-symbols-outlined text-xs text-primary-fixed">verified</span>
+<span>98% Confianza</span>
+</div>
+</div>
+<!-- Content Info -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-text-secondary font-label-sm text-label-sm">
+<span class="text-text-primary font-medium">TechLatam Strategy</span>
+<span class="text-text-tertiary">Hace 2 días</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary leading-snug">
+          Cómo implementar Agentes IA autónomos en ventas B2B en 2025
+        </h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded bg-surface-secondary text-text-secondary font-label-sm text-label-sm">
+            Agentes IA / Productividad
+          </span>
+</div>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-3 gap-2 py-space-xs px-space-sm bg-surface-secondary rounded-lg font-code-metric">
+<div class="flex flex-col">
+<span class="text-text-tertiary text-label-sm">Vistas</span>
+<span class="text-text-primary font-code-metric text-body-md font-semibold">142.8K</span>
+</div>
+<div class="flex flex-col">
+<span class="text-text-tertiary text-label-sm">Likes</span>
+<span class="text-text-primary font-code-metric text-body-md font-semibold">18.4K</span>
+</div>
+<div class="flex flex-col items-start">
+<span class="text-text-tertiary text-label-sm">Engagement</span>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-secondary-container text-primary-fixed font-label-sm text-label-sm font-bold">
+<span class="w-1 h-1 rounded-full bg-primary-fixed"></span>
+<span>8.6%</span>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="flex items-center justify-between pt-1">
+<span class="text-text-tertiary font-code-metric text-label-sm">Precisión: Alta</span>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-semibold shadow-[0_0_12px_rgba(199,245,163,0.2)] hover:opacity-90 active:scale-95 transition-all" type="button">
+<span>Analizar tendencia</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Tarjeta 2: Automation Tools -->
+<article class="bg-surface-card rounded-xl p-space-md flex flex-col gap-space-sm shadow-md hover:bg-surface-card-hover transition-colors">
+<!-- Media Header -->
+<div class="relative w-full h-44 rounded-lg overflow-hidden bg-surface-base">
+<img class="w-full h-full object-cover" data-alt="Editorial portrait of a Latin American technology consultant working alongside dual sleek dark holographic screens showing financial cost saving graphs and machine learning micro-automations, moody dark green ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoSwkfNgY_eqOn9Ho3sKBez1agHLLvJ0P1PfkqfR7Rday0wKYgfbFIRbq4aUvOSyIwh2d6F38knpsKD98DWLqYnntvT_qDX4x-jmXQ9HZlekV2RCYzOVoxCebuYep71bjEQxOEttNdbBYByhV9cRjDKn6LLAyaxBFQrS-kjPPv-wGWywqylmTe9IMIJV2WDs1yUFVywfSStknnn7o7XgTBIByNqYLI_C35sj1BR9vtgShLH4w7SVbl"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/30 to-transparent"></div>
+<!-- Platform Badge -->
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-base/90 backdrop-blur-md text-text-primary font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-xs text-primary-fixed">play_circle</span>
+<span>TikTok</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-base/80 backdrop-blur-md text-primary-fixed font-label-sm text-label-sm">
+            Viral
+          </span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-surface-base/90 backdrop-blur-md px-2 py-0.5 rounded text-primary-fixed font-code-metric text-label-sm">
+<span class="material-symbols-outlined text-xs text-primary-fixed">verified</span>
+<span>94% Confianza</span>
+</div>
+</div>
+<!-- Content Info -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-text-secondary font-label-sm text-label-sm">
+<span class="text-text-primary font-medium">Rodrigo Morales AI</span>
+<span class="text-text-tertiary">Hace 4 días</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary leading-snug">
+          3 herramientas de automatización que reemplazan consultorías costosas
+        </h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded bg-surface-secondary text-text-secondary font-label-sm text-label-sm">
+            Automatización &amp; Costos
+          </span>
+</div>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-3 gap-2 py-space-xs px-space-sm bg-surface-secondary rounded-lg font-code-metric">
+<div class="flex flex-col">
+<span class="text-text-tertiary text-label-sm">Vistas</span>
+<span class="text-text-primary font-code-metric text-body-md font-semibold">389.2K</span>
+</div>
+<div class="flex flex-col">
+<span class="text-text-tertiary text-label-sm">Likes</span>
+<span class="text-text-primary font-code-metric text-body-md font-semibold">42.1K</span>
+</div>
+<div class="flex flex-col items-start">
+<span class="text-text-tertiary text-label-sm">Engagement</span>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-secondary-container text-primary-fixed font-label-sm text-label-sm font-bold">
+<span class="w-1 h-1 rounded-full bg-primary-fixed"></span>
+<span>11.2%</span>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="flex items-center justify-between pt-1">
+<span class="text-text-tertiary font-code-metric text-label-sm">Precisión: Alta</span>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-semibold shadow-[0_0_12px_rgba(199,245,163,0.2)] hover:opacity-90 active:scale-95 transition-all" type="button">
+<span>Analizar tendencia</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Tarjeta 3: DeepSeek vs ChatGPT -->
+<article class="bg-surface-card rounded-xl p-space-md flex flex-col gap-space-sm shadow-md hover:bg-surface-card-hover transition-colors">
+<!-- Media Header -->
+<div class="relative w-full h-44 rounded-lg overflow-hidden bg-surface-base">
+<img class="w-full h-full object-cover" data-alt="Deep split comparison composition showing two artificial intelligence computing cores benchmarking complex mathematical tokens against Spanish enterprise business metrics, dark matte textures with subtle lime and emerald neon rays" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAnOdKTHb0cnl02hV8m7R3y-kjLFQZupFP3vQbjqAthzCTdeHm-5EA6kd0iqWCURNoc-APb7VhM6AwGu9e7ntWIulZAa72wqDTdyw7H8eub2UwdyQ0P79Gv6cvJbdeC9m5XhQ_KORcK9TBQVwxyN_hGFPp0GGknMjtOUcjHtYPV-FdXxmq5gI0JpWqgJPYg_KQrvSTZ92OJ2ah8vF7K2VUyWmxjBE5AIIdN1RPJNMrNNP1FDkF_rGd"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/30 to-transparent"></div>
+<!-- Platform Badge -->
+<div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-base/90 backdrop-blur-md text-text-primary font-label-sm text-label-sm shadow-sm">
+<span class="material-symbols-outlined text-xs text-status-critical">video_library</span>
+<span>YouTube Long-form</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-base/80 backdrop-blur-md text-text-secondary font-label-sm text-label-sm">
+            24:18 min
+          </span>
+</div>
+<div class="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-surface-base/90 backdrop-blur-md px-2 py-0.5 rounded text-primary-fixed font-code-metric text-label-sm">
+<span class="material-symbols-outlined text-xs text-primary-fixed">verified</span>
+<span>91% Confianza</span>
+</div>
+</div>
+<!-- Content Info -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-text-secondary font-label-sm text-label-sm">
+<span class="text-text-primary font-medium">Enterprise AI Studio</span>
+<span class="text-text-tertiary">Hace 6 días</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary leading-snug">
+          DeepSeek vs ChatGPT: Impacto real en empresas hispanohablantes
+        </h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded bg-surface-secondary text-text-secondary font-label-sm text-label-sm">
+            Modelos Abiertos / Negocios
+          </span>
+</div>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-3 gap-2 py-space-xs px-space-sm bg-surface-secondary rounded-lg font-code-metric">
+<div class="flex flex-col">
+<span class="text-text-tertiary text-label-sm">Vistas</span>
+<span class="text-text-primary font-code-metric text-body-md font-semibold">98.4K</span>
+</div>
+<div class="flex flex-col">
+<span class="text-text-tertiary text-label-sm">Likes</span>
+<span class="text-text-primary font-code-metric text-body-md font-semibold">12.0K</span>
+</div>
+<div class="flex flex-col items-start">
+<span class="text-text-tertiary text-label-sm">Engagement</span>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-secondary-container text-primary-fixed font-label-sm text-label-sm font-bold">
+<span class="w-1 h-1 rounded-full bg-primary-fixed"></span>
+<span>7.4%</span>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="flex items-center justify-between pt-1">
+<span class="text-text-tertiary font-code-metric text-label-sm">Precisión: Alta</span>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-md text-label-md font-semibold shadow-[0_0_12px_rgba(199,245,163,0.2)] hover:opacity-90 active:scale-95 transition-all" type="button">
+<span>Analizar tendencia</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</article>
+</div>
+<!-- Ambient Radar Footer Signal -->
+<div class="flex items-center justify-between py-space-sm px-space-md bg-surface-secondary rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed text-base">radar</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Monitoreando 412 canales en tiempo real</span>
+</div>
+<span class="font-code-metric text-label-sm text-primary-fixed">LATAM 100% OK</span>
+</div>
+</div></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-secondary/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary-fixed bg-surface-card/60"><div class="flex justify-around items-center h-20 px-space-xs"><a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 transition-colors text-primary-fixed bg-surface-card/60" data-path="descubrir" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-sm text-label-sm">Descubrir</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="tendencias" href="#"><span class="material-symbols-outlined text-[20px]">query_stats</span><span class="font-label-sm text-label-sm">Tendencias</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="oportunidades" href="#"><span class="material-symbols-outlined text-[20px]">lightbulb</span><span class="font-label-sm text-label-sm">Oportunidades</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="guardados" href="#"><span class="material-symbols-outlined text-[20px]">bookmark</span><span class="font-label-sm text-label-sm">Guardados</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-12 rounded px-1 text-text-secondary transition-colors" data-path="fuentes-y-estado" href="#"><span class="material-symbols-outlined text-[20px]">dataset</span><span class="font-label-sm text-label-sm truncate">Fuentes/Estado</span></a></div></nav></body></html>
