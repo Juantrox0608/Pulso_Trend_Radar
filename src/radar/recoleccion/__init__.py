@@ -1,0 +1,1 @@
+"""Recolectores de publicaciones públicas."""
