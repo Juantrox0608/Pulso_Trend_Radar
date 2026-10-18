@@ -337,3 +337,88 @@ def test_real_example_config_and_no_mock():
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         config(collector_mode="mock")
+
+
+@pytest.mark.parametrize("upstream_status,upstream_code,expected", [
+    (503, "provider_configuration", 503), (503, "provider_authentication", 503),
+    (503, "provider_rate_limited", 503), (503, "provider_unavailable", 503),
+    (504, "provider_timeout", 504), (502, "provider_rejected_request", 502),
+    (502, "invalid_provider_response", 502), (502, "invalid_source_reference", 502),
+    (422, "invalid_input", 502), (413, "body_too_large", 502),
+])
+def test_ai_http_errors_preserve_safe_diagnostics(body, result, upstream_status, upstream_code, expected):
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(upstream_status, json={"error": {
+            "code": upstream_code, "message": "SECRET_PROVIDER_BODY", "details": [{"input": "PRIVATE_INPUT"}],
+        }})
+    settings = config()
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    try:
+        with TestClient(create_app(settings, FakeCollector(result), AIClient(settings, http))) as client:
+            response = client.post("/research", json=body)
+        assert response.status_code == expected
+        error = response.json()["error"]
+        assert error["code"] == "ai_" + upstream_code
+        assert error["details"] == [{"service": "ai", "upstream_status": upstream_status, "upstream_code": upstream_code}]
+        assert "SECRET_PROVIDER_BODY" not in response.text and "PRIVATE_INPUT" not in response.text
+        assert len(calls) == 1
+    finally:
+        asyncio.run(http.aclose())
+
+
+@pytest.mark.parametrize("status,payload,expected", [
+    (404, b"<html>PRIVATE</html>", "ai_endpoint_not_found"),
+    (405, b"{}", "ai_method_not_allowed"),
+    (500, b'{"error":{"code":"PRIVATE_CODE","message":"SECRET"}}', "ai_error"),
+    (502, b"not-json", "ai_error"),
+    (502, b"x" * 17000, "ai_error"),
+    (503, b"{}", "ai_unavailable"),
+    (504, b"{}", "ai_timeout"),
+    (429, b"{}", "ai_rate_limited"),
+    (401, b"{}", "ai_authentication"),
+    (422, b'{"detail":[{"input":"PRIVATE"}]}', "ai_error"),
+    (502, b'{"error":{"code":["invalid_provider_response"]}}', "ai_error"),
+])
+def test_unknown_ai_errors_do_not_leak_body(body, result, status, payload, expected):
+    settings = config()
+    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(status, content=payload)))
+    try:
+        with TestClient(create_app(settings, FakeCollector(result), AIClient(settings, http))) as client:
+            response = client.post("/research", json=body)
+        error = response.json()["error"]
+        assert error["code"] == expected
+        assert error["details"] == [{"service": "ai", "upstream_status": status}]
+        assert "PRIVATE" not in response.text and "SECRET" not in response.text
+    finally:
+        asyncio.run(http.aclose())
+
+
+def test_real_ai_app_failure_is_diagnosable(body, result):
+    class FailingProvider:
+        async def generate(self, context):
+            raise ServiceError(502, "invalid_provider_response", "INTERNAL_DETAILS")
+    with TestClient(create_ai_app(FailingProvider())) as ai_server:
+        def handler(request):
+            response = ai_server.post("/analyze", json=json.loads(request.content))
+            return httpx.Response(response.status_code, json=response.json())
+        settings = config()
+        http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        try:
+            with TestClient(create_app(settings, FakeCollector(result), AIClient(settings, http))) as client:
+                response = client.post("/research", json=body)
+            assert response.status_code == 502
+            assert response.json()["error"]["code"] == "ai_invalid_provider_response"
+            assert "INTERNAL_DETAILS" not in response.text
+        finally:
+            asyncio.run(http.aclose())
+
+
+def test_postman_probe_is_valid_and_ranked():
+    from app.schemas import AnalyzeRequest
+    path = Path(__file__).parents[1] / "examples/ai_probe_request.json"
+    request = AnalyzeRequest.model_validate_json(path.read_text(encoding="utf-8"))
+    ranking = calculate_ranking(request.videos)
+    assert len(ranking) == 1
+    assert ranking[0].video_id == "yt:diagnostic-test" and ranking[0].value == 100

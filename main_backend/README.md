@@ -1,5 +1,8 @@
 # Backend principal de 30X RADAR
 
+Para aislar fallos de IA antes de repetir búsquedas, sigue
+[la guía de diagnóstico en Postman](examples/POSTMAN_DIAGNOSTIC.md).
+
 Flujo real: frontend → `POST /research` → recolector desplegado → normalización y
 selección → `POST /analyze` del servicio IA → frontend. Sin base de datos ni
 persistencia de investigaciones. No hay datos quemados ni fallback simulado en
