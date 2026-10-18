@@ -61,7 +61,7 @@ def test_bloqueo_guarda_parcial(codigo):
 
 def respuesta(texto): return {'choices':[{'message':{'content':texto}}]}
 
-@pytest.mark.parametrize('textos,conservados,sin_filtrar', [(['1: SI\n2: NO'], 1, 0), (['', ''], 2, 1), (['1: SI', '1: SI'], 2, 1), (['incorrecto', '1: SÍ\n2: NO'], 1, 0)])
+@pytest.mark.parametrize('textos,conservados,sin_filtrar', [(['1: SI\n2: NO'], 1, 0), (['', ''], 0, 1), (['1: SI', '1: SI'], 0, 1), (['incorrecto', '1: SÍ\n2: NO'], 1, 0)])
 def test_filtro(textos, conservados, sin_filtrar):
     pedidos = []
     def pedir(req):
@@ -71,7 +71,7 @@ def test_filtro(textos, conservados, sin_filtrar):
     pares = [tc.tiktok.convertir_entrada(entrada(sufijo=i), sal='sal', ahora=AHORA) for i in range(2)]
     filtro = tc.FiltroTema('IA', clave='ficticia', pedir=pedir, pausa=lambda _:None)
     filtrados, r = filtro.filtrar(pares)
-    assert len(filtrados) == conservados and r['lotes_sin_filtrar'] == sin_filtrar
+    assert len(filtrados) == conservados and r['lotes_descartados_sin_filtro'] == sin_filtrar
     for pedido in pedidos:
         assert pedido['model'] == 'nvidia/nemotron-3-super-120b-a12b:free'
         assert pedido['reasoning'] == {'enabled':False}
@@ -87,8 +87,8 @@ def test_filtro_429_no_vuelve_a_pedir():
     filtro = tc.FiltroTema('IA', clave='ficticia', pedir=pedir, pausa=lambda _:None)
     par = tc.tiktok.convertir_entrada(entrada(), sal='sal', ahora=AHORA)
     pares, r = filtro.filtrar([par]*61)
-    assert len(pares) == 61 and len(intentos) == 1
-    assert r['lotes_sin_filtrar'] == 3 and r['aviso']
+    assert pares == [] and len(intentos) == 1
+    assert r['lotes_descartados_sin_filtro'] == 3 and r['aviso']
 
 
 def test_semillas_csv_y_exa(tmp_path):
@@ -133,11 +133,11 @@ def test_cuota_persistente_y_dia_siguiente(tmp_path):
         pedidos.append(req)
         return respuesta('1: SI')
     filtro=tc.FiltroTema('IA',clave='ficticia',contador=contador,pedir=pedir,pausa=lambda _:None,reloj=lambda:AHORA)
-    assert filtro.filtrar([par])[1]['lotes_sin_filtrar']==0
+    assert filtro.filtrar([par])[1]['lotes_descartados_sin_filtro']==0
     otro=tc.FiltroTema('IA',clave='ficticia',contador=contador,pedir=pedir,pausa=lambda _:None,reloj=lambda:AHORA)
-    assert otro.filtrar([par])[1]['lotes_sin_filtrar']==1 and len(pedidos)==1
+    assert otro.filtrar([par])[1]['lotes_descartados_sin_filtro']==1 and len(pedidos)==1
     otro.reloj=lambda:AHORA+timedelta(days=1)
-    assert otro.filtrar([par])[1]['lotes_sin_filtrar']==0 and len(pedidos)==2
+    assert otro.filtrar([par])[1]['lotes_descartados_sin_filtro']==0 and len(pedidos)==2
 
 
 def test_429_del_filtro_solo_detiene_esa_captura():
@@ -277,12 +277,12 @@ def test_cuota_diaria_persistida_y_reinicio(tmp_path):
         return respuesta('1: SI')
     par=tc.tiktok.convertir_entrada(entrada(),sal='sal',ahora=AHORA)
     filtro=tc.FiltroTema('IA',clave='ficticia',pedir=pedir,contador=contador,reloj=lambda:AHORA,pausa=lambda _:None)
-    for _ in range(50): assert filtro.filtrar([par])[1]['lotes_sin_filtrar'] == 0
-    assert filtro.filtrar([par])[1]['lotes_sin_filtrar'] == 1 and len(datos) == 50
+    for _ in range(50): assert filtro.filtrar([par])[1]['lotes_descartados_sin_filtro'] == 0
+    assert filtro.filtrar([par])[1]['lotes_descartados_sin_filtro'] == 1 and len(datos) == 50
     nuevo=tc.FiltroTema('IA',clave='ficticia',pedir=pedir,contador=contador,reloj=lambda:AHORA,pausa=lambda _:None)
-    assert nuevo.filtrar([par])[1]['lotes_sin_filtrar'] == 1 and len(datos) == 50
+    assert nuevo.filtrar([par])[1]['lotes_descartados_sin_filtro'] == 1 and len(datos) == 50
     nuevo.reloj=lambda:AHORA+timedelta(days=1)
-    assert nuevo.filtrar([par])[1]['lotes_sin_filtrar'] == 0 and len(datos) == 51
+    assert nuevo.filtrar([par])[1]['lotes_descartados_sin_filtro'] == 0 and len(datos) == 51
     assert json.loads(contador.read_text())['pedidos'] == 1
 
 
@@ -301,14 +301,14 @@ def test_lotes_de_30_y_pausa_entre_pedidos(monkeypatch):
 
 
 @pytest.mark.parametrize('texto', ['1: SI\n1: NO', '1: TAL VEZ', '0: SI', '1: SI\n2: NO\nexplicación'])
-def test_respuestas_malformadas_conservan_lote(texto):
+def test_respuestas_malformadas_descartan_lote(texto):
     par=tc.tiktok.convertir_entrada(entrada(),sal='sal',ahora=AHORA)
     llamadas=[]
     def pedir(req):
         llamadas.append(req)
         return respuesta(texto)
     filtrados,r=tc.FiltroTema('IA',clave='ficticia',pedir=pedir,pausa=lambda _:None).filtrar([par])
-    assert filtrados == [par] and r['lotes_sin_filtrar'] == 1 and len(llamadas) == 2
+    assert filtrados == [] and r['lotes_descartados_sin_filtro'] == 1 and len(llamadas) == 2
 
 
 def test_filtro_no_envia_urls_embebidas():
@@ -380,7 +380,7 @@ def test_cli_semillas_desde_csv_sin_duplicados(tmp_path,monkeypatch,capsys):
     assert CANAL not in capsys.readouterr().err
     monkeypatch.delenv('OPENROUTER_API_KEY',raising=False)
     with pytest.raises(SystemExit) as exc: tc.main(['capturar','--tema','IA'])
-    assert exc.value.code==1 and 'OPENROUTER_API_KEY' in capsys.readouterr().err
+    assert exc.value.code==1 and 'AUTOR_HASH_SAL' in capsys.readouterr().err
 
 
 def test_json_utf8_emoji_y_sin_sobrescribir(tmp_path):

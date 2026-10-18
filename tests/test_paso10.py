@@ -71,7 +71,7 @@ def test_hashtag_exacto_sin_modelo_ni_clave(par):
         pedir=lambda _: pytest.fail('No debe llamar al modelo'))
     salida, r = filtro.filtrar(pares)
     assert salida == pares[:1] and r['descartados_tema'] == 3
-    assert r['lotes_sin_filtrar'] == 0 and filtro.usados == 0
+    assert r['lotes_descartados_sin_filtro'] == 0 and filtro.usados == 0
 
 
 def test_hashtag_mixto_solo_envia_no_coincidentes_al_modelo(par):

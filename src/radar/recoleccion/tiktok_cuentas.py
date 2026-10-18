@@ -6,6 +6,8 @@ import os
 import re
 import sys
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
+from math import isfinite
 from io import StringIO
 from itertools import islice
 from pathlib import Path
@@ -17,7 +19,8 @@ import yt_dlp
 
 from radar.contrato import Plataforma, id_desde_url
 from radar.recoleccion import imprimir_json, texto_publico, terminos_tema, normalizar_hashtag, tiktok
-from radar.recoleccion.linkedin_buscar import buscar_urls, _consultas, _entero, _pedir
+from radar.recoleccion.linkedin_buscar import buscar_urls, _consultas, _entero, _pedir, _peticion_groq
+from radar.recoleccion.presupuesto_busqueda import LimiteBusqueda
 
 SEMILLAS = Path('data/raw/tiktok_cuentas.txt')
 
@@ -176,22 +179,36 @@ def descubrir_cuentas(consultas, *, clave, pedir=None, extractor=None, pausa=sle
     consultas = _consultas(consultas)
     urls, vistos = [], set()
     fallidas = 0
+    aviso = None
+    proveedores, costo, tokens = [], 0, 0
     for consulta in consultas:
+        detalle = {'consulta': len(proveedores)+1, 'proveedor': None, 'groq_tokens': 0}
+        proveedores.append(detalle)
         try:
-            encontradas, _ = buscar_urls(consulta, clave=clave, pedir=pedir,
-                                        dominio='tiktok.com', validar_url=_validar_video)
+            encontradas, importe = buscar_urls(consulta, clave=clave, pedir=pedir,
+                                        dominio='tiktok.com', validar_url=_validar_video, resumen=detalle)
+        except LimiteBusqueda as error:
+            if not urls:
+                raise
+            fallidas += 1
+            aviso = str(error)
+            break
         except ValueError:
             fallidas += 1
             continue
+        costo += importe
+        tokens += detalle['groq_tokens']
         for url in encontradas:
             nativo = id_desde_url(url)[1]
             if nativo not in vistos:
                 vistos.add(nativo)
                 urls.append(url)
     if fallidas == len(consultas):
-        raise ValueError('OpenRouter: ninguna consulta de cuentas pudo completarse')
+        raise ValueError('OpenRouter/Groq: ninguna consulta de cuentas pudo completarse')
     cuentas, resumen = _cuentas_de_urls(urls, extractor=extractor, pausa=pausa, existentes=existentes)
     resumen['consultas_fallidas'] = fallidas
+    resumen['aviso'] = aviso
+    resumen.update(proveedores=proveedores, costo_usd=costo, groq_tokens=tokens)
     return cuentas, resumen
 
 
@@ -202,8 +219,9 @@ class FiltroTema:
         self.hashtags = {normalizar_hashtag(t) for t in terminos if t.startswith('#')}
         self.terminos = [t for t in terminos if not t.startswith('#')]
         self.preciso = ',' in tema
-        if self.terminos and (not clave or not clave.strip()):
-            raise ValueError('Falta OPENROUTER_API_KEY en el entorno para --tema')
+        self.clave_groq = os.environ.get('GROQ_API_KEY', '').strip()
+        self.groq_bloqueado = False
+        self.ultimo_groq = None
         self.tema, self.clave = tema, clave
         self.pedir, self.pausa = pedir or _pedir, pausa
         self.reloj = reloj or (lambda:datetime.now(timezone.utc))
@@ -239,31 +257,55 @@ class FiltroTema:
         self.ultimo = monotonic()
         return True
 
+    @staticmethod
+    def _decisiones(respuesta, cantidad):
+        valores = {}
+        for linea in respuesta.strip().splitlines():
+            match = re.fullmatch(r'\s*(\d+):\s*(SI|SÍ|NO)\s*', linea, flags=re.I)
+            if not match or int(match[1]) in valores:
+                raise ValueError()
+            valores[int(match[1])] = match[2].upper() != 'NO'
+        if set(valores) != set(range(1, cantidad+1)):
+            raise ValueError()
+        return valores
+
+    def _espera_groq(self, error):
+        headers = getattr(error, 'headers', None) or {}
+        valor = headers.get('Retry-After') or headers.get('retry-after')
+        try:
+            segundos = float(valor)
+        except (TypeError, ValueError):
+            try:
+                segundos = (parsedate_to_datetime(valor) - self.reloj()).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                return 30
+        return max(0, min(60, segundos)) if isfinite(segundos) else 30
+
     def filtrar(self, pares):
         originales = pares
         salida = [par for par in pares if self.hashtags.intersection(
             normalizar_hashtag(h) for h in par[0].hashtags)]
         directos = {p.id for p, _ in salida}
         pares = [par for par in pares if par[0].id not in directos]
-        r = {'descartados_tema': 0, 'lotes_sin_filtrar': 0, 'aviso': None}
+        r = {'descartados_tema': 0, 'lotes_descartados_sin_filtro': 0, 'aviso': None,
+             'lotes_openrouter': 0, 'lotes_groq': 0}
         if not self.terminos:
             r['descartados_tema'] = len(pares)
             return salida, r
         for inicio in range(0, len(pares), 30):
             lote = pares[inicio:inicio+30]
             decisiones = None
+            # Los enlaces embebidos en la descripción tampoco se envían al modelo.
+            textos = [re.sub(r'(?i)\b(?:https?://|www\.)\S+', '', texto_publico(p.texto or '')[0])
+                      for p, _ in lote]
+            criterio = ('específicamente de al menos uno de estos términos: ' +
+                        '; '.join(self.terminos)) if self.preciso else 'de ' + self.terminos[0]
+            prompt = (f"Para cada publicación, responde una línea 'n: SI' si trata {criterio}, "
+                      "o 'n: NO' si no. Solo esas líneas, sin explicar.\n" +
+                      '\n'.join(f'{i}: {texto}' for i, texto in enumerate(textos, 1)))
             for intento in range(2):
-                if self.bloqueado or not self._reservar():
-                    r['aviso'] = 'Filtro detenido por cuota o HTTP 429; se conservan lotes sin filtrar.'
+                if not self.clave or not self.clave.strip() or self.bloqueado or not self._reservar():
                     break
-                # Los enlaces embebidos en la descripción tampoco se envían al modelo.
-                textos = [re.sub(r'(?i)\b(?:https?://|www\.)\S+', '', texto_publico(p.texto or '')[0])
-                          for p, _ in lote]
-                criterio = ('específicamente de al menos uno de estos términos: ' +
-                            '; '.join(self.terminos)) if self.preciso else 'de ' + self.terminos[0]
-                prompt = (f"Para cada publicación, responde una línea 'n: SI' si trata {criterio}, "
-                          "o 'n: NO' si no. Solo esas líneas, sin explicar.\n" +
-                          '\n'.join(f'{i}: {texto}' for i, texto in enumerate(textos, 1)))
                 cuerpo = {'model': 'nvidia/nemotron-3-super-120b-a12b:free',
                           'reasoning': {'enabled': False}, 'max_tokens': 500,
                           'messages': [{'role': 'user', 'content': prompt}]}
@@ -272,29 +314,43 @@ class FiltroTema:
                         data=json.dumps(cuerpo).encode('utf-8'),
                         headers={'Authorization':f'Bearer {self.clave}', 'Content-Type':'application/json'})
                     respuesta = self.pedir(request)['choices'][0]['message']['content']
-                    lineas = respuesta.strip().splitlines()
-                    valores = {}
-                    for linea in lineas:
-                        match = re.fullmatch(r'\s*(\d+):\s*(SI|SÍ|NO)\s*', linea, flags=re.I)
-                        if not match or int(match[1]) in valores:
-                            raise ValueError()
-                        valores[int(match[1])] = match[2].upper() != 'NO'
-                    if set(valores) != set(range(1, len(lote)+1)):
-                        raise ValueError()
-                    decisiones = valores
+                    decisiones = self._decisiones(respuesta, len(lote))
+                    r['lotes_openrouter'] += 1
                     break
                 except Exception as error:
                     if getattr(error, 'code', None) == 429:
                         self.bloqueado = True
-                        r['aviso'] = 'Filtro detenido por HTTP 429; se conservan lotes sin filtrar.'
                         break
+                    if self.clave_groq:
+                        break
+            if decisiones is None and self.clave_groq and not self.groq_bloqueado:
+                if self.ultimo_groq is not None:
+                    transcurrido = (self.reloj() - self.ultimo_groq).total_seconds()
+                    self.pausa(max(0, 30 - transcurrido))
+                for intento in range(2):
+                    self.ultimo_groq = self.reloj()
+                    try:
+                        request = _peticion_groq([{'role': 'user', 'content': prompt}], self.clave_groq)
+                        respuesta = self.pedir(request)['choices'][0]['message']['content']
+                        decisiones = self._decisiones(respuesta, len(lote))
+                        r['lotes_groq'] += 1
+                        break
+                    except Exception as error:
+                        codigo = getattr(error, 'code', None)
+                        if codigo == 402 or (codigo == 429 and intento == 1):
+                            self.groq_bloqueado = True
+                            break
+                        if intento == 0:
+                            self.pausa(self._espera_groq(error) if codigo == 429 else 30)
             if decisiones is None:
-                salida.extend(lote)
-                r['lotes_sin_filtrar'] += 1
+                r['lotes_descartados_sin_filtro'] += 1
             else:
                 salida.extend(par for i, par in enumerate(lote, 1) if decisiones[i])
                 r['descartados_tema'] += sum(not v for v in decisiones.values())
         aceptados = {p.id for p, _ in salida}
+        if r['lotes_descartados_sin_filtro']:
+            r['aviso'] = (f"{r['lotes_descartados_sin_filtro']} lotes descartados: "
+                          'no se pudieron filtrar con el tema')
         return [par for par in originales if par[0].id in aceptados], r
 
 
@@ -310,9 +366,11 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
         raise ValueError('No hay cuentas semilla; ejecuta primero semillas')
     if filtro:
         filtro.bloqueado = False
+        filtro.groq_bloqueado = False
     pares, vistos = [], set()
     r = dict(cuentas=0, cuentas_fallidas=0, videos=0, fuera_fecha=0, omitidos=0,
-             descartados_tema=0, lotes_sin_filtrar=0, aviso=None, interrumpido=False, detenido=False)
+             descartados_tema=0, lotes_descartados_sin_filtro=0, lotes_openrouter=0, lotes_groq=0,
+             aviso=None, interrumpido=False, detenido=False)
     consecutivos = 0
     try:
         for i, canal in enumerate(cuentas):
@@ -345,13 +403,21 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
     if filtro and not r['interrumpido']:
         try:
             pares, resumen = filtro.filtrar(pares)
-            for campo in ('descartados_tema', 'lotes_sin_filtrar'):
+            for campo in ('descartados_tema', 'lotes_descartados_sin_filtro', 'lotes_openrouter', 'lotes_groq'):
                 r[campo] += resumen[campo]
             if resumen['aviso']:
                 r['aviso'] = ' '.join(filter(None, (r['aviso'], resumen['aviso'])))
         except KeyboardInterrupt:
             r['interrumpido'] = True
-            r['lotes_sin_filtrar'] += (len(pares)+29)//30
+    if filtro and r['interrumpido']:
+        directos = [par for par in pares if filtro.hashtags.intersection(
+            normalizar_hashtag(h) for h in par[0].hashtags)]
+        r['lotes_descartados_sin_filtro'] = (len(pares) - len(directos) + 29)//30
+        pares = directos
+        if r['lotes_descartados_sin_filtro']:
+            aviso = (f"{r['lotes_descartados_sin_filtro']} lotes descartados: "
+                     'no se pudieron filtrar con el tema')
+            r['aviso'] = ' '.join(filter(None, (r['aviso'], aviso)))
     r['videos'] = len(pares)
     return [p for p, _ in pares], [m for _, m in pares if m is not None], r
 
@@ -359,7 +425,8 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
 def _resumir(r):
     print(f"Cuentas: {r['cuentas']}; cuentas fallidas: {r['cuentas_fallidas']}; videos: {r['videos']}; "
           f"fuera de fecha: {r['fuera_fecha']}; omitidos: {r['omitidos']}; "
-          f"descartados por tema: {r['descartados_tema']}; lotes sin filtrar: {r['lotes_sin_filtrar']}", file=sys.stderr)
+          f"descartados por tema: {r['descartados_tema']}; lotes descartados sin filtro: {r['lotes_descartados_sin_filtro']}", file=sys.stderr)
+    print(f"Lotes OpenRouter: {r['lotes_openrouter']}; lotes Groq: {r['lotes_groq']}", file=sys.stderr)
     if r['aviso']:
         print(r['aviso'], file=sys.stderr)
 
@@ -426,7 +493,7 @@ def main(argv=None):
         if args.comando == 'semillas':
             if args.consulta:
                 clave = os.environ.get('OPENROUTER_API_KEY', '')
-                if not clave.strip():
+                if not clave.strip() and not os.environ.get('GROQ_API_KEY', '').strip():
                     raise ValueError('Falta OPENROUTER_API_KEY en el entorno')
                 nuevas, resumen = descubrir_cuentas(args.consulta, clave=clave, existentes=cuentas)
             else:
@@ -434,6 +501,11 @@ def main(argv=None):
             cantidad = guardar_semillas(args.semillas, nuevas)
             print(f"Cuentas nuevas: {cantidad}; fallidas: {resumen['fallidas']}; "
                   f"consultas fallidas: {resumen.get('consultas_fallidas', 0)}", file=sys.stderr)
+            if 'proveedores' in resumen:
+                print(f"Proveedores por consulta: {resumen['proveedores']}; costo OpenRouter: USD "
+                      f"{resumen['costo_usd']:.6f}; tokens Groq: {resumen['groq_tokens']}", file=sys.stderr)
+            if resumen.get('aviso'):
+                print(resumen['aviso'], file=sys.stderr)
         else:
             if not cuentas:
                 raise ValueError('No hay cuentas semilla; ejecuta primero semillas')

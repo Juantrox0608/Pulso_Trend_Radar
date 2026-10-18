@@ -138,3 +138,18 @@ def test_post_lote_recoleccion_con_metricas(client):
     assert (datos["guardadas"] + datos["actualizadas"]) >= 1
     assert datos.get("metricas_guardadas", 0) >= 1
 
+
+def test_get_trends_with_alias_and_sort(client):
+    # Probar búsqueda con hashtag y alias en inglés
+    resp_alias = client.get("/api/trends?query=%23AIAgents")
+    assert resp_alias.status_code == 200
+    trends_alias = resp_alias.json()
+    assert len(trends_alias) >= 1
+
+    # Probar ordenamiento por vistas
+    resp_vistas = client.get("/api/trends?sort=vistas")
+    assert resp_vistas.status_code == 200
+    trends_vistas = resp_vistas.json()
+    assert len(trends_vistas) >= 2
+    assert trends_vistas[0]["views"] >= trends_vistas[1]["views"]
+

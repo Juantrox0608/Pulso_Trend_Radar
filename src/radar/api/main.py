@@ -106,19 +106,65 @@ def health():
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
+CATEGORY_ALIASES: dict[str, list[str]] = {
+    "Agentes IA": [
+        "agentes ia", "agentes de ia", "agentes autonomos",
+        "ai agents", "aiagents", "inteligencia artificial",
+        "artificial intelligence", "ia"
+    ],
+    "Automatización": [
+        "automatizacion", "automation", "automatizacion empresarial",
+        "automatizacion de negocios", "procesos automatizados"
+    ],
+    "IA generativa": [
+        "ia generativa", "generative ai", "generativeai",
+        "genai", "modelos de ia", "inteligencia artificial"
+    ],
+    "Productividad": [
+        "productividad", "productivity", "herramientas de productividad",
+        "software para equipos"
+    ],
+}
+
+
+def _normalizar(texto: str) -> str:
+    import unicodedata
+    nfkd = unicodedata.normalize("NFD", texto.lower())
+    sin_tildes = "".join(c for c in nfkd if unicodedata.category(c) != "Mn")
+    return sin_tildes.replace("#", "").strip()
+
+
+def _matches_trend(trend: TrendDB, query: str) -> bool:
+    q = _normalizar(query)
+    if not q:
+        return True
+
+    searchable = _normalizar(f"{trend.title} {trend.category} {trend.creator} {trend.insight} {trend.angle} {trend.hook} {trend.audience}")
+    if q in searchable:
+        return True
+
+    aliases = CATEGORY_ALIASES.get(trend.category, [])
+    for alias in aliases:
+        norm_alias = _normalizar(alias)
+        if norm_alias == q or (len(q) >= 4 and q in norm_alias):
+            return True
+    return False
+
+
 @app.get("/api/trends", response_model=list[Trend], tags=["Tendencias"])
 def get_trends(
     query: Annotated[str | None, Query(description="Término o tema a buscar (ej. Agentes IA, automatización)")] = None,
     platform: Annotated[str | None, Query(description="Filtrar por plataforma (YouTube, TikTok, LinkedIn)")] = None,
     category: Annotated[str | None, Query(description="Filtrar por categoría")] = None,
+    sort: Annotated[str | None, Query(description="Criterio de orden (engagement, vistas, reciente)")] = "engagement",
     session: Session = Depends(get_session),
 ):
     """Devuelve las tendencias ordenadas por velocidad de crecimiento con su análisis editorial."""
     statement = select(TrendDB)
-    
-    if platform and platform.lower() != "all":
+
+    if platform and platform.lower() not in ("all", "todos"):
         statement = statement.where(TrendDB.platform.ilike(platform))
-        
+
     if category:
         statement = statement.where(TrendDB.category.ilike(f"%{category}%"))
 
@@ -127,23 +173,19 @@ def get_trends(
         _sembrar_datos_iniciales(session)
         trends_db = session.exec(statement).all()
 
-    # Si hay query de búsqueda, filtramos por título, categoría, gancho o insight
+    # Si hay query de búsqueda, filtramos por título, categoría, ganchos y alias
     if query and query.strip():
-        q_lower = query.strip().lower()
-        trends_db = [
-            t for t in trends_db
-            if (
-                q_lower in t.title.lower()
-                or q_lower in t.category.lower()
-                or q_lower in t.insight.lower()
-                or q_lower in t.angle.lower()
-                or q_lower in t.hook.lower()
-                or q_lower in t.audience.lower()
-            )
-        ]
+        trends_db = [t for t in trends_db if _matches_trend(t, query)]
 
-    # Ordenar por el score de velocidad (lo que más rápido crece primero)
-    trends_ordenadas = sorted(trends_db, key=lambda x: x.engagement_score, reverse=True)
+    # Ordenamiento configurable (por defecto velocidad de engagement)
+    sort_criterio = (sort or "engagement").lower()
+    if sort_criterio in ("vistas", "views"):
+        trends_ordenadas = sorted(trends_db, key=lambda x: x.views, reverse=True)
+    elif sort_criterio in ("reciente", "recent"):
+        trends_ordenadas = sorted(trends_db, key=lambda x: x.published_at, reverse=True)
+    else:
+        trends_ordenadas = sorted(trends_db, key=lambda x: x.engagement_score, reverse=True)
+
     return [t.to_contract() for t in trends_ordenadas]
 
 
@@ -151,6 +193,21 @@ def get_trends(
 def get_trend_by_id(trend_id: str, session: Session = Depends(get_session)):
     """Obtiene los detalles y análisis editorial de una tendencia específica."""
     trend = session.get(TrendDB, trend_id)
+    if not trend:
+        # Búsqueda flexible con o sin prefijo (yt:, tt:, li:) para compatibilidad total con el frontend
+        for prefix in ("yt:", "tt:", "li:"):
+            if not trend_id.startswith(prefix):
+                candidate = session.get(TrendDB, f"{prefix}{trend_id}")
+                if candidate:
+                    trend = candidate
+                    break
+            else:
+                unprefixed = trend_id[len(prefix):]
+                candidate = session.get(TrendDB, unprefixed)
+                if candidate:
+                    trend = candidate
+                    break
+
     if not trend:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tendencia no encontrada")
     return trend.to_contract()
