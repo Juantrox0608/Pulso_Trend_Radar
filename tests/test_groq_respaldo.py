@@ -132,7 +132,7 @@ def test_filtro_respaldo_mismo_prompt_y_parametros(fallo):
         filtro.dia, filtro.usados = AHORA.date().isoformat(), 50
     pares = [tc.tiktok.convertir_entrada(entrada(sufijo=i), sal='sal', ahora=AHORA) for i in range(2)]
     filtrados, r = filtro.filtrar(pares)
-    assert filtrados == pares[:1] and r['lotes_sin_filtrar'] == 0
+    assert filtrados == pares[:1] and r['lotes_descartados_sin_filtro'] == 0
     assert r['lotes_groq'] == 1 and r['lotes_openrouter'] == 0
     req = reqs[-1]
     assert req.get_header('User-agent')
@@ -144,13 +144,13 @@ def test_filtro_respaldo_mismo_prompt_y_parametros(fallo):
     assert all(s not in cuerpo['messages'][0]['content'] for s in ('usuario_ficticio', 'https://', CANAL))
 
 
-def test_filtro_ambos_fallan_conserva_lote():
+def test_filtro_ambos_fallan_descarta_lote():
     def pedir(req):
         raise ValueError('or_ficticia groq_ficticia nombre_privado')
     filtro = tc.FiltroTema('IA', clave='or_ficticia', pedir=pedir, pausa=lambda _: None)
     pares = [tc.tiktok.convertir_entrada(entrada(), sal='sal', ahora=AHORA)]
     filtrados, r = filtro.filtrar(pares)
-    assert filtrados == pares and r['lotes_sin_filtrar'] == 1
+    assert filtrados == [] and r['lotes_descartados_sin_filtro'] == 1
     assert r['lotes_groq'] == r['lotes_openrouter'] == 0
     assert all(s not in str(r) for s in ('or_ficticia', 'groq_ficticia', 'nombre_privado'))
 
@@ -187,8 +187,8 @@ def test_cuota_groq_corta_el_filtro_en_lotes_siguientes():
         raise HTTPError('privada',429,'groq_ficticia',{},None)
     par=tc.tiktok.convertir_entrada(entrada(),sal='sal',ahora=AHORA)
     salida,r=tc.FiltroTema('IA',clave='',pedir=pedir,pausa=lambda _:None).filtrar([par]*61)
-    assert len(salida)==61 and r['lotes_sin_filtrar']==3
-    assert len(llamadas)==1 and 'groq_ficticia' not in str(r)
+    assert salida == [] and r['lotes_descartados_sin_filtro']==3
+    assert len(llamadas)==2 and 'groq_ficticia' not in str(r)
 
 
 def test_costo_openrouter_valido_con_respuesta_invalida_no_se_pierde():
@@ -199,13 +199,13 @@ def test_costo_openrouter_valido_con_respuesta_invalida_no_se_pierde():
     assert lb.buscar_urls('IA', clave='ficticia', pedir=pedir) == ([URL], Decimal('.012'))
 
 
-def test_groq_tambien_429_conserva_lote_y_error_seguro():
+def test_groq_tambien_429_descarta_lote_y_error_seguro():
     def pedir(req):
         raise HTTPError('url_privada', 429, 'groq_ficticia or_ficticia', {}, None)
     filtro = tc.FiltroTema('IA', clave='or_ficticia', pedir=pedir, pausa=lambda _: None)
     pares = [tc.tiktok.convertir_entrada(entrada(), sal='sal', ahora=AHORA)]
     salida, r = filtro.filtrar(pares)
-    assert salida == pares and r['lotes_sin_filtrar'] == 1
+    assert salida == [] and r['lotes_descartados_sin_filtro'] == 1
     assert 'ficticia' not in str(r) and 'url_privada' not in str(r)
 
 

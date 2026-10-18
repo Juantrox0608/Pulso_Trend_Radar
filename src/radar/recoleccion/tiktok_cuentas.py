@@ -6,6 +6,8 @@ import os
 import re
 import sys
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
+from math import isfinite
 from io import StringIO
 from itertools import islice
 from pathlib import Path
@@ -219,8 +221,7 @@ class FiltroTema:
         self.preciso = ',' in tema
         self.clave_groq = os.environ.get('GROQ_API_KEY', '').strip()
         self.groq_bloqueado = False
-        if self.terminos and (not clave or not clave.strip()) and not self.clave_groq:
-            raise ValueError('Falta OPENROUTER_API_KEY en el entorno para --tema')
+        self.ultimo_groq = None
         self.tema, self.clave = tema, clave
         self.pedir, self.pausa = pedir or _pedir, pausa
         self.reloj = reloj or (lambda:datetime.now(timezone.utc))
@@ -268,13 +269,25 @@ class FiltroTema:
             raise ValueError()
         return valores
 
+    def _espera_groq(self, error):
+        headers = getattr(error, 'headers', None) or {}
+        valor = headers.get('Retry-After') or headers.get('retry-after')
+        try:
+            segundos = float(valor)
+        except (TypeError, ValueError):
+            try:
+                segundos = (parsedate_to_datetime(valor) - self.reloj()).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                return 30
+        return max(0, min(60, segundos)) if isfinite(segundos) else 30
+
     def filtrar(self, pares):
         originales = pares
         salida = [par for par in pares if self.hashtags.intersection(
             normalizar_hashtag(h) for h in par[0].hashtags)]
         directos = {p.id for p, _ in salida}
         pares = [par for par in pares if par[0].id not in directos]
-        r = {'descartados_tema': 0, 'lotes_sin_filtrar': 0, 'aviso': None,
+        r = {'descartados_tema': 0, 'lotes_descartados_sin_filtro': 0, 'aviso': None,
              'lotes_openrouter': 0, 'lotes_groq': 0}
         if not self.terminos:
             r['descartados_tema'] = len(pares)
@@ -292,7 +305,6 @@ class FiltroTema:
                       '\n'.join(f'{i}: {texto}' for i, texto in enumerate(textos, 1)))
             for intento in range(2):
                 if not self.clave or not self.clave.strip() or self.bloqueado or not self._reservar():
-                    r['aviso'] = 'Filtro detenido por cuota o HTTP 429; se conservan lotes sin filtrar.'
                     break
                 cuerpo = {'model': 'nvidia/nemotron-3-super-120b-a12b:free',
                           'reasoning': {'enabled': False}, 'max_tokens': 500,
@@ -308,29 +320,37 @@ class FiltroTema:
                 except Exception as error:
                     if getattr(error, 'code', None) == 429:
                         self.bloqueado = True
-                        r['aviso'] = 'Filtro detenido por HTTP 429; se conservan lotes sin filtrar.'
                         break
                     if self.clave_groq:
                         break
             if decisiones is None and self.clave_groq and not self.groq_bloqueado:
-                try:
-                    request = _peticion_groq([{'role': 'user', 'content': prompt}], self.clave_groq)
-                    respuesta = self.pedir(request)['choices'][0]['message']['content']
-                    decisiones = self._decisiones(respuesta, len(lote))
-                    r['lotes_groq'] += 1
-                except Exception as error:
-                    if getattr(error, 'code', None) in (402, 429):
-                        self.groq_bloqueado = True
-                    r['aviso'] = 'Filtro OpenRouter/Groq no disponible; se conservan lotes sin filtrar.'
+                if self.ultimo_groq is not None:
+                    transcurrido = (self.reloj() - self.ultimo_groq).total_seconds()
+                    self.pausa(max(0, 30 - transcurrido))
+                for intento in range(2):
+                    self.ultimo_groq = self.reloj()
+                    try:
+                        request = _peticion_groq([{'role': 'user', 'content': prompt}], self.clave_groq)
+                        respuesta = self.pedir(request)['choices'][0]['message']['content']
+                        decisiones = self._decisiones(respuesta, len(lote))
+                        r['lotes_groq'] += 1
+                        break
+                    except Exception as error:
+                        codigo = getattr(error, 'code', None)
+                        if codigo == 402 or (codigo == 429 and intento == 1):
+                            self.groq_bloqueado = True
+                            break
+                        if intento == 0:
+                            self.pausa(self._espera_groq(error) if codigo == 429 else 30)
             if decisiones is None:
-                salida.extend(lote)
-                r['lotes_sin_filtrar'] += 1
+                r['lotes_descartados_sin_filtro'] += 1
             else:
                 salida.extend(par for i, par in enumerate(lote, 1) if decisiones[i])
                 r['descartados_tema'] += sum(not v for v in decisiones.values())
         aceptados = {p.id for p, _ in salida}
-        if not r['lotes_sin_filtrar']:
-            r['aviso'] = None
+        if r['lotes_descartados_sin_filtro']:
+            r['aviso'] = (f"{r['lotes_descartados_sin_filtro']} lotes descartados: "
+                          'no se pudieron filtrar con el tema')
         return [par for par in originales if par[0].id in aceptados], r
 
 
@@ -349,7 +369,7 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
         filtro.groq_bloqueado = False
     pares, vistos = [], set()
     r = dict(cuentas=0, cuentas_fallidas=0, videos=0, fuera_fecha=0, omitidos=0,
-             descartados_tema=0, lotes_sin_filtrar=0, lotes_openrouter=0, lotes_groq=0,
+             descartados_tema=0, lotes_descartados_sin_filtro=0, lotes_openrouter=0, lotes_groq=0,
              aviso=None, interrumpido=False, detenido=False)
     consecutivos = 0
     try:
@@ -383,13 +403,21 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
     if filtro and not r['interrumpido']:
         try:
             pares, resumen = filtro.filtrar(pares)
-            for campo in ('descartados_tema', 'lotes_sin_filtrar', 'lotes_openrouter', 'lotes_groq'):
+            for campo in ('descartados_tema', 'lotes_descartados_sin_filtro', 'lotes_openrouter', 'lotes_groq'):
                 r[campo] += resumen[campo]
             if resumen['aviso']:
                 r['aviso'] = ' '.join(filter(None, (r['aviso'], resumen['aviso'])))
         except KeyboardInterrupt:
             r['interrumpido'] = True
-            r['lotes_sin_filtrar'] += (len(pares)+29)//30
+    if filtro and r['interrumpido']:
+        directos = [par for par in pares if filtro.hashtags.intersection(
+            normalizar_hashtag(h) for h in par[0].hashtags)]
+        r['lotes_descartados_sin_filtro'] = (len(pares) - len(directos) + 29)//30
+        pares = directos
+        if r['lotes_descartados_sin_filtro']:
+            aviso = (f"{r['lotes_descartados_sin_filtro']} lotes descartados: "
+                     'no se pudieron filtrar con el tema')
+            r['aviso'] = ' '.join(filter(None, (r['aviso'], aviso)))
     r['videos'] = len(pares)
     return [p for p, _ in pares], [m for _, m in pares if m is not None], r
 
@@ -397,7 +425,7 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
 def _resumir(r):
     print(f"Cuentas: {r['cuentas']}; cuentas fallidas: {r['cuentas_fallidas']}; videos: {r['videos']}; "
           f"fuera de fecha: {r['fuera_fecha']}; omitidos: {r['omitidos']}; "
-          f"descartados por tema: {r['descartados_tema']}; lotes sin filtrar: {r['lotes_sin_filtrar']}", file=sys.stderr)
+          f"descartados por tema: {r['descartados_tema']}; lotes descartados sin filtro: {r['lotes_descartados_sin_filtro']}", file=sys.stderr)
     print(f"Lotes OpenRouter: {r['lotes_openrouter']}; lotes Groq: {r['lotes_groq']}", file=sys.stderr)
     if r['aviso']:
         print(r['aviso'], file=sys.stderr)

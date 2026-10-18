@@ -363,7 +363,7 @@ Cada corrida escribe un JSON UTF-8 `data/raw/tiktok/tiktok_AAAA-MM-DDTHHMM.json`
 La escritura es temporal y luego se renombra; no publica JSON incompleto. No guarda respuestas crudas.
 La salida contiene hash del autor, menciones `@[usuario]` y URL canónica sin usuario.
 El resumen por stderr cuenta cuentas, cuentas fallidas, videos guardados, fuera de fecha, omitidos,
-descartados por tema y lotes sin filtrar. Cada captura nueva conserva otra observación de métricas
+descartados por tema y `lotes_descartados_sin_filtro`. Cada captura nueva conserva otra observación de métricas
 para el mismo video, útil para comparar crecimiento, velocidad y aceleración.
 
 Filtro opcional de relevancia, con `OPENROUTER_API_KEY` o `GROQ_API_KEY` cargada:
@@ -389,9 +389,12 @@ Esto filtra los videos de las cuentas semilla; no descubre nuevas cuentas.
 Usa `nvidia/nemotron-3-super-120b-a12b:free`, razonamiento desactivado, hasta 30 textos por pedido.
 Al modelo solo llegan textos anonimizados: sin enlaces ni datos de autor. Conserva los `SI`/`SÍ`.
 Una respuesta vacía, incompleta o mal formada pasa a Groq si está configurado; sin Groq se
-reintenta una vez y, si vuelve a fallar, conserva ese lote sin filtrar y lo cuenta.
-Un HTTP 429 detiene las llamadas al proveedor afectado durante esa corrida. Con `GROQ_API_KEY`,
-los lotes pasan al respaldo; si ambos fallan conserva los lotes pendientes y avisa.
+reintenta una vez y, si vuelve a fallar, descarta ese lote y lo cuenta.
+Un HTTP 429 de OpenRouter detiene sus llamadas durante esa corrida y pasa a Groq si está disponible.
+Groq espera 30 s entre lotes; la primera llamada no espera. Ante HTTP 429 espera `Retry-After`
+(con tope de 60 s; sin cabecera válida, 30 s) y reintenta una vez. Si vuelve a recibir 429,
+no se usa Groq en el resto de esa captura. Una respuesta inválida de Groq también se reintenta una vez.
+Si no se puede filtrar, descarta el lote y avisa: "N lotes descartados: no se pudieron filtrar con el tema".
 La siguiente captura puede volver a intentarlo.
 Sin `--tema` no se hacen llamadas a modelos durante la captura.
 
@@ -399,8 +402,9 @@ La prueba histórica de este filtro dio 30/30 respuestas en 3,5 s, USD 0 y coinc
 no garantiza la clasificación futura ni disponibilidad. El límite indicado del plan gratis es
 20 pedidos/minuto y 50/día: el comando espacia pedidos al menos 3,1 s y persiste el contador diario
 UTC en `data/raw/tiktok_filtro_cuota.json`, incluidos reintentos y reinicios.
-Al agotarlo usa Groq si su clave está disponible; en otro caso conserva
-sin filtrar. Ese contador solo conoce pedidos de este comando: otros usos de la clave también
+Al agotarlo usa Groq si su clave está disponible; en otro caso descarta el lote.
+Sin claves de proveedores, los lotes que requieren el modelo se descartan; los hashtags exactos
+siguen aceptándose sin modelo. Ese contador solo conoce pedidos de este comando: otros usos de la clave también
 consumen la cuota del proveedor. Ejecuta una sola instancia del recolector por clave.
 
 Para repetir en primer plano hasta Ctrl+C (intervalo mínimo: una hora después de cada corrida):
@@ -470,7 +474,7 @@ YouTube busca en MX, CO, AR, CL y PE; LinkedIn descubre publicaciones por tema; 
 cuentas semilla existentes y aplica Nemotron, con Groq de respaldo. Por defecto son las tres redes,
 los últimos 7 días y un único JSON sin repetir publicaciones ni métricas por id. Una red o un país
 que falla se cuenta en stderr y las demás consultas siguen; si todas fallan, termina con error.
-El resumen incluye avisos de capturas parciales, bloqueo o lotes que se conservaron sin filtrar.
+El resumen incluye avisos de capturas parciales, bloqueo o lotes descartados porque no se pudieron filtrar con el tema.
 
 Necesita `AUTOR_HASH_SAL`, `YOUTUBE_API_KEY` para YouTube y `OPENROUTER_API_KEY` como principal
 para LinkedIn y el filtro de texto de TikTok; `GROQ_API_KEY` permite el respaldo, incluso si falta
@@ -580,9 +584,12 @@ Una reserva de costo desconocido en OpenRouter sigue consumiendo presupuesto loc
 
 El filtro envía el mismo texto anonimizado y lee las mismas líneas `n: SI/SÍ/NO` con ambos proveedores.
 Con Groq configurado, el primer fallo de OpenRouter pasa ese lote al respaldo; sin Groq se conserva
-el reintento anterior. El resumen cuenta `lotes_openrouter`, `lotes_groq` y `lotes_sin_filtrar`.
-Si ambos fallan, se conserva el lote sin filtrar y se avisa sin exponer respuestas ni credenciales.
-Un HTTP 402/429 de Groq detiene sus llamadas restantes durante esa captura.
+el reintento anterior. El resumen cuenta `lotes_openrouter`, `lotes_groq` y
+`lotes_descartados_sin_filtro`. Si ambos fallan, se descarta el lote y se avisa sin exponer
+respuestas ni credenciales. Groq pausa 30 s entre lotes y reintenta una vez ante 429,
+respetando `Retry-After` hasta 60 s (30 s por defecto). Un segundo 429 o un HTTP 402
+detiene sus llamadas restantes durante esa captura. Sin `--tema` no hay filtro;
+los hashtags exactos siguen sin pasar por el modelo.
 Una búsqueda donde ambos fallan se cuenta como fallida; si todas fallan, el comando termina con error.
 
 Mediciones históricas del 17/10/2026, proporcionadas en el encargo (no repetidas aquí):
