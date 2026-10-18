@@ -1,14 +1,14 @@
 from typing import Annotated, Literal
 
 from pydantic import AwareDatetime, Field, StringConstraints, model_validator
-from app.schemas import AnalyzeResponse, Schema
+from app.schemas import AnalyzeResponse, Schema, Metric
 
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 
 class Filters(Schema):
     query: ShortText
-    platform: Literal["youtube"] = "youtube"
+    platform: Literal["youtube", "tiktok", "linkedin"] = "youtube"
     language: Annotated[str, StringConstraints(pattern=r"^[a-z]{2}$")] | None = None
     country: Annotated[str, StringConstraints(pattern=r"^[A-Z]{2}$")] | None = None
     published_after: AwareDatetime | None = None
@@ -30,8 +30,19 @@ class ResearchRequest(Schema):
 
 class Source(Schema):
     id: str
-    title: str
+    title: str | None
     url: str
+    platform: Literal["youtube", "tiktok", "linkedin"] = "youtube"
+
+
+class PublicationMetrics(Schema):
+    id: str
+    platform: Literal["youtube", "tiktok", "linkedin"]
+    views: Metric | None
+    likes: Metric | None
+    comments: Metric | None
+    shares: Metric | None
+    metrics_collected_at: AwareDatetime
 
 
 class CollectionInfo(Schema):
@@ -45,3 +56,4 @@ class ResearchResponse(Schema):
     analysis: AnalyzeResponse
     sources: list[Source]
     collection: CollectionInfo
+    metrics: list[PublicationMetrics] = Field(default_factory=list)

@@ -1,5 +1,9 @@
 # Backend principal de 30X RADAR
 
+Actualización: admite YouTube, TikTok y LinkedIn, una plataforma por solicitud,
+y devuelve el bloque común `metrics`. Consulta [el contrato multiplataforma y
+el orden de despliegue](examples/MULTIPLATFORM.md).
+
 Para aislar fallos de IA antes de repetir búsquedas, sigue
 [la guía de diagnóstico en Postman](examples/POSTMAN_DIAGNOSTIC.md).
 
@@ -26,8 +30,7 @@ y en una prueba real. Se leyó la rama remota sin cambiar de rama ni fusionarla.
 - `error` indica búsqueda fallida. HTTP 409 al crear indica que hay otra en curso.
 - HTTP 404 al consultar puede indicar que se perdió la búsqueda: el recolector
   guarda hasta 20 tareas en memoria y las pierde al reiniciarse.
-- Redes admitidas por el recolector: youtube, linkedin, tiktok. Este backend y
-  el contrato de IA siguen admitiendo **solo YouTube**.
+- Redes admitidas: youtube, linkedin, tiktok, una plataforma por solicitud.
 - `dias`: entero 1–36500; `paises`: lista no vacía de códigos de dos letras;
   tema: una frase o de uno a cinco términos distintos separados por comas.
 
@@ -111,7 +114,7 @@ Inicio del backend:
 | `/research` | Recolector o procesamiento local |
 |---|---|
 | `filters.query` | `tema`; no se exige coincidencia literal en los títulos devueltos |
-| `filters.platform` | `redes: ["youtube"]` |
+| `filters.platform` | `redes: [platform]`, con youtube, tiktok o linkedin |
 | `filters.country` | `paises: [country]`; si falta, `COLLECTOR_DEFAULT_COUNTRY` |
 | `filters.published_after` | Se calcula `dias` desde UTC actual, redondeando hacia arriba y añadiendo un día de margen; el corte exacto se aplica localmente |
 | Sin `published_after` | `COLLECTOR_DEFAULT_DAYS`; por defecto siete días |

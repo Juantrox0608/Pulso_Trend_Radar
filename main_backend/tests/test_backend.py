@@ -69,7 +69,8 @@ class FakeAI:
         return AnalyzeResponse(summary="Prueba simulada", findings=[{"observation": "Metadatos de prueba",
             "hypothesis": None, "source_video_ids": [source]}], recommendations=[{"title": "Idea de prueba",
             "suggested_format": "Tutorial", "reason": "Para equipos", "source_video_ids": [source]}],
-            limitations=["Sin historial"], ranking=calculate_ranking(request.videos), unranked_video_ids=[])
+            limitations=["Sin historial"], ranking=calculate_ranking(request.videos),
+            unranked_video_ids=sorted(v.id for v in request.videos if v.views is None))
 
 
 def test_endpoint_health_and_selection(body, result):
@@ -175,7 +176,7 @@ def test_query_not_reinterpreted_as_literal_substring(body, result):
         assert client.post("/research", json=body).status_code == 200
 
 
-@pytest.mark.parametrize("case", ["empty", "all_null", "all_invalid", "bad_structure"])
+@pytest.mark.parametrize("case", ["empty", "all_invalid", "bad_structure"])
 def test_no_results_never_calls_ai(body, result, case):
     if case == "empty":
         result["publicaciones"], result["metricas"] = [], []
@@ -291,7 +292,7 @@ def test_poll_deadline_and_real_pauses(body):
 
 
 @pytest.mark.parametrize("field,value", [("sample_size", 0), ("sample_size", 11), ("sample_size", True),
-    ("platform", "linkedin"), ("country", "co"), ("published_after", "2026-10-01")])
+    ("platform", "instagram"), ("country", "co"), ("published_after", "2026-10-01")])
 def test_input_validation(body, field, value):
     body["filters"][field] = value
     with TestClient(create_app(config(), FakeCollector({}), FakeAI())) as client:

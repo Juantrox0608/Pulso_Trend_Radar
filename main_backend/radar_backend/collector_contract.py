@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from app.errors import ServiceError
 from app.schemas import Video
 
+PLATFORM_PREFIXES = {"youtube": "yt:", "tiktok": "tt:", "linkedin": "li:"}
+
 
 def collector_parameters(filters, settings, now=None):
     now = now or datetime.now(timezone.utc)
@@ -51,7 +53,7 @@ def normalize_result(data):
     indexed = {}
     for index, metric in enumerate(metrics):
         mid = metric.get("publicacion_id") if isinstance(metric, dict) else None
-        if not isinstance(mid, str) or not mid.startswith("yt:"):
+        if not isinstance(mid, str) or not any(mid.startswith(prefix) and len(mid) > len(prefix) for prefix in PLATFORM_PREFIXES.values()):
             report["invalid_records"].append({"metric_index": index, "reason": "invalid_metric_id"})
         elif mids[mid] == 1:
             indexed[mid] = metric
@@ -60,7 +62,9 @@ def normalize_result(data):
     for index, row in enumerate(publications):
         pid = row.get("id") if isinstance(row, dict) else None
         issue = {"metadata_index": index, "id": pid if isinstance(pid, str) else None}
-        if not isinstance(pid, str) or not pid.startswith("yt:") or len(pid) <= 3 or row.get("plataforma") != "youtube":
+        platform = row.get("plataforma") if isinstance(row, dict) else None
+        prefix = PLATFORM_PREFIXES.get(platform) if isinstance(platform, str) else None
+        if not isinstance(pid, str) or not prefix or not pid.startswith(prefix) or len(pid) <= len(prefix):
             report["invalid_records"].append({**issue, "reason": "unsupported_platform_or_id"})
             continue
         if pids[pid] > 1 or mids[pid] > 1 or pid not in indexed:
@@ -68,10 +72,11 @@ def normalize_result(data):
         metric = indexed[pid]
         try:
             video = Video.model_validate({
-                "id": pid, "title": row.get("titulo"), "description": row.get("texto"), "author": None,
+                "platform": platform, "id": pid, "title": row.get("titulo"), "description": row.get("texto"), "author": None,
                 "url": row.get("url"), "published_at": row.get("publicada_en"),
                 "metrics_collected_at": metric.get("capturada_en"),
                 "views": metric.get("vistas"), "likes": metric.get("likes"), "comments": metric.get("comentarios"),
+                "shares": metric.get("compartidos"),
             })
         except ValidationError as exc:
             report["invalid_records"].append({**issue, "reason": "schema_validation", "errors": [
