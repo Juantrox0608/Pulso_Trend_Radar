@@ -762,3 +762,41 @@ El plan gratis se duerme tras inactividad y un reinicio pierde búsquedas y resu
 también los trabajos en curso. El registro local de gasto de OpenRouter tampoco es persistente
 en Render: configura el límite de gasto en la clave del proveedor. Usa un solo proceso/instancia
 para mantener la exclusión de búsquedas. El despliegue y la prueba real quedan para el equipo.
+
+## TikTok en Render
+
+TikTok bloquea la captura desde las regiones de Render probadas. La PC captura las cuentas
+semilla sin tema y Render sirve lo subido. Configura `CARGA_TOKEN` con el mismo secreto en el
+entorno de la PC y en Render; en la PC también necesitas `AUTOR_HASH_SAL` y las semillas del
+archivo habitual o de `TIKTOK_CUENTAS`. No guardes secretos en el repo.
+
+```powershell
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas subir --servicio https://TU-SERVICIO.onrender.com --dias 7 --cada-minutos 15
+```
+
+Con intervalo, repite hasta Ctrl+C y cada subida genera actividad en Render. Sin
+`--cada-minutos` hace una sola vuelta. Conserva los límites actuales de captura: hasta 30
+videos por cuenta y 300 publicaciones por vuelta. Si la captura está vacía, detenida o
+interrumpida, no envía nada; informa por stderr y conserva la carga anterior. Los errores
+de captura o envío se informan sin datos del proveedor; con intervalo intenta de nuevo
+en la siguiente vuelta. No se reenvía el token en redirecciones: usa la URL final del servicio.
+
+`POST /tiktok/carga` recibe `{"publicaciones": [...], "metricas": [...]}` según el contrato:
+solo IDs `tt:`, sin publicaciones duplicadas, máximo 3000 publicaciones y una métrica por
+pieza, asociada a su publicación. Requiere `X-Carga-Token`; ausente o incorrecto responde
+401, sin `CARGA_TOKEN` configurada responde 503. Un lote inválido responde 422 y conserva
+la carga anterior. Un lote válido reemplaza todo el contenido anterior. No necesita `X-Token`.
+`GET /tiktok/carga` es público y devuelve solo `{"publicaciones": n, "cargado_en": ...}`,
+con hora UTC de recepción; antes de la primera carga la hora es `null`.
+
+Con `TIKTOK_DESDE_CARGA=1` (ya incluido en `render.yaml`), las búsquedas de TikTok usan
+esa copia, sin capturar. Filtran la fecha de publicación entre ahora menos `dias` y ahora,
+y reutilizan `FiltroTema`: hashtags exactos sin modelo, términos por comas y Nemotron/Groq
+para texto. El resumen de TikTok incluye `origen_tiktok: "carga"` y `cargado_en`.
+Sin datos cargados, marca `fallidas: 1` y el aviso `No hay datos de TikTok cargados`;
+incluso una búsqueda solo TikTok finaliza con ese resumen y listas vacías. YouTube y LinkedIn
+siguen su flujo habitual. Sin la variable activada se conserva la captura TikTok anterior.
+
+La carga vive en memoria y se pierde al reiniciar: deja la PC ejecutando el comando para
+reponerla. Usa un solo proceso/instancia. Los servicios de prueba de Frankfurt y Singapur
+se quitaron del YAML; su eliminación en la cuenta de Render queda para Juan/equipo.

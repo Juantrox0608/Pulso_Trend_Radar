@@ -32,6 +32,19 @@ def _tiktok(tema, dias):
                                   sal=os.environ.get('AUTOR_HASH_SAL', ''))
 
 
+def _tiktok_cargado(tema, dias, carga):
+    ps, ms, _ = carga
+    ahora = datetime.now(timezone.utc)
+    desde = ahora - timedelta(days=dias)
+    metricas = {m.publicacion_id: m for m in ms}
+    pares = [(p, metricas.get(p.id)) for p in ps if desde <= p.publicada_en <= ahora]
+    filtro = tiktok_cuentas.FiltroTema(tema, clave=os.environ.get('OPENROUTER_API_KEY', ''),
+                                     contador=Path('data/raw/tiktok_filtro_cuota.json'))
+    filtrados, detalle = filtro.filtrar(pares)
+    detalle['fuera_fecha'] = len(ps) - len(pares)
+    return [p for p, _ in filtrados], [m for _, m in filtrados if m is not None], detalle
+
+
 def validar_busqueda(tema, dias, redes, paises):
     if not tema.strip() or not 1 <= dias <= 36500:
         raise ValueError('Usa un tema con texto y --dias entre 1 y 36500')
@@ -45,19 +58,30 @@ def validar_busqueda(tema, dias, redes, paises):
     return terminos, redes, paises
 
 
-def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
+def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None, carga_tiktok=None):
     terminos, redes, paises = validar_busqueda(tema, dias, redes, paises)
     recolectores = recolectores or dict(youtube=_youtube, linkedin=_linkedin, tiktok=_tiktok)
     publicaciones, metricas, resumen = {}, {}, {}
     exitos = 0
+    sin_carga = False
     for red in redes:
         r = dict(publicaciones=0, metricas=0, fallidas=0)
         resumen[red] = r
+        desde_carga = red == 'tiktok' and os.environ.get('TIKTOK_DESDE_CARGA') == '1'
+        if desde_carga:
+            r.update(origen_tiktok='carga', cargado_en=carga_tiktok[2] if carga_tiktok else None)
+            if not carga_tiktok or not carga_tiktok[0]:
+                r.update(fallidas=1, aviso='No hay datos de TikTok cargados')
+                sin_carga = True
+                continue
         consultas = [(t, p) for t in terminos for p in paises] if red == 'youtube' else [
             (t, None) for t in (terminos if red == 'linkedin' else [tema])]
         for consulta, pais in consultas:
             try:
-                resultado = recolectores[red](consulta, dias, pais) if pais else recolectores[red](consulta, dias)
+                if desde_carga:
+                    resultado = _tiktok_cargado(consulta, dias, carga_tiktok)
+                else:
+                    resultado = recolectores[red](consulta, dias, pais) if pais else recolectores[red](consulta, dias)
             except Exception:
                 r['fallidas'] += 1
                 r['aviso'] = ('No se completaron una o más consultas; revisa YOUTUBE_API_KEY y AUTOR_HASH_SAL'
@@ -88,7 +112,7 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
                 if m.publicacion_id not in metricas:
                     metricas[m.publicacion_id] = m
                     r['metricas'] += 1
-    if not exitos:
+    if not exitos and not sin_carga:
         fallos = '; '.join(f'{red}: {r["fallidas"]} consultas fallidas' for red,r in resumen.items())
         raise ValueError('Todas las redes fallaron; ' + fallos +
             '; revisa YOUTUBE_API_KEY, OPENROUTER_API_KEY, GROQ_API_KEY, AUTOR_HASH_SAL, saldo y conexión')

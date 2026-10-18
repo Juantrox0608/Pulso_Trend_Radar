@@ -19,36 +19,9 @@ services:
         sync: false
       - key: RADAR_TOKEN
         sync: false
-      - key: TIKTOK_CUENTAS
+      - key: CARGA_TOKEN
         sync: false
-  # Pruebas temporales: ¿TikTok bloquea también estas regiones? Borrar cuando se decida.
-  - type: web
-    name: radar-recoleccion-fra
-    runtime: python
-    plan: free
-    region: frankfurt
-    buildCommand: pip install -e ".[api]"
-    startCommand: uvicorn radar.recoleccion.servicio:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /salud
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: AUTOR_HASH_SAL
-        sync: false
-      - key: TIKTOK_CUENTAS
-        sync: false
-  - type: web
-    name: radar-recoleccion-sgp
-    runtime: python
-    plan: free
-    region: singapore
-    buildCommand: pip install -e ".[api]"
-    startCommand: uvicorn radar.recoleccion.servicio:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /salud
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
-      - key: AUTOR_HASH_SAL
-        sync: false
+      - key: TIKTOK_DESDE_CARGA
+        value: "1"
       - key: TIKTOK_CUENTAS
         sync: false

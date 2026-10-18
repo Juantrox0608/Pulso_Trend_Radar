@@ -13,7 +13,7 @@ from itertools import islice
 from pathlib import Path
 from time import sleep, monotonic
 from urllib.parse import urlsplit
-from urllib.request import Request
+from urllib.request import Request, HTTPRedirectHandler, build_opener
 
 import yt_dlp
 
@@ -508,6 +508,59 @@ def ejecutar(cuentas, *, sal, salida_dir='data/raw/tiktok', cada_horas=None,
         bloqueo.unlink(missing_ok=True)
 
 
+class _SinRedireccion(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # No reenviar X-Carga-Token a otro destino.
+        return None
+
+
+def _post_carga(request, *, timeout):
+    with build_opener(_SinRedireccion()).open(request, timeout=timeout) as respuesta:
+        if not 200 <= respuesta.status < 300:
+            raise ValueError('El servicio rechazó la carga')
+
+
+def subir(cuentas, *, servicio, sal, token, dias=7, cada_minutos=None, pedir=None, pausa=sleep):
+    partes = urlsplit(servicio)
+    if (partes.scheme not in ('http', 'https') or not partes.hostname or partes.username
+            or partes.password or partes.query or partes.fragment):
+        raise ValueError('--servicio requiere una URL base HTTP(S), sin credenciales')
+    if not token or not token.strip():
+        raise ValueError('Falta CARGA_TOKEN en el entorno')
+    if not sal or not sal.strip():
+        raise ValueError('Falta AUTOR_HASH_SAL en el entorno')
+    _entero(dias, 1, 36500, 'dias')
+    if cada_minutos is not None:
+        _entero(cada_minutos, 1, 525600, 'cada_minutos')
+    try:
+        while True:
+            interrumpido = False
+            try:
+                ps, ms, r = capturar(cuentas, sal=sal, dias=dias)
+                interrumpido = r.get('interrumpido', False)
+                print(f"TikTok: {len(ps)} publicaciones; detenida: {r.get('detenido', False)}; "
+                      f"interrumpida: {interrumpido}", file=sys.stderr)
+                if not ps or r.get('detenido') or interrumpido:
+                    print('No se sube: captura vacía, detenida o interrumpida; se conserva la carga anterior.',
+                          file=sys.stderr)
+                else:
+                    cuerpo = dict(publicaciones=[p.model_dump(mode='json') for p in ps],
+                                  metricas=[m.model_dump(mode='json') for m in ms])
+                    request = Request(servicio.rstrip('/') + '/tiktok/carga', method='POST',
+                        data=json.dumps(cuerpo, ensure_ascii=False).encode('utf-8'),
+                        headers={'Content-Type': 'application/json', 'X-Carga-Token': token})
+                    (pedir or _post_carga)(request, timeout=90)
+                    print(f'TikTok: carga confirmada, {len(ps)} publicaciones.', file=sys.stderr)
+            except Exception:
+                print('TikTok: captura o carga no confirmada; se conserva la carga anterior del servidor.',
+                      file=sys.stderr)
+            if cada_minutos is None or interrumpido:
+                break
+            pausa(cada_minutos * 60)
+    except KeyboardInterrupt:
+        print('Subida detenida por el usuario.', file=sys.stderr)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Cuentas semilla y capturas periódicas públicas de TikTok.')
     sub = parser.add_subparsers(dest='comando', required=True)
@@ -524,6 +577,11 @@ def main(argv=None):
     captura.add_argument('--salida-dir', type=Path, default=Path('data/raw/tiktok'))
     captura.add_argument('--cada-horas', type=int)
     captura.add_argument('--tema', help='Frase amplia o hasta 5 términos por comas; #hashtag exacto sin modelo')
+    subida = sub.add_parser('subir', help='Capturar sin tema y subir al servicio; sin intervalo hace una vuelta')
+    subida.add_argument('--servicio', required=True)
+    subida.add_argument('--semillas', type=Path, default=SEMILLAS)
+    subida.add_argument('--dias', type=int, default=7)
+    subida.add_argument('--cada-minutos', type=int)
     args = parser.parse_args(argv)
     try:
         cuentas = leer_semillas(args.semillas)
@@ -543,6 +601,11 @@ def main(argv=None):
                       f"{resumen['costo_usd']:.6f}; tokens Groq: {resumen['groq_tokens']}", file=sys.stderr)
             if resumen.get('aviso'):
                 print(resumen['aviso'], file=sys.stderr)
+        elif args.comando == 'subir':
+            if not cuentas:
+                raise ValueError('No hay cuentas semilla; ejecuta primero semillas')
+            subir(cuentas, servicio=args.servicio, dias=args.dias, cada_minutos=args.cada_minutos,
+                  sal=os.environ.get('AUTOR_HASH_SAL', ''), token=os.environ.get('CARGA_TOKEN', ''))
         else:
             if not cuentas:
                 raise ValueError('No hay cuentas semilla; ejecuta primero semillas')
