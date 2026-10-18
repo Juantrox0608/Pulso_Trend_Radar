@@ -433,3 +433,36 @@ def test_health_identifies_ai_target_without_leaking_credentials(result):
     assert response.json()["ai_target"] == {"host": "ia-analisis.onrender.com", "path": "/analyze"}
     assert "private-" not in response.text
     assert not collector.calls and not ai.requests
+
+
+def test_tiktok_capture_failure_reaches_frontend_without_calling_ai(body):
+    body["filters"]["platform"] = "tiktok"
+    result = {"estado": "lista", "search_id": SEARCH_ID, "publicaciones": [], "metricas": [],
+              "resumen": {"tiktok": {"publicaciones": 0, "metricas": 0, "fallidas": 0,
+                  "detalle": {"cuentas": 3, "cuentas_fallidas": 3, "videos": 0, "detenido": True,
+                              "aviso": "PRIVATE_PROVIDER_DETAILS", "token": "PRIVATE_TOKEN"}}}}
+    ai = FakeAI()
+    with TestClient(create_app(config(), FakeCollector(result), ai)) as client:
+        response = client.post("/research", json=body)
+    assert response.status_code == 502
+    error = response.json()["error"]
+    assert error["code"] == "collector_capture_failed"
+    detail = error["details"][0]
+    assert detail["search_id"] == SEARCH_ID
+    assert detail["capture"]["cuentas_fallidas"] == 3
+    assert detail["ai_called"] is False
+    assert detail["reason"] == "capture_failed_or_stopped"
+    assert "PRIVATE" not in response.text
+    assert ai.requests == []
+
+
+def test_empty_tiktok_is_distinguished_from_capture_failure(body):
+    body["filters"]["platform"] = "tiktok"
+    result = {"estado": "lista", "publicaciones": [], "metricas": [],
+              "resumen": {"tiktok": {"detalle": {"cuentas": 3, "cuentas_fallidas": 0, "videos": 0}}}}
+    ai = FakeAI()
+    with TestClient(create_app(config(), FakeCollector(result), ai)) as client:
+        response = client.post("/research", json=body)
+    assert response.status_code == 422
+    assert response.json()["error"]["details"][0]["reason"] == "empty_collection"
+    assert not ai.requests

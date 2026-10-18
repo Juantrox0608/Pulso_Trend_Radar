@@ -13,7 +13,7 @@ from app.errors import ServiceError
 from app.main import BodyLimitMiddleware
 from app.schemas import ErrorResponse
 from .clients import AIClient, CollectorClient
-from .errors import DependencyError
+from .errors import DependencyError, CollectionError
 from .config import Settings
 from .schemas import ResearchRequest, ResearchResponse
 from .service import research
@@ -46,7 +46,7 @@ def create_app(settings=None, collector=None, ai=None):
     async def service_error(request: Request, exc: ServiceError):
         return JSONResponse(status_code=exc.status, content={"error": {
             "code": exc.code, "message": exc.message,
-            "details": exc.details if isinstance(exc, DependencyError) else [],
+            "details": exc.details if isinstance(exc, (DependencyError, CollectionError)) else [],
         }})
 
     @app.exception_handler(RequestValidationError)

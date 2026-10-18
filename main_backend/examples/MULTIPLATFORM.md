@@ -99,5 +99,19 @@ campos nuevos, URLs de otras redes o títulos nulos. No confundirlo con falta de
   `collection.simulated: false`. Ranking vacío con vistas desconocidas es correcto.
 - Un fallo de recolección no se reemplaza con datos ficticios.
 
+### Diagnóstico de TikTok
+
+Si el recolector devuelve cero publicaciones e indica captura detenida o todas
+las cuentas fallidas, `/research` responde 502 `collector_capture_failed`, no un
+resultado vacío normal. `error.details[0]` incluye `platform`, `search_id`, conteos
+de captura y `ai_called: false`. No se devuelven mensajes privados del proveedor.
+Una búsqueda realmente vacía mantiene 422 `no_usable_videos` con
+`reason: "empty_collection"`. El frontend debe mostrar ambos casos de forma distinta.
+
+La prueba real guardada en `tiktok_diagnostic_latest.json` confirmó tres cuentas
+fallidas, captura detenida y cero publicaciones/métricas. No permite confirmar el
+flujo de éxito de TikTok hasta resolver la captura en el recolector. No se hicieron
+llamadas a IA para esa búsqueda. El ID permite consultar la misma tarea sin repetir POST.
+
 Los tests locales ejercitan las tres plataformas con fixtures y aplicación real
 de IA con inferencia simulada. No consumen cuotas externas.

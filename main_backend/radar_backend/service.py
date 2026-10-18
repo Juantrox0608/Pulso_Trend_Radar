@@ -3,6 +3,7 @@ from app.ranking import calculate_ranking
 from app.schemas import AnalyzeRequest
 
 from .collector_contract import normalize_result
+from .errors import CollectionError
 from .schemas import CollectionInfo, ResearchResponse, Source, PublicationMetrics
 
 
@@ -30,7 +31,25 @@ async def research(request, collector, ai, mode="http"):
     known = sorted((v for v in matching if v.views is not None), key=lambda v: (-v.views, v.id))
     selected = known[:f.sample_size] if known else sorted(matching, key=lambda v: v.id)[:f.sample_size]
     if not selected:
-        raise ServiceError(422, "no_usable_videos", "La búsqueda terminó sin publicaciones válidas que cumplan los filtros; no se consultó IA.")
+        summary = data["resumen"].get(f.platform, {})
+        capture = summary.get("detalle", {}) if isinstance(summary, dict) else {}
+        capture = capture if isinstance(capture, dict) else {}
+        detail = {"service": "collector", "platform": f.platform,
+                  "search_id": data.get("search_id"), "metadata_records": report["metadata_records"],
+                  "statistics_records": report["statistics_records"],
+                  "invalid_records_count": len(report["invalid_records"]), "ai_called": False}
+        # Only fixed, non-sensitive counters and flags; never forward provider messages.
+        counters = {key: capture[key] for key in ("cuentas", "cuentas_fallidas", "videos", "fuera_fecha", "descartados_tema")
+                    if type(capture.get(key)) is int and capture[key] >= 0}
+        detail["capture"] = counters
+        all_accounts_failed = counters.get("cuentas", 0) > 0 and counters.get("cuentas_fallidas", 0) >= counters["cuentas"]
+        stopped = capture.get("detenido") is True
+        if report["metadata_records"] == 0 and (all_accounts_failed or stopped):
+            detail["reason"] = "capture_failed_or_stopped"
+            raise CollectionError(502, "collector_capture_failed",
+                "El recolector no pudo capturar publicaciones de esta plataforma. Revisa las cuentas y el acceso del recolector; no se consultó IA.", detail)
+        detail["reason"] = "empty_collection" if report["metadata_records"] == 0 else "no_valid_matches"
+        raise CollectionError(422, "no_usable_videos", "La búsqueda terminó sin publicaciones válidas que cumplan los filtros; no se consultó IA.", detail)
     note = (
         f" Analiza solo estas {len(selected)} publicaciones de {f.platform}. "
         "La selección no representa toda la plataforma. Cada publicación tiene una captura de métricas: no demuestra crecimiento reciente."
