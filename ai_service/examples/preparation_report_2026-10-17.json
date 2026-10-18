@@ -1,0 +1,88 @@
+{
+  "metadata_records": 1010,
+  "statistics_records": 1009,
+  "statistics_captured_at": "2026-10-17T06:42:53.022937+00:00",
+  "duplicate_metadata_ids": [],
+  "metadata_without_statistics": [
+    "yt:eCTMxfst7wE"
+  ],
+  "statistics_without_metadata": [],
+  "invalid_records": [],
+  "missing_metric_fields": [],
+  "valid_joined_records": 1009,
+  "unknown_views_ids": [],
+  "selection_method": "Top N among valid joined records with known views; views descending, ID ascending",
+  "requested_sample_size": 5,
+  "ignored_metadata_fields": [
+    "autor_hash",
+    "capturada_en",
+    "consulta",
+    "duracion_segundos",
+    "formato",
+    "hashtags",
+    "idioma",
+    "origen",
+    "pais",
+    "schema_version",
+    "tipo_autor"
+  ],
+  "notes": [
+    "IDs are matched exactly including platform prefix; duplicate IDs are excluded.",
+    "author is null: autor_hash is not an author name.",
+    "Missing metric keys become null and are reported; zero remains zero.",
+    "Invalid records are excluded without truncating texts or coercing metrics.",
+    "Only one statistics snapshot is available; no recent growth can be established.",
+    "Selection favors accumulated views and is not representative of all YouTube."
+  ],
+  "known_views_records": 1009,
+  "selected_ids": [
+    "yt:qDzg-xvkeXw",
+    "yt:9-o5oNgJzJE",
+    "yt:wwl_9yI2RGU",
+    "yt:go6yxgk6odU",
+    "yt:NsTCeiiuL3g"
+  ],
+  "selected_count": 5,
+  "expected_ranking": [
+    {
+      "video_id": "yt:qDzg-xvkeXw",
+      "position": 1,
+      "metric": "views",
+      "value": 2355931
+    },
+    {
+      "video_id": "yt:9-o5oNgJzJE",
+      "position": 2,
+      "metric": "views",
+      "value": 2169167
+    },
+    {
+      "video_id": "yt:wwl_9yI2RGU",
+      "position": 3,
+      "metric": "views",
+      "value": 1690488
+    },
+    {
+      "video_id": "yt:go6yxgk6odU",
+      "position": 4,
+      "metric": "views",
+      "value": 1571277
+    },
+    {
+      "video_id": "yt:NsTCeiiuL3g",
+      "position": 5,
+      "metric": "views",
+      "value": 1191979
+    }
+  ],
+  "inputs": {
+    "metadata": {
+      "name": "youtube_2026-10-17.json",
+      "sha256": "d0b0c5bc2e02335449c282b2d914aea929a2905b20430fd51aadbbe686fe19c7"
+    },
+    "statistics": {
+      "name": "youtube_stats_2026-10-17.json",
+      "sha256": "fa284c220284094fd0baf8d9fe199fa1d26e874e3592082f4985bb8d0717a0cb"
+    }
+  }
+}

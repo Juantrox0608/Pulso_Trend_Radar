@@ -15,8 +15,9 @@ class Schema(BaseModel):
 
 
 class Video(Schema):
+    platform: Literal["youtube", "tiktok", "linkedin"] = "youtube"
     id: VideoId
-    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)] | None = None
     description: Annotated[str, StringConstraints(max_length=5000)] | None = None
     author: Annotated[str, StringConstraints(max_length=300)] | None = None
     url: HttpUrl
@@ -25,16 +26,39 @@ class Video(Schema):
     views: Metric | None
     likes: Metric | None
     comments: Metric | None
+    shares: Metric | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def infer_platform(cls, data):
+        if isinstance(data, dict) and "platform" not in data:
+            prefix = str(data.get("id", "")).split(":", 1)[0]
+            platform = {"yt": "youtube", "tt": "tiktok", "li": "linkedin"}.get(prefix)
+            if platform:
+                return {**data, "platform": platform}
+        return data
 
     @field_validator("url")
     @classmethod
-    def youtube_url(cls, value):
-        if value.scheme != "https" or value.host not in {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}:
-            raise ValueError("Se requiere una URL HTTPS de YouTube")
+    def platform_url(cls, value, info):
+        hosts = {
+            "youtube": {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"},
+            "tiktok": {"tiktok.com", "www.tiktok.com", "m.tiktok.com"},
+            "linkedin": {"linkedin.com", "www.linkedin.com", "lnkd.in"},
+        }
+        if value.scheme != "https" or value.host not in hosts.get(info.data.get("platform", "youtube"), set()):
+            raise ValueError("Se requiere una URL HTTPS de la plataforma indicada")
         return value
 
     @model_validator(mode="after")
     def chronological(self):
+        expected = {"youtube": "yt:", "tiktok": "tt:", "linkedin": "li:"}[self.platform]
+        if (":" in self.id and not self.id.startswith(expected)) or (self.platform != "youtube" and not self.id.startswith(expected)):
+            raise ValueError("El prefijo del ID no coincide con la plataforma")
+        if self.platform == "youtube" and not self.title:
+            raise ValueError("Los videos de YouTube requieren título")
+        if not self.title and not (self.description and self.description.strip()):
+            raise ValueError("La publicación requiere título o texto")
         if self.metrics_collected_at < self.published_at:
             raise ValueError("Las métricas no pueden preceder a la publicación")
         return self
@@ -49,6 +73,8 @@ class AnalyzeRequest(Schema):
     def unique_ids(self):
         if len({v.id for v in self.videos}) != len(self.videos):
             raise ValueError("Los IDs de video deben ser únicos")
+        if len({video.platform for video in self.videos}) > 1:
+            raise ValueError("Analiza una plataforma por solicitud; las métricas entre redes no son directamente comparables")
         return self
 
 

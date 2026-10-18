@@ -1,5 +1,15 @@
 # Radar de tendencias
 
+## Documentación del MVP implementado
+
+- [Referencia de endpoints: entradas, salidas y errores](docs/README_ENDPOINTS.md).
+- [Guía para consumir las APIs desde el frontend](docs/README_FRONTEND.md).
+- [Informe de auditoría del 18 de octubre de 2026](docs/endpoint_audit_2026-10-18.json).
+
+Estos documentos distinguen capacidades implementadas, resultados de pruebas y
+limitaciones. La visión de tendencias históricas descrita a continuación requiere
+mediciones en distintos momentos; no es una capacidad demostrada por una sola captura.
+
 Buscador de tendencias de bajo costo: encuentra los temas que **apenas empiezan a crecer** en YouTube, TikTok y
 LinkedIn, explica por qué está funcionando cada uno y filtra lo que le sirve a una audiencia concreta.
 

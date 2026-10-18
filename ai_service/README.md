@@ -1,5 +1,14 @@
 # Microservicio IA de 30X RADAR
 
+Actualización multiplataforma: `/analyze` también admite TikTok y LinkedIn, una
+plataforma por solicitud, con `platform` y `shares`, y texto sin título para esas
+redes. Se conserva `videos` por compatibilidad. Consulta el
+[contrato ampliado](../main_backend/examples/MULTIPLATFORM.md). Desplegar este
+servicio antes del backend principal actualizado.
+
+Para probar las exportaciones reales del equipo, consulta
+[preparación y Postman con cinco videos](examples/REAL_DATA.md).
+
 Recibe videos desde el JSON de cada solicitud, calcula el ranking con Python y pide
 una interpretación real a Groq. No consulta YouTube, no descarga URLs y no usa base
 de datos. Los ejemplos son ficticios. No mide crecimiento histórico ni viralidad global.

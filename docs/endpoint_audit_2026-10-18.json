@@ -1,0 +1,361 @@
+{
+  "date": "2026-10-18",
+  "checks": [
+    {
+      "name": "ai_redoc",
+      "method": "GET",
+      "url": "https://ia-analisis.onrender.com/redoc",
+      "http_status": 200,
+      "seconds": 0.59
+    },
+    {
+      "name": "collector_docs",
+      "method": "GET",
+      "url": "https://radar-recoleccion.onrender.com/docs",
+      "http_status": 200,
+      "seconds": 0.59
+    },
+    {
+      "name": "ai_health",
+      "method": "GET",
+      "url": "https://ia-analisis.onrender.com/health",
+      "http_status": 200,
+      "seconds": 0.61
+    },
+    {
+      "name": "main_docs",
+      "method": "GET",
+      "url": "https://tred-radar.onrender.com/docs",
+      "http_status": 200,
+      "seconds": 0.62
+    },
+    {
+      "name": "main_health",
+      "method": "GET",
+      "url": "https://tred-radar.onrender.com/health",
+      "http_status": 200,
+      "seconds": 0.87,
+      "ai_target": {
+        "host": "ia-analisis.onrender.com",
+        "path": "/analyze"
+      }
+    },
+    {
+      "name": "main_redoc",
+      "method": "GET",
+      "url": "https://tred-radar.onrender.com/redoc",
+      "http_status": 200,
+      "seconds": 0.78
+    },
+    {
+      "name": "collector_openapi.json",
+      "method": "GET",
+      "url": "https://radar-recoleccion.onrender.com/openapi.json",
+      "http_status": 200,
+      "seconds": 0.77
+    },
+    {
+      "name": "collector_health",
+      "method": "GET",
+      "url": "https://radar-recoleccion.onrender.com/salud",
+      "http_status": 200,
+      "seconds": 0.82
+    },
+    {
+      "name": "ai_docs",
+      "method": "GET",
+      "url": "https://ia-analisis.onrender.com/docs",
+      "http_status": 200,
+      "seconds": 0.83
+    },
+    {
+      "name": "ai_openapi.json",
+      "method": "GET",
+      "url": "https://ia-analisis.onrender.com/openapi.json",
+      "http_status": 200,
+      "seconds": 1.01
+    },
+    {
+      "name": "main_openapi.json",
+      "method": "GET",
+      "url": "https://tred-radar.onrender.com/openapi.json",
+      "http_status": 200,
+      "seconds": 1.47
+    },
+    {
+      "name": "main_invalid_body",
+      "method": "POST",
+      "url": "https://tred-radar.onrender.com/research",
+      "http_status": 422,
+      "seconds": 0.18,
+      "error": {
+        "code": "invalid_input",
+        "message": "Revisa pregunta, audiencia y filtros.",
+        "details": [
+          {
+            "location": [
+              "body",
+              "question"
+            ],
+            "type": "missing"
+          },
+          {
+            "location": [
+              "body",
+              "audience"
+            ],
+            "type": "missing"
+          },
+          {
+            "location": [
+              "body",
+              "filters"
+            ],
+            "type": "missing"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ai_invalid_body",
+      "method": "POST",
+      "url": "https://ia-analisis.onrender.com/analyze",
+      "http_status": 422,
+      "seconds": 0.56,
+      "error": {
+        "code": "invalid_input",
+        "message": "La solicitud contiene datos inválidos.",
+        "details": [
+          {
+            "location": [
+              "body",
+              "question"
+            ],
+            "type": "missing"
+          },
+          {
+            "location": [
+              "body",
+              "audience"
+            ],
+            "type": "missing"
+          },
+          {
+            "location": [
+              "body",
+              "videos"
+            ],
+            "type": "missing"
+          }
+        ]
+      }
+    },
+    {
+      "name": "collector_invalid_body",
+      "method": "POST",
+      "url": "https://radar-recoleccion.onrender.com/busquedas",
+      "http_status": 422,
+      "seconds": 0.17
+    },
+    {
+      "name": "collector_unknown_id",
+      "method": "GET",
+      "url": "https://radar-recoleccion.onrender.com/busquedas/nonexistent-audit-id",
+      "http_status": 404,
+      "seconds": 0.19
+    },
+    {
+      "name": "tiktok_existing_job",
+      "method": "GET",
+      "url": "https://radar-recoleccion.onrender.com/busquedas/1f478120918b460d98374efb7a323e2b",
+      "http_status": 200,
+      "seconds": 0.2
+    },
+    {
+      "name": "youtube_collector_job",
+      "method": "GET",
+      "url": "https://radar-recoleccion.onrender.com/busquedas/4aa21a437efc4be98188768658ffedb9",
+      "http_status": 200,
+      "seconds": 0.37
+    },
+    {
+      "name": "ai_direct_fictitious_single",
+      "method": "POST",
+      "url": "https://ia-analisis.onrender.com/analyze",
+      "http_status": 200,
+      "seconds": 2.71
+    }
+  ],
+  "research": {
+    "youtube": {
+      "http_status": 200,
+      "seconds": 4.59,
+      "schema_valid": true,
+      "source_count": 1,
+      "metric_count": 1,
+      "references_valid": true,
+      "metric_ids_valid": true,
+      "platforms_valid": true,
+      "findings_count": 1,
+      "recommendations_count": 1,
+      "ranking": [
+        {
+          "video_id": "yt:KRCblygC8Nw",
+          "position": 1,
+          "metric": "views",
+          "value": 736058
+        }
+      ],
+      "simulated": false,
+      "search_id": "4aa21a437efc4be98188768658ffedb9",
+      "limitations": [
+        "El análisis se limita a las publicaciones recibidas y sus metadatos.",
+        "No se analizó el contenido audiovisual completo.",
+        "No hay historial para establecer crecimiento ni referencia de desempeño del canal.",
+        "Las hipótesis no demuestran causalidad.",
+        "Una sola publicación no permite identificar patrones entre publicaciones.",
+        "El conjunto de datos incluye únicamente un video; no se puede inferir tendencia general.",
+        "Las métricas de likes, comentarios y shares son bajas y pueden no reflejar el interés real.",
+        "No se dispone de datos sobre impresiones o tiempo de visualización, limitando el análisis de rendimiento.",
+        "La selección no representa toda la plataforma ni mide crecimiento reciente; métricas ausentes son null, no cero.",
+        "Los nombres de autores no están disponibles. Las métricas no son directamente comparables entre plataformas.",
+        "Selección por vistas acumuladas conocidas.",
+        "El país es región de búsqueda de YouTube, no ubicación del autor."
+      ],
+      "collector_state": "lista"
+    },
+    "linkedin": {
+      "http_status": 422,
+      "seconds": 6.78,
+      "error": {
+        "code": "no_usable_videos",
+        "message": "La búsqueda terminó sin publicaciones válidas que cumplan los filtros; no se consultó IA.",
+        "details": [
+          {
+            "service": "collector",
+            "platform": "linkedin",
+            "search_id": "049846b6c1e1494cac109dc8804c46fb",
+            "metadata_records": 0,
+            "statistics_records": 0,
+            "invalid_records_count": 0,
+            "ai_called": false,
+            "capture": {
+              "fuera_fecha": 9
+            },
+            "reason": "empty_collection"
+          }
+        ]
+      }
+    },
+    "linkedin_extended_window": {
+      "http_status": 200,
+      "seconds": 11.37,
+      "published_after": "2026-09-18T06:33:46.027201+00:00",
+      "reason_for_second_check": "First search completed with no results and nine posts outside the date window; this is a deliberate wider-window check, not an ambiguous-start retry.",
+      "schema_valid": true,
+      "source_count": 1,
+      "metric_count": 1,
+      "references_valid": true,
+      "metric_ids_valid": true,
+      "platforms_valid": true,
+      "findings_count": 5,
+      "recommendations_count": 5,
+      "ranking": [],
+      "simulated": false,
+      "search_id": "65fdf7ad33fe4228a84a67d65784caf6",
+      "limitations": [
+        "El análisis se limita a las publicaciones recibidas y sus metadatos.",
+        "No se analizó el contenido audiovisual completo.",
+        "No hay historial para establecer crecimiento ni referencia de desempeño del canal.",
+        "Las hipótesis no demuestran causalidad.",
+        "Los videos sin visualizaciones conocidas fueron excluidos del ranking.",
+        "No hay visualizaciones conocidas: no es posible comparar desempeño.",
+        "Una sola publicación no permite identificar patrones entre publicaciones.",
+        "Las métricas desconocidas permanecen null; no equivalen a cero ni son comparables directamente entre plataformas.",
+        "Solo una publicación en LinkedIn",
+        "Sin métricas de vistas conocidas",
+        "Sin ranking de desempeño",
+        "No se puede inferir alcance ni tendencias",
+        "La selección no representa toda la plataforma ni mide crecimiento reciente; métricas ausentes son null, no cero.",
+        "Los nombres de autores no están disponibles. Las métricas no son directamente comparables entre plataformas.",
+        "Sin vistas conocidas: se muestran métricas disponibles y análisis de metadatos, con ranking vacío.",
+        "El recolector no aplica país a esta plataforma; no se garantiza cobertura del país solicitado."
+      ]
+    }
+  },
+  "notes": [],
+  "direct_ai": {
+    "schema_valid": true,
+    "source_ids_valid": true
+  },
+  "tiktok_existing_result": {
+    "http_status": 200,
+    "search_id": "1f478120918b460d98374efb7a323e2b",
+    "state": "lista",
+    "summary": {
+      "tiktok": {
+        "publicaciones": 0,
+        "metricas": 0,
+        "fallidas": 0,
+        "detalle": {
+          "cuentas": 3,
+          "cuentas_fallidas": 3,
+          "videos": 0,
+          "fuera_fecha": 0,
+          "omitidos": 0,
+          "descartados_tema": 0,
+          "lotes_descartados_sin_filtro": 0,
+          "lotes_openrouter": 0,
+          "lotes_groq": 0,
+          "aviso": "Captura detenida por bloqueo o tres cuentas fallidas consecutivas; salida parcial.",
+          "interrumpido": false,
+          "detenido": true
+        }
+      }
+    },
+    "publications": 0,
+    "metrics": 0
+  },
+  "linkedin_existing_result": {
+    "http_status": 200,
+    "search_id": "049846b6c1e1494cac109dc8804c46fb",
+    "state": "lista",
+    "summary": {
+      "linkedin": {
+        "publicaciones": 0,
+        "metricas": 0,
+        "fallidas": 0,
+        "detalle": {
+          "consultas": 1,
+          "consultas_fallidas": 0,
+          "urls": 9,
+          "completados": 0,
+          "omitidos": 0,
+          "fuera_fecha": 9,
+          "costo_usd": 0,
+          "aviso": null,
+          "proveedores": [
+            {
+              "consulta": 1,
+              "proveedor": "groq",
+              "groq_tokens": 8472
+            }
+          ],
+          "groq_tokens": 8472
+        }
+      }
+    },
+    "publications": 0,
+    "metrics": 0
+  },
+  "local_tests": {
+    "main_backend_passed": 88,
+    "ai_service_passed": 62,
+    "external_calls_in_automated_tests": false
+  },
+  "quality_notes": [
+    "A YouTube limitation described metrics as low without a baseline; factual/editorial quality is not established by schema validation.",
+    "Browser CORS integration remains pending the actual frontend origin.",
+    "TikTok success with real publications remains blocked by capture failure."
+  ]
+}

@@ -27,7 +27,7 @@ async def analyze(request: AnalyzeRequest, provider: AnalysisProvider) -> Analyz
             raise ServiceError(502, "invalid_source_reference", "El análisis contiene referencias a videos no recibidos.")
     unranked = sorted(v.id for v in request.videos if v.views is None)
     limitations = [
-        "El análisis se limita a los videos recibidos y sus metadatos.",
+        "El análisis se limita a las publicaciones recibidas y sus metadatos.",
         "No se analizó el contenido audiovisual completo.",
         "No hay historial para establecer crecimiento ni referencia de desempeño del canal.",
         "Las hipótesis no demuestran causalidad.",
@@ -37,7 +37,9 @@ async def analyze(request: AnalyzeRequest, provider: AnalysisProvider) -> Analyz
     if not ranking:
         limitations.append("No hay visualizaciones conocidas: no es posible comparar desempeño.")
     if len(request.videos) == 1:
-        limitations.append("Un solo video no permite identificar patrones entre publicaciones.")
+        limitations.append("Una sola publicación no permite identificar patrones entre publicaciones.")
+    if request.videos[0].platform != "youtube":
+        limitations.append("Las métricas desconocidas permanecen null; no equivalen a cero ni son comparables directamente entre plataformas.")
     result = interpretation.model_dump(exclude={"limitations"})
     return AnalyzeResponse(
         **result, ranking=ranking, unranked_video_ids=unranked,
