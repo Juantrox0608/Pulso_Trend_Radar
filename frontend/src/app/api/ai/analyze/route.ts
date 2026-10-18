@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const response = await fetch(`${AI_API_URL}/analyze`, {
+    const response = await fetch(body?.filters?.query ? 'https://tred-radar.onrender.com/research' : `${AI_API_URL}/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
