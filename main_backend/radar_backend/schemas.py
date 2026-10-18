@@ -35,7 +35,7 @@ class Source(Schema):
 
 
 class CollectionInfo(Schema):
-    mode: Literal["mock", "http"]
+    mode: Literal["http"]
     simulated: bool
     filters: Filters
     preparation: dict

@@ -2,12 +2,10 @@
   "question": "¿Qué videos destacan en la selección y qué contenido sobre IA podría producir 30X para esta audiencia?",
   "audience": "Líderes y equipos de Latinoamérica que están aprendiendo a aplicar IA en su trabajo",
   "filters": {
-    "query": "IA",
+    "query": "inteligencia artificial",
     "platform": "youtube",
     "language": "es",
     "country": "CO",
-    "published_after": "2026-10-01T00:00:00Z",
-    "published_before": "2026-10-17T23:59:59Z",
     "sample_size": 3
   }
 }

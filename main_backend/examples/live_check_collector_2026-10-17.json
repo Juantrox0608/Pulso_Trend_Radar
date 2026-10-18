@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-10-18T02:59:17.822146+00:00",
+  "sample_size": 1,
+  "collector_days": 1,
+  "search_id": "06ee096a31414e7e8f9b9dc7f1cc0c5c",
+  "status": "passed",
+  "collector_state": "lista",
+  "publications": 49,
+  "metrics": 49,
+  "http_status": 200,
+  "ranking": [
+    {
+      "video_id": "yt:UFlskjMeBWU",
+      "position": 1,
+      "metric": "views",
+      "value": 110710
+    }
+  ],
+  "source_ids": [
+    "yt:UFlskjMeBWU"
+  ],
+  "findings_count": 3,
+  "recommendations_count": 3,
+  "limitations": [
+    "El análisis se limita a los videos recibidos y sus metadatos.",
+    "No se analizó el contenido audiovisual completo.",
+    "No hay historial para establecer crecimiento ni referencia de desempeño del canal.",
+    "Las hipótesis no demuestran causalidad.",
+    "Un solo video no permite identificar patrones entre publicaciones.",
+    "Se analizó un solo video, por lo tanto, las conclusiones no se generalizan a YouTube completo.",
+    "Las métricas disponibles son estáticas; no se dispone de datos de crecimiento temporal.",
+    "No se incluyeron datos externos ni análisis de tendencias históricas.",
+    "Selección por visualizaciones acumuladas conocidas; no representa todo YouTube ni mide crecimiento reciente.",
+    "El país es la región de búsqueda, no la ubicación del autor. Los nombres de autores no están disponibles."
+  ],
+  "simulated": false
+}

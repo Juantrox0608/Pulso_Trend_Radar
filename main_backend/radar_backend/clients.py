@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 
 import httpx
 
@@ -8,11 +9,17 @@ from app.schemas import AnalyzeRequest, AnalyzeResponse
 from pydantic import ValidationError
 
 
-async def request_json(http, url, payload, timeout, service, headers=None, max_bytes=2 * 1024 * 1024):
+async def request_json(http, url, payload, timeout, service, headers=None, max_bytes=2 * 1024 * 1024,
+                       method="POST", expected_status=200):
     try:
         async with asyncio.timeout(timeout):
-            async with http.stream("POST", str(url), json=payload, headers=headers, timeout=timeout) as response:
+            kwargs = {"json": payload} if method == "POST" else {}
+            async with http.stream(method, str(url), headers=headers, timeout=timeout, **kwargs) as response:
                 if not response.is_success:
+                    if service == "collector" and response.status_code == 409:
+                        raise ServiceError(503, "collector_busy", "El recolector ya tiene una búsqueda en curso; espera antes de iniciar otra.")
+                    if service == "collector" and response.status_code == 404:
+                        raise ServiceError(502, "collector_search_lost", "La búsqueda no existe o se perdió al reiniciar el recolector.")
                     if response.status_code == 429:
                         raise ServiceError(503, f"{service}_rate_limited", f"{service}: límite de uso alcanzado.")
                     if response.status_code in {401, 403}:
@@ -20,6 +27,8 @@ async def request_json(http, url, payload, timeout, service, headers=None, max_b
                     if response.status_code in {503, 504}:
                         raise ServiceError(response.status_code, f"{service}_unavailable", f"{service} no está disponible o agotó su plazo.")
                     raise ServiceError(502, f"{service}_error", f"{service} rechazó la solicitud.")
+                if response.status_code != expected_status:
+                    raise ServiceError(502, f"{service}_invalid_response", f"Estado HTTP inesperado de {service}.")
                 body = bytearray()
                 async for chunk in response.aiter_bytes():
                     body.extend(chunk)
@@ -39,31 +48,53 @@ class CollectorClient:
         self.settings, self.http = settings, http
 
     async def collect(self, filters):
-        if self.settings.collector_mode == "mock":
-            # Synthetic records created per request, filtered by the actual input.
-            rows = [{
-                "id": f"yt:mock-{index}", "plataforma": "youtube",
-                "titulo": f"[FICTICIO] {title}", "texto": "Datos simulados para probar integración de 30X; no son evidencia real.",
-                "autor_hash": "mock-hash", "url": f"https://www.youtube.com/watch?v=mock-{index}",
-                "publicada_en": "2026-10-10T12:00:00Z", "idioma": "es", "pais": "CO",
-            } for index, title in enumerate([
-                "IA para automatizar reportes", "IA: evaluar herramientas en equipos", "IA y reuniones de trabajo",
-                "IA: riesgos y revisión humana",
-            ], 1)]
-            stats = {"capturada_en": "2026-10-17T06:00:00Z", "stats": {
-                f"yt:mock-{i}": {"viewCount": views, "likeCount": 0 if i == 3 else None, "commentCount": None}
-                for i, views in enumerate([12000, 12000, 0, None], 1)
-            }}
-            return {"metadata": rows, "statistics": stats}
-        if self.settings.collector_url is None:
-            raise ServiceError(503, "collector_configuration", "Configura COLLECTOR_URL para usar el recolector real.")
-        token = self.settings.collector_token.get_secret_value().strip()
-        return await request_json(
-            self.http, self.settings.collector_url,
-            {"filters": filters.model_dump(mode="json", exclude_none=True)},
-            self.settings.collector_timeout_seconds, "collector",
-            headers={"Authorization": f"Bearer {token}"} if token else None,
-        )
+        from .collector_contract import collector_parameters
+        parameters = collector_parameters(filters, self.settings)
+        search_id = None
+        try:
+            async with asyncio.timeout(self.settings.collector_search_timeout_seconds):
+                base = str(self.settings.collector_url).rstrip("/")
+                try:
+                    started = await request_json(self.http, base + "/busquedas", parameters,
+                        self.settings.collector_timeout_seconds, "collector", expected_status=202)
+                except ServiceError as exc:
+                    if exc.code in {"collector_timeout", "collector_unavailable", "collector_invalid_json",
+                                    "collector_invalid_response", "collector_response_too_large"}:
+                        raise ServiceError(exc.status, "collector_start_uncertain",
+                            "No se pudo confirmar el inicio. No repitas automáticamente POST /busquedas: podría existir una tarea activa.") from None
+                    raise
+                if (not isinstance(started, dict) or started.get("estado") != "en_curso"
+                        or not isinstance(started.get("id"), str) or not re.fullmatch(r"[a-f0-9]{32}", started["id"])):
+                    raise ServiceError(502, "collector_start_uncertain",
+                        "Inicio inválido o sin ID confirmado. No repitas automáticamente la creación.")
+                search_id = started["id"]
+                result = await self.wait_for_search(search_id)
+                result["search_id"] = search_id
+                result["request_parameters"] = parameters
+                return result
+        except ServiceError as exc:
+            if search_id:
+                exc.message += f" ID de búsqueda: {search_id}. Conserva este ID; no crees otra tarea automáticamente."
+            raise
+        except TimeoutError:
+            suffix = f" Consulta GET /busquedas/{search_id} para recuperar el resultado." if search_id else " No repitas automáticamente el POST: el inicio pudo haber ocurrido."
+            raise ServiceError(504, "collector_search_timeout", "Se agotó el plazo de recolección." + suffix) from None
+
+    async def wait_for_search(self, search_id):
+        base = str(self.settings.collector_url).rstrip("/")
+        while True:
+            result = await request_json(self.http, base + "/busquedas/" + search_id, None,
+                self.settings.collector_timeout_seconds, "collector", method="GET")
+            if not isinstance(result, dict):
+                raise ServiceError(502, "collector_invalid_response", "La consulta de búsqueda no es un objeto.")
+            state = result.get("estado")
+            if state == "lista":
+                return result
+            if state == "error":
+                raise ServiceError(502, "collector_search_failed", "El recolector informó una búsqueda fallida; no se consultó IA.")
+            if state != "en_curso":
+                raise ServiceError(502, "collector_invalid_state", "El recolector devolvió un estado desconocido.")
+            await asyncio.sleep(self.settings.collector_poll_interval_seconds)
 
 
 class AIClient:

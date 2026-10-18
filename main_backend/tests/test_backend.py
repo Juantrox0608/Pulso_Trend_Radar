@@ -1,4 +1,6 @@
 import asyncio
+import copy
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -11,8 +13,12 @@ from app.main import create_app as create_ai_app
 from app.ranking import calculate_ranking
 from app.schemas import AnalyzeResponse
 from radar_backend.clients import AIClient, CollectorClient
+from radar_backend.collector_contract import collector_parameters, normalize_result
 from radar_backend.config import Settings
 from radar_backend.main import create_app
+from radar_backend.schemas import Filters
+
+SEARCH_ID = "a" * 32
 
 
 @pytest.fixture(autouse=True)
@@ -22,13 +28,35 @@ def no_network(monkeypatch):
     monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", forbidden)
 
 
+def config(**kwargs):
+    return Settings(_env_file=None, collector_poll_interval_seconds=0.001, **kwargs)
+
+
 @pytest.fixture
 def body():
     return json.loads((Path(__file__).parents[1] / "examples/research_request.json").read_text(encoding="utf-8"))
 
 
-def config(**kwargs):
-    return Settings(_env_file=None, **kwargs)
+@pytest.fixture
+def result():
+    return {"estado": "lista", "resumen": {"youtube": {"publicaciones": 4, "metricas": 4, "fallidas": 0}},
+        "publicaciones": [{"id": f"yt:test-{i}", "plataforma": "youtube", "titulo": f"FICTICIO {i}",
+            "texto": "Fixture, no datos reales", "autor_hash": "not-a-name", "url": f"https://youtu.be/test-{i}",
+            "publicada_en": "2026-10-10T12:00:00Z", "capturada_en": "2026-10-11T12:00:00Z", "idioma": "es", "pais": "CO"}
+            for i in range(1, 5)],
+        "metricas": [{"publicacion_id": f"yt:test-{i}", "capturada_en": f"2026-10-17T06:00:0{i}Z",
+            "vistas": views, "likes": 0 if i == 3 else None, "comentarios": None}
+            for i, views in enumerate([12000, 12000, 0, None], 1)]}
+
+
+class FakeCollector:
+    def __init__(self, result):
+        self.result = result
+        self.calls = []
+
+    async def collect(self, filters):
+        self.calls.append(filters)
+        return copy.deepcopy(self.result)
 
 
 class FakeAI:
@@ -38,181 +66,274 @@ class FakeAI:
     async def analyze(self, request):
         self.requests.append(request)
         source = request.videos[0].id
-        return AnalyzeResponse(
-            summary="Prueba simulada", findings=[{"observation": "Metadatos de prueba", "hypothesis": None, "source_video_ids": [source]}],
-            recommendations=[{"title": "Idea de prueba", "suggested_format": "Tutorial", "reason": "Para equipos", "source_video_ids": [source]}],
-            limitations=["Una sola captura, sin historial."],
-            ranking=calculate_ranking(request.videos), unranked_video_ids=[],
-        )
+        return AnalyzeResponse(summary="Prueba simulada", findings=[{"observation": "Metadatos de prueba",
+            "hypothesis": None, "source_video_ids": [source]}], recommendations=[{"title": "Idea de prueba",
+            "suggested_format": "Tutorial", "reason": "Para equipos", "source_video_ids": [source]}],
+            limitations=["Sin historial"], ranking=calculate_ranking(request.videos), unranked_video_ids=[])
 
 
-def test_local_flow_health_and_dynamic_filters(body):
-    fake = FakeAI()
-    with TestClient(create_app(config(), ai=fake)) as client:
-        assert client.get("/health").json()["collector_mode"] == "mock"
-        assert not fake.requests
-        response = client.post("/research", json=body)
-        assert response.status_code == 200, response.text
-        result = response.json()
-        assert result["collection"]["simulated"] is True
-        assert [r["position"] for r in result["analysis"]["ranking"]] == [1, 1, 3]
-        assert len(result["sources"]) == 3
-        assert "FICTICIOS" in fake.requests[0].question
-        assert fake.requests[0].audience == body["audience"]
-        assert all(v.author is None for v in fake.requests[0].videos)
-        body["filters"]["query"] = "reuniones"
-        response = client.post("/research", json=body)
-        assert response.status_code == 200
-        assert response.json()["analysis"]["ranking"][0]["value"] == 0
+def test_endpoint_health_and_selection(body, result):
+    collector, ai = FakeCollector(result), FakeAI()
+    with TestClient(create_app(config(), collector, ai)) as client:
+        assert client.get("/health").json()["collector_mode"] == "http"
+        assert collector.calls == []
+        reply = client.post("/research", json=body)
+        assert reply.status_code == 200, reply.text
+        data = reply.json()
+        assert data["collection"]["simulated"] is False
+        assert [r["position"] for r in data["analysis"]["ranking"]] == [1, 1, 3]
+        assert len(data["sources"]) == 3
+        assert ai.requests[0].audience == body["audience"]
+        assert all(v.author is None for v in ai.requests[0].videos)
+        assert "crecimiento reciente" in ai.requests[0].question
+        assert "FICTICIOS" not in ai.requests[0].question
+        body["filters"]["sample_size"] = 1
+        assert len(client.post("/research", json=body).json()["sources"]) == 1
 
 
-@pytest.mark.parametrize("field,value", [("query", "nothing matches"), ("language", "en"), ("country", "MX"),
-    ("published_after", "2026-10-16T00:00:00Z")])
-def test_empty_filter_results_skip_ai(body, field, value):
-    fake = FakeAI()
+def test_per_video_capture_null_zero_and_inputs_unchanged(result):
+    before = copy.deepcopy(result)
+    videos, _, report = normalize_result(result)
+    assert result == before
+    assert videos[2].views == 0 and videos[3].views is None
+    assert videos[2].likes == 0 and videos[0].likes is None
+    assert videos[0].metrics_collected_at.isoformat() == "2026-10-17T06:00:01+00:00"
+    assert videos[1].metrics_collected_at != videos[0].metrics_collected_at
+    assert len(report["statistics_captured_at_by_id"]) == 4
+
+
+def test_unmatched_duplicate_invalid_metrics(result):
+    result["publicaciones"].append(copy.deepcopy(result["publicaciones"][0]))
+    result["publicaciones"].append({"id": "yt:orphan", "plataforma": "youtube"})
+    result["metricas"].append({"publicacion_id": "yt:extra", "vistas": 0})
+    result["metricas"][1]["vistas"] = True
+    videos, _, report = normalize_result(result)
+    assert [v.id for v in videos] == ["yt:test-3", "yt:test-4"]
+    assert report["duplicate_metadata_ids"] == ["yt:test-1"]
+    assert report["metadata_without_statistics"] == ["yt:orphan"]
+    assert report["statistics_without_metadata"] == ["yt:extra"]
+    assert report["invalid_records"][0]["id"] == "yt:test-2"
+
+
+def test_duplicate_metrics_not_chosen_arbitrarily(result):
+    result["metricas"].append(copy.deepcopy(result["metricas"][0]))
+    videos, _, report = normalize_result(result)
+    assert "yt:test-1" not in [v.id for v in videos]
+    assert report["duplicate_metric_ids"] == ["yt:test-1"]
+
+
+@pytest.mark.parametrize("value", [-1, "100", 1.5, True])
+def test_invalid_metrics_excluded(result, value):
+    result["metricas"][0]["vistas"] = value
+    videos, _, report = normalize_result(result)
+    assert "yt:test-1" not in [v.id for v in videos]
+    assert report["invalid_records"]
+
+
+def test_missing_metric_and_invalid_capture(result):
+    del result["metricas"][0]["likes"]
+    result["metricas"][1]["capturada_en"] = "2026-10-17T06:00:00"
+    videos, _, report = normalize_result(result)
+    assert videos[0].likes is None
+    assert report["missing_metric_fields"] == [{"id": "yt:test-1", "fields": ["likes"]}]
+    assert "yt:test-2" not in [v.id for v in videos]
+
+
+def test_parameters_mapping():
+    now = datetime(2026, 10, 17, 12, tzinfo=timezone.utc)
+    f = Filters(query="inteligencia artificial", country="MX", published_after="2026-10-15T12:00:00Z", language="en", sample_size=1)
+    assert collector_parameters(f, config(), now) == {"tema": "inteligencia artificial", "redes": ["youtube"], "dias": 3, "paises": ["MX"]}
+    assert collector_parameters(Filters(query="IA"), config(), now)["dias"] == 7
+    assert collector_parameters(Filters(query="IA"), config(), now)["paises"] == ["CO"]
+
+
+@pytest.mark.parametrize("query", [", ,", "#", "a,b,c,d,e,f"])
+def test_invalid_topics_before_network(query):
+    with pytest.raises(ServiceError) as error:
+        collector_parameters(Filters(query=query), config())
+    assert error.value.status == 422
+
+
+def test_future_start_rejected_before_network():
+    with pytest.raises(ServiceError):
+        collector_parameters(Filters(query="IA", published_after="2030-01-01T00:00:00Z"), config(), datetime(2026, 10, 17, tzinfo=timezone.utc))
+
+
+@pytest.mark.parametrize("field,value", [("language", "en"), ("published_after", "2026-10-16T00:00:00Z"),
+    ("published_before", "2026-10-01T00:00:00Z")])
+def test_local_filters_skip_ai(body, result, field, value):
     body["filters"][field] = value
-    with TestClient(create_app(config(), ai=fake)) as client:
-        response = client.post("/research", json=body)
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "no_usable_videos"
-    assert not fake.requests
-
-
-@pytest.mark.parametrize("field,value", [("sample_size", 0), ("sample_size", 11), ("sample_size", True),
-    ("platform", "linkedin"), ("published_after", "2026-10-01"), ("country", "co"),
-    ("published_before", "2020-01-01T00:00:00Z")])
-def test_invalid_filters(body, field, value):
-    fake = FakeAI()
-    body["filters"][field] = value
-    with TestClient(create_app(config(), ai=fake)) as client:
+    ai = FakeAI()
+    with TestClient(create_app(config(), FakeCollector(result), ai)) as client:
         assert client.post("/research", json=body).status_code == 422
-    assert not fake.requests
+    assert ai.requests == []
 
 
-def test_invalid_input_and_size(body):
-    with TestClient(create_app(config(), ai=FakeAI())) as client:
-        assert client.post("/research", json={}).status_code == 422
-        assert client.post("/research", content="{").status_code == 422
-        assert client.post("/research", content=b"x" * (256 * 1024 + 1)).status_code == 413
+def test_query_not_reinterpreted_as_literal_substring(body, result):
+    assert all("inteligencia artificial" not in p["titulo"] for p in result["publicaciones"])
+    with TestClient(create_app(config(), FakeCollector(result), FakeAI())) as client:
+        assert client.post("/research", json=body).status_code == 200
 
 
-def test_http_roundtrip_collector_main_ai_service(body):
-    """Both HTTP clients plus the actual AI app; only inference is fake."""
+@pytest.mark.parametrize("case", ["empty", "all_null", "all_invalid", "bad_structure"])
+def test_no_results_never_calls_ai(body, result, case):
+    if case == "empty":
+        result["publicaciones"], result["metricas"] = [], []
+    elif case == "all_null":
+        for metric in result["metricas"]:
+            metric["vistas"] = None
+    elif case == "all_invalid":
+        for row in result["publicaciones"]:
+            row["publicada_en"] = "invalid"
+    else:
+        del result["metricas"]
+    ai = FakeAI()
+    with TestClient(create_app(config(), FakeCollector(result), ai)) as client:
+        assert client.post("/research", json=body).status_code == (502 if case == "bad_structure" else 422)
+    assert not ai.requests
+
+
+def test_http_start_poll_and_real_ai_app(body, result):
     calls = []
-
     class FakeGroq:
         async def generate(self, context):
-            data = json.loads(context)
-            return json.dumps({"summary": "Respuesta de prueba", "findings": [], "recommendations": [], "limitations": []})
-
-    async def mock_export():
-        async with httpx.AsyncClient() as http:
-            from radar_backend.schemas import Filters
-            return await CollectorClient(config(), http).collect(Filters(query="IA"))
-    export = asyncio.run(mock_export())
-    settings = config(collector_mode="http", collector_url="https://collector.example/search", collector_token="test-token")
+            assert len(json.loads(context)["videos"]) == 3
+            return json.dumps({"summary": "Prueba", "findings": [], "recommendations": [], "limitations": []})
     with TestClient(create_ai_app(FakeGroq())) as ai_server:
         def handler(request):
-            calls.append(str(request.url))
-            if request.url.host == "collector.example":
-                assert request.headers["authorization"] == "Bearer test-token"
-                assert json.loads(request.content)["filters"]["query"] == "IA"
-                return httpx.Response(200, json=export)
-            assert str(request.url) == "http://127.0.0.1:8001/analyze"
-            ai_body = json.loads(request.content)
-            assert len(ai_body["videos"]) == 3
-            reply = ai_server.post("/analyze", json=ai_body)
+            calls.append((request.method, request.url.path))
+            assert "authorization" not in request.headers and "x-token" not in request.headers
+            if request.url.path == "/busquedas":
+                assert request.method == "POST"
+                assert json.loads(request.content) == {"tema": "inteligencia artificial", "redes": ["youtube"], "dias": 7, "paises": ["CO"]}
+                return httpx.Response(202, json={"id": SEARCH_ID, "estado": "en_curso"})
+            if request.url.path.startswith("/busquedas/"):
+                assert request.method == "GET"
+                return httpx.Response(200, json={"estado": "en_curso", "resumen": {}} if len(calls) == 2 else result)
+            reply = ai_server.post("/analyze", json=json.loads(request.content))
             return httpx.Response(reply.status_code, json=reply.json())
-
         http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        settings = config(collector_url="https://collector.example")
         try:
             with TestClient(create_app(settings, CollectorClient(settings, http), AIClient(settings, http))) as client:
                 reply = client.post("/research", json=body)
                 assert reply.status_code == 200, reply.text
-                assert reply.json()["collection"]["mode"] == "http"
-                assert reply.json()["analysis"]["ranking"][0]["value"] == 12000
+                assert reply.json()["collection"]["preparation"]["search_id"] == SEARCH_ID
         finally:
             asyncio.run(http.aclose())
-    assert len(calls) == 2
+    assert [method for method, _ in calls] == ["POST", "GET", "GET", "POST"]
 
 
-@pytest.mark.parametrize("status,expected", [(400, 502), (401, 503), (429, 503), (500, 502), (503, 503), (504, 504)])
-def test_collector_errors(body, status, expected):
-    settings = config(collector_mode="http", collector_url="https://collector.example/search")
-    http = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: httpx.Response(status, text="PRIVATE")))
-    fake = FakeAI()
+@pytest.mark.parametrize("case,expected,code", [
+    ("ambiguous_timeout", 504, "collector_start_uncertain"),
+    ("ambiguous_connection", 503, "collector_start_uncertain"),
+    ("invalid_json", 502, "collector_start_uncertain"),
+    ("missing_id", 502, "collector_start_uncertain"),
+    ("wrong_http", 502, "collector_start_uncertain"),
+    ("busy", 503, "collector_busy"), ("rate", 503, "collector_rate_limited"),
+    ("rejected", 502, "collector_error"),
+    ("failed", 502, "collector_search_failed"), ("unknown_state", 502, "collector_invalid_state"),
+    ("lost", 502, "collector_search_lost"), ("large", 502, "collector_start_uncertain"),
+])
+def test_failures_single_post_no_ai(body, case, expected, code):
+    calls = []
+    def handler(request):
+        calls.append(request.method)
+        if request.method == "POST":
+            if case == "ambiguous_timeout":
+                raise httpx.ReadTimeout("private", request=request)
+            if case == "ambiguous_connection":
+                raise httpx.ConnectError("private", request=request)
+            if case == "invalid_json":
+                return httpx.Response(202, text="not json")
+            if case == "missing_id":
+                return httpx.Response(202, json={"estado": "en_curso"})
+            if case == "wrong_http":
+                return httpx.Response(200, json={"id": SEARCH_ID, "estado": "en_curso"})
+            if case == "large":
+                return httpx.Response(202, content=b"x" * (2 * 1024 * 1024 + 1))
+            if case in {"busy", "rate", "rejected"}:
+                return httpx.Response({"busy": 409, "rate": 429, "rejected": 422}[case], text="PRIVATE")
+            return httpx.Response(202, json={"id": SEARCH_ID, "estado": "en_curso"})
+        if case == "lost":
+            return httpx.Response(404)
+        return httpx.Response(200, json={"estado": "error" if case == "failed" else "unknown"})
+    settings, ai = config(collector_url="https://collector.example"), FakeAI()
+    http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     try:
-        with TestClient(create_app(settings, CollectorClient(settings, http), fake)) as client:
+        with TestClient(create_app(settings, CollectorClient(settings, http), ai)) as client:
             reply = client.post("/research", json=body)
-        assert reply.status_code == expected
+        assert reply.status_code == expected, reply.text
+        assert reply.json()["error"]["code"] == code
         assert "PRIVATE" not in reply.text
-        assert not fake.requests
+        assert calls.count("POST") == 1 and ai.requests == []
     finally:
         asyncio.run(http.aclose())
 
 
-@pytest.mark.parametrize("failure,expected", [("timeout", 504), ("connection", 503), ("json", 502), ("structure", 502), ("large", 502)])
-def test_collector_bad_responses(body, failure, expected):
-    settings = config(collector_mode="http", collector_url="https://collector.example/search")
+def test_poll_deadline_and_real_pauses(body):
+    calls = []
     def handler(request):
-        if failure == "timeout":
-            raise httpx.ReadTimeout("private", request=request)
-        if failure == "connection":
-            raise httpx.ConnectError("private", request=request)
-        return httpx.Response(200, content=b"x" * (2 * 1024 * 1024 + 1) if failure == "large" else b"{" if failure == "json" else b"{}")
+        calls.append(request.method)
+        return httpx.Response(202 if request.method == "POST" else 200,
+            json={"id": SEARCH_ID, "estado": "en_curso"})
+    settings = config(collector_search_timeout_seconds=0.02)
     http = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     try:
         with TestClient(create_app(settings, CollectorClient(settings, http), FakeAI())) as client:
-            assert client.post("/research", json=body).status_code == expected
+            reply = client.post("/research", json=body)
+        assert reply.status_code == 504
+        assert SEARCH_ID in reply.json()["error"]["message"]
+        assert calls.count("POST") == 1
+        assert 1 <= calls.count("GET") < 30
     finally:
         asyncio.run(http.aclose())
 
 
-def test_http_mode_never_falls_back_to_mock(body):
-    fake = FakeAI()
-    with TestClient(create_app(config(collector_mode="http"), ai=fake)) as client:
-        reply = client.post("/research", json=body)
-    assert reply.status_code == 503
-    assert reply.json()["error"]["code"] == "collector_configuration"
-    assert not fake.requests
+@pytest.mark.parametrize("field,value", [("sample_size", 0), ("sample_size", 11), ("sample_size", True),
+    ("platform", "linkedin"), ("country", "co"), ("published_after", "2026-10-01")])
+def test_input_validation(body, field, value):
+    body["filters"][field] = value
+    with TestClient(create_app(config(), FakeCollector({}), FakeAI())) as client:
+        assert client.post("/research", json=body).status_code == 422
+
+
+def test_size_json_and_cors():
+    with TestClient(create_app(config(cors_origins=["http://localhost:5173"]), FakeCollector({}), FakeAI())) as client:
+        assert client.post("/research", content="{").status_code == 422
+        assert client.post("/research", content=b"x" * (256 * 1024 + 1)).status_code == 413
+        assert client.options("/research", headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "POST"}).status_code == 200
+        assert client.options("/research", headers={"Origin": "https://other.example", "Access-Control-Request-Method": "POST"}).status_code == 400
 
 
 @pytest.mark.parametrize("failure", ["references", "ranking", "upstream"])
-def test_ai_errors(body, failure):
+def test_ai_contract_unchanged(body, result, failure):
     class BadAI(FakeAI):
         async def analyze(self, request):
             if failure == "upstream":
                 raise ServiceError(504, "ai_timeout", "Plazo agotado")
-            result = await super().analyze(request)
+            response = await super().analyze(request)
             if failure == "references":
-                result.findings[0].source_video_ids = ["yt:invented"]
+                response.findings[0].source_video_ids = ["yt:invented"]
             else:
-                result.ranking = []
-            return result
-    with TestClient(create_app(config(), ai=BadAI())) as client:
-        reply = client.post("/research", json=body)
-    assert reply.status_code == (504 if failure == "upstream" else 502)
+                response.ranking = []
+            return response
+    with TestClient(create_app(config(), FakeCollector(result), BadAI())) as client:
+        assert client.post("/research", json=body).status_code == (504 if failure == "upstream" else 502)
 
 
 def test_total_deadline(body):
     class Slow:
         async def collect(self, filters):
             await asyncio.sleep(1)
-    with TestClient(create_app(config(research_timeout_seconds=0.01), collector=Slow(), ai=FakeAI())) as client:
-        reply = client.post("/research", json=body)
-    assert reply.status_code == 504
-    assert reply.json()["error"]["code"] == "research_timeout"
+    with TestClient(create_app(config(research_timeout_seconds=0.01), Slow(), FakeAI())) as client:
+        assert client.post("/research", json=body).json()["error"]["code"] == "research_timeout"
 
 
-def test_empty_collector_url_from_example():
-    assert Settings(_env_file=Path(__file__).parents[1] / ".env.example").collector_url is None
-
-
-def test_cors_is_explicit():
-    with TestClient(create_app(config(cors_origins=["http://localhost:5173"]), ai=FakeAI())) as client:
-        response = client.options("/research", headers={"Origin": "http://localhost:5173",
-            "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"})
-        assert response.status_code == 200
-        assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
-        assert client.options("/research", headers={"Origin": "https://unconfigured.example",
-            "Access-Control-Request-Method": "POST"}).status_code == 400
+def test_real_example_config_and_no_mock():
+    settings = Settings(_env_file=Path(__file__).parents[1] / ".env.example")
+    assert settings.collector_mode == "http"
+    assert str(settings.collector_url).startswith("https://radar-recoleccion.onrender.com")
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        config(collector_mode="mock")

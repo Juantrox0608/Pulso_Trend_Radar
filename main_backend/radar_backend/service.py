@@ -1,82 +1,60 @@
-from pydantic import TypeAdapter, AwareDatetime, ValidationError
-
 from app.errors import ServiceError
-from app.prepare_request import prepare_request
 from app.ranking import calculate_ranking
 from app.schemas import AnalyzeRequest
 
+from .collector_contract import normalize_result
 from .schemas import CollectionInfo, ResearchResponse, Source
 
 
-async def research(request, collector, ai, mode):
+async def research(request, collector, ai, mode="http"):
     data = await collector.collect(request.filters)
-    if not isinstance(data, dict) or not isinstance(data.get("metadata"), list) or not isinstance(data.get("statistics"), dict):
-        raise ServiceError(502, "collector_invalid_response", "Se requieren metadata y statistics del recolector.")
-    if len(data["metadata"]) > 2000:
-        raise ServiceError(502, "collector_too_many_records", "El recolector excedió 2000 registros; acuerda paginación.")
-    # Validate/join before filtering so malformed rows remain visible in the report.
-    try:
-        _, original_report = prepare_request(data["metadata"], data["statistics"], request.filters.sample_size)
-    except (ValueError, TypeError, KeyError):
-        raise ServiceError(502, "collector_invalid_response", "El recolector devolvió una estructura o captura inválida.") from None
-    invalid = {issue["metadata_index"] for issue in original_report["invalid_records"]}
-    duplicates = set(original_report["duplicate_metadata_ids"])
-    selected_metadata = []
-    missing_filter_fields = 0
+    valid, metadata, report = normalize_result(data)
+    matching = []
+    missing_language = 0
     f = request.filters
-    for index, row in enumerate(data["metadata"]):
-        if index in invalid or row.get("id") in duplicates:
-            continue
-        if f.query.casefold() not in f"{row.get('titulo', '')} {row.get('texto') or ''}".casefold():
-            continue
-        if (f.language and not row.get("idioma")) or (f.country and not row.get("pais")):
-            missing_filter_fields += 1
+    # query and country belong to the remote search, not literal title/author filters.
+    for video in valid:
+        row = metadata[video.id]
+        if f.language and not row.get("idioma"):
+            missing_language += 1
             continue
         if f.language and row.get("idioma") != f.language:
             continue
-        if f.country and row.get("pais") != f.country:
+        if f.published_after and video.published_at < f.published_after:
             continue
-        try:
-            published = TypeAdapter(AwareDatetime).validate_python(row.get("publicada_en"))
-        except ValidationError:
+        if f.published_before and video.published_at > f.published_before:
             continue
-        if f.published_after and published < f.published_after:
-            continue
-        if f.published_before and published > f.published_before:
-            continue
-        selected_metadata.append(row)
-    try:
-        prepared, report = prepare_request(selected_metadata, data["statistics"], f.sample_size)
-    except (ValueError, TypeError, KeyError):
-        raise ServiceError(502, "collector_invalid_response", "No se pudieron preparar los datos del recolector.") from None
-    if prepared is None:
-        raise ServiceError(422, "no_usable_videos", "No hay videos válidos con vistas conocidas que cumplan los filtros.")
+        matching.append(video)
+    known = sorted((v for v in matching if v.views is not None), key=lambda v: (-v.views, v.id))
+    selected = known[:f.sample_size]
+    if not selected:
+        raise ServiceError(422, "no_usable_videos", "La búsqueda terminó sin videos válidos con vistas conocidas que cumplan los filtros; no se consultó IA.")
     note = (
-        f" Analiza solo estos {len(prepared.videos)} videos seleccionados por vistas acumuladas conocidas. "
-        "La selección no representa todo YouTube. Solo hay una captura de métricas: no demuestra crecimiento reciente."
+        f" Analiza solo estos {len(selected)} videos seleccionados por vistas acumuladas conocidas. "
+        "La selección no representa todo YouTube. Cada video tiene una captura de métricas: no demuestra crecimiento reciente."
     )
-    if mode == "mock":
-        note += " DATOS FICTICIOS: prueba de integración, no evidencia de mercado."
-    ai_request = AnalyzeRequest(question=request.question + note, audience=request.audience, videos=prepared.videos)
+    ai_request = AnalyzeRequest(question=request.question + note, audience=request.audience, videos=selected)
     result = await ai.analyze(ai_request)
-    valid_ids = {v.id for v in prepared.videos}
-    if result.ranking != calculate_ranking(prepared.videos) or result.unranked_video_ids != []:
+    valid_ids = {v.id for v in selected}
+    if result.ranking != calculate_ranking(selected) or result.unranked_video_ids != []:
         raise ServiceError(502, "ai_invalid_ranking", "La IA devolvió un ranking distinto al esperado.")
     if any(not set(item.source_video_ids) <= valid_ids for item in result.findings + result.recommendations):
         raise ServiceError(502, "ai_invalid_references", "La IA devolvió referencias ajenas a la selección.")
-    result.limitations = list(dict.fromkeys(result.limitations + [
+    limitations = [
         "Selección por visualizaciones acumuladas conocidas; no representa todo YouTube ni mide crecimiento reciente.",
-    ] + (["DATOS SIMULADOS: resultados de demostración sin evidencia real de mercado."] if mode == "mock" else [])))
-    summary = {key: original_report[key] for key in (
-        "metadata_records", "statistics_records", "duplicate_metadata_ids", "metadata_without_statistics",
-        "statistics_without_metadata", "invalid_records", "missing_metric_fields", "statistics_captured_at",
-    )}
-    summary.update({"matching_metadata_records": len(selected_metadata),
-                    "missing_filter_fields_records": missing_filter_fields,
-                    "selected_ids": report["selected_ids"], "selected_count": report["selected_count"],
-                    "unknown_views_ids": report["unknown_views_ids"]})
+        "El país es la región de búsqueda, no la ubicación del autor. Los nombres de autores no están disponibles.",
+    ]
+    youtube_summary = data["resumen"].get("youtube", {})
+    if isinstance(youtube_summary, dict) and type(youtube_summary.get("fallidas")) is int and youtube_summary["fallidas"] > 0:
+        limitations.append("El recolector informó consultas parcialmente fallidas; la cobertura es incompleta.")
+    if report["invalid_records"] or report["metadata_without_statistics"] or report["duplicate_metadata_ids"] or report["duplicate_metric_ids"]:
+        limitations.append("Se excluyeron registros inválidos, ambiguos o sin estadísticas; consulta el reporte de preparación.")
+    result.limitations = list(dict.fromkeys(result.limitations + limitations))
+    report.update({"matching_metadata_records": len(matching), "missing_filter_fields_records": missing_language,
+                   "selected_ids": [v.id for v in selected], "selected_count": len(selected),
+                   "unknown_views_ids": sorted(v.id for v in matching if v.views is None)})
     return ResearchResponse(
         analysis=result,
-        sources=[Source(id=v.id, title=v.title, url=str(v.url)) for v in prepared.videos],
-        collection=CollectionInfo(mode=mode, simulated=mode == "mock", filters=f, preparation=summary),
+        sources=[Source(id=v.id, title=v.title, url=str(v.url)) for v in selected],
+        collection=CollectionInfo(mode="http", simulated=False, filters=f, preparation=report),
     )

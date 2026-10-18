@@ -1,18 +1,69 @@
 # Backend principal de 30X RADAR
 
-Orquesta frontend → recolector → preparación → microservicio IA → frontend.
-No consulta directamente YouTube ni Groq. No usa base de datos. La clave Groq
-permanece exclusivamente en `ai_service/.env`.
+Flujo real: frontend → `POST /research` → recolector desplegado → normalización y
+selección → `POST /analyze` del servicio IA → frontend. Sin base de datos ni
+persistencia de investigaciones. No hay datos quemados ni fallback simulado en
+ejecución. Los fixtures existen únicamente en las pruebas automáticas.
 
-El recolector todavía no tiene un contrato HTTP acordado. Por defecto se ejecuta
-`COLLECTOR_MODE=mock`, con cuatro publicaciones FICTICIAS, métricas inventadas y
-fecha fija. **El análisis se solicita al servicio IA real por HTTP**; por tanto,
-al ejecutar `/research` normalmente sí se consume cuota Groq. Las pruebas no
-realizan llamadas externas. El modo simulado no se activa desde el cuerpo HTTP.
+La conexión HTTP con IA conserva su contrato y cliente. Este cambio no fusiona
+los dos procesos; puedes seguir usando la IA ya desplegada.
 
-## Preparar y ejecutar (PowerShell)
+## Contrato confirmado del recolector
 
-Primera vez, desde la raíz del repositorio:
+Verificado contra el [OpenAPI desplegado](https://radar-recoleccion.onrender.com/openapi.json)
+y el código de `origin/feature/recoleccion`, referencia `f3386ab`:
+`src/radar/recoleccion/servicio.py`, `buscar.py` y `contrato/metrica.py`.
+El OpenAPI no describe los cuerpos de respuesta; se confirmaron en implementación
+y en una prueba real. Se leyó la rama remota sin cambiar de rama ni fusionarla.
+
+- `GET /salud` → `{"estado":"ok"}`. No requiere token en este despliegue.
+- `POST /busquedas` → HTTP 202, `{"id":"<uuid hexadecimal de 32 caracteres>","estado":"en_curso"}`.
+- `GET /busquedas/{id}` → HTTP 200: `en_curso`, `lista` o `error`.
+- `lista` contiene `resumen`, `publicaciones` y `metricas`.
+- `error` indica búsqueda fallida. HTTP 409 al crear indica que hay otra en curso.
+- HTTP 404 al consultar puede indicar que se perdió la búsqueda: el recolector
+  guarda hasta 20 tareas en memoria y las pierde al reiniciarse.
+- Redes admitidas por el recolector: youtube, linkedin, tiktok. Este backend y
+  el contrato de IA siguen admitiendo **solo YouTube**.
+- `dias`: entero 1–36500; `paises`: lista no vacía de códigos de dos letras;
+  tema: una frase o de uno a cinco términos distintos separados por comas.
+
+Ejemplo de creación:
+
+```json
+{"tema":"inteligencia artificial","redes":["youtube"],"dias":7,"paises":["CO"]}
+```
+
+Ejemplo estructural de resultado, con datos ficticios de documentación:
+
+```json
+{
+  "estado": "lista",
+  "resumen": {"youtube": {"publicaciones": 1, "metricas": 1, "fallidas": 0}},
+  "publicaciones": [{
+    "id": "yt:ejemplo",
+    "plataforma": "youtube",
+    "titulo": "Ejemplo de IA",
+    "texto": "Descripción",
+    "autor_hash": "hash-sin-nombre",
+    "url": "https://www.youtube.com/watch?v=ejemplo",
+    "publicada_en": "2026-10-16T12:00:00Z",
+    "idioma": "es",
+    "pais": "CO"
+  }],
+  "metricas": [{
+    "publicacion_id": "yt:ejemplo",
+    "capturada_en": "2026-10-17T06:00:00Z",
+    "vistas": 12000,
+    "likes": null,
+    "comentarios": 0
+  }]
+}
+```
+
+## Configuración local
+
+Primera instalación, desde la raíz:
 
 ```powershell
 cd main_backend
@@ -21,214 +72,188 @@ py -m venv .venv
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Ambos proyectos se instalan desde sus carpetas locales. Se comparten los esquemas
-Pydantic, ranking y preparador de `ai_service` como dependencia Python local;
-no se duplica el contrato y no se llama al análisis de IA dentro del proceso.
-Para instalar este backend debes tener ambas carpetas del repositorio. A futuro,
-el contrato compartido puede extraerse a un paquete independiente.
+Si `.env` ya existe, actualiza las variables manualmente; no copies encima.
+Se busca siempre en `main_backend`. Reinicia el proceso tras modificarlo.
 
-Terminal 1, desde `ai_service`, con su clave local ya configurada:
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+```dotenv
+COLLECTOR_MODE=http
+COLLECTOR_URL=https://radar-recoleccion.onrender.com
+COLLECTOR_TIMEOUT_SECONDS=30
+COLLECTOR_SEARCH_TIMEOUT_SECONDS=150
+COLLECTOR_POLL_INTERVAL_SECONDS=2
+COLLECTOR_DEFAULT_DAYS=7
+COLLECTOR_DEFAULT_COUNTRY=CO
+AI_ANALYZE_URL=https://radar-ai-8xi7.onrender.com/analyze
+AI_TIMEOUT_SECONDS=45
+RESEARCH_TIMEOUT_SECONDS=210
+CORS_ORIGINS=[]
 ```
 
-Terminal 2, desde `main_backend`:
+`COLLECTOR_URL` es la URL BASE, no termina en `/busquedas`. No configurar token:
+el cliente no envía `Authorization` ni `X-Token` al recolector. Elimina el antiguo
+`COLLECTOR_TOKEN`. `COLLECTOR_MODE` solo admite `http`; `https` es un protocolo de
+la URL, no un modo. `mock` ya no está disponible. La clave Groq permanece en IA.
+
+Para usar IA local, configura `AI_ANALYZE_URL=http://127.0.0.1:8001/analyze` e inicia
+ese servicio por separado. No se modificó su implementación.
+
+Inicio del backend:
 
 ```powershell
 .\.venv\Scripts\python.exe -m uvicorn radar_backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-El `.env` del backend principal se busca siempre en `main_backend`. Reinicia
-el proceso después de cambiarlo. No copies la clave Groq a esta carpeta.
+## Mapeo de filtros
+
+| `/research` | Recolector o procesamiento local |
+|---|---|
+| `filters.query` | `tema`; no se exige coincidencia literal en los títulos devueltos |
+| `filters.platform` | `redes: ["youtube"]` |
+| `filters.country` | `paises: [country]`; si falta, `COLLECTOR_DEFAULT_COUNTRY` |
+| `filters.published_after` | Se calcula `dias` desde UTC actual, redondeando hacia arriba y añadiendo un día de margen; el corte exacto se aplica localmente |
+| Sin `published_after` | `COLLECTOR_DEFAULT_DAYS`; por defecto siete días |
+| `filters.published_before` | No tiene equivalente remoto: límite inclusivo local |
+| `filters.language` | No tiene equivalente remoto: igualdad local con `idioma`; si es desconocido se excluye y se cuenta |
+| `filters.sample_size` | No tiene equivalente remoto: máximo 1–10 videos enviados a IA, ordenados por vistas conocidas e ID |
+
+El país del recolector es **región de búsqueda, no ubicación del autor**. Su código
+de YouTube utiliza español como idioma de relevancia; no garantiza que los videos
+estén en español. El filtro local de idioma puede dejar pocos o ningún resultado.
+
+Una fecha final antigua sin fecha inicial no amplía la ventana de siete días:
+podría devolver cero coincidencias. Para una ventana histórica indica ambas fechas.
+Se rechaza un inicio futuro o de hace más de 36500 días antes de iniciar la tarea.
+El margen temporal es aproximado; se presupone que los relojes están sincronizados.
+
+`sample_size=1` no limita el trabajo remoto: el recolector consulta hasta 50 videos
+por término/país y luego se selecciona localmente. Para una primera prueba usa un
+solo tema, un país y `COLLECTOR_DEFAULT_DAYS=1`, omitiendo fechas de publicación.
+
+## Normalización y respuesta
+
+`collector_contract.py` une `publicaciones[].id` con `metricas[].publicacion_id`,
+conservando `yt:`. Se usa **la fecha de cada métrica**, no la captura del metadato.
+`titulo` → `title`, `texto` → `description`, `publicada_en` → `published_at`,
+`vistas` → `views`, `likes` → `likes`, `comentarios` → `comments`.
+`author` es `null`: nunca se inventa un nombre desde `autor_hash`.
+
+Se conserva cero; ausentes o desconocidos quedan como `null`. No se convierten
+booleanos, cadenas ni decimales en conteos. Registros inválidos, sin coincidencia
+o con IDs duplicados se excluyen y reportan. Capturas distintas para un mismo ID
+se consideran ambiguas y no se elige una arbitrariamente. Vistas desconocidas no
+participan en la selección. No se truncan textos silenciosamente.
+
+El frontend conserva los tres bloques:
+
+- `analysis`: el contrato existente de IA, con ranking verificado, análisis,
+  recomendaciones, referencias y limitaciones.
+- `sources`: ID, título y URL de cada video enviado al servicio IA.
+- `collection`: `mode: "http"`, `simulated: false`, filtros y reporte `preparation`.
+  El reporte incluye `search_id`, `collector_parameters`, fechas por ID, exclusiones
+  y selección. Así puede rastrearse la tarea del recolector.
+
+El backend impone limitaciones sobre selección y ausencia de evidencia de crecimiento.
+Si el recolector informa consultas parcialmente fallidas, también se comunica.
+Referencias válidas y JSON correcto no garantizan que toda interpretación sea verdadera.
 
 ## Postman
 
-### Salud
-
-- Método: GET.
-- URL: `http://127.0.0.1:8000/health`.
-- Authorization: No Auth. Sin cuerpo.
-- Respuesta: `{"status":"ok","service":"main_backend","collector_mode":"mock"}`.
-- No llama al recolector, al servicio IA ni a Groq. No es prueba de disponibilidad
-  de las dependencias.
-
-### Investigar
-
-- Método: POST.
-- URL: `http://127.0.0.1:8000/research`.
-- Authorization: No Auth.
-- Headers: `Content-Type: application/json`, `Accept: application/json`.
-- Body → raw → JSON: pega todo `examples/research_request.json`:
+1. GET `http://127.0.0.1:8000/health`: debe devolver estado ok y modo http. No
+   consulta dependencias ni consume cuotas; no confirma que estén disponibles.
+2. POST `http://127.0.0.1:8000/research`, Authorization **No Auth**.
+3. Headers: `Content-Type: application/json`, `Accept: application/json`.
+4. Body → raw → JSON:
 
 ```json
 {
-  "question": "¿Qué videos destacan en la selección y qué contenido sobre IA podría producir 30X para esta audiencia?",
-  "audience": "Líderes y equipos de Latinoamérica que están aprendiendo a aplicar IA en su trabajo",
+  "question": "¿Qué destaca en esta selección y qué contenido útil sobre IA podría producir 30X? Distingue observaciones de hipótesis.",
+  "audience": "Líderes y equipos de Latinoamérica que aplican IA en su trabajo",
   "filters": {
-    "query": "IA",
+    "query": "inteligencia artificial",
     "platform": "youtube",
-    "language": "es",
     "country": "CO",
-    "published_after": "2026-10-01T00:00:00Z",
-    "published_before": "2026-10-17T23:59:59Z",
-    "sample_size": 3
+    "sample_size": 1
   }
 }
 ```
 
-- Timeout de Postman: 75000 ms. Plazo total del backend: 60 segundos por defecto;
-  recolector: 10; servicio IA: 45. No hay reintentos HTTP en el backend principal.
-- Send. Espera HTTP 200, con este envoltorio:
+5. Timeout de Postman: `240000` ms. Pulsa Send **una sola vez**; el backend crea
+   la tarea y la consulta con pausas. No es streaming ni hay progreso de frontend.
+6. Comprueba HTTP 200, `collection.simulated: false`, ID de búsqueda, un video en
+   ranking/fuentes y referencias a ese ID. Revisa las limitaciones y el contenido
+   editorial. Una sola captura no demuestra crecimiento reciente.
 
-```text
-{
-  "analysis": {ranking, summary, findings, recommendations, limitations, ...},
-  "sources": [{"id": "yt:mock-1", "title": "[FICTICIO] ...", "url": "https://..."}, ...],
-  "collection": {
-    "mode": "mock",
-    "simulated": true,
-    "filters": {...},
-    "preparation": {...}
-  }
-}
-```
+Si seleccionas `language: "es"`, se filtrará estrictamente y podrían faltar
+coincidencias. `/docs` describe los campos y límites. Pregunta: máximo 1500;
+audiencia: máximo 1000; tema: máximo 200 caracteres.
 
-El bloque anterior ilustra la forma, no es JSON para pegar. `analysis` conserva
-el contrato de `/analyze`; su `analysis_mode: "groq"` describe el proveedor,
-mientras `collection.simulated: true` señala que las publicaciones son ficticias.
-Se añade una limitación obligatoria de simulación incluso si el modelo la omite.
-`sources` permite resolver los IDs sin pedirle al modelo que invente URLs.
+## Plazos y errores
 
-Pruebas manuales adicionales:
+Solo se hace **un POST de creación**, sin reintentos. La consulta GET se repite
+exclusivamente mientras `estado == "en_curso"`, con pausas reales. Ni errores de
+red ni respuestas ambiguas vuelven a crear la tarea. No hay fallback a datos ficticios.
 
-1. Cambia `query` a `reuniones`: se selecciona solo `yt:mock-3`, con cero vistas.
-2. Cambia `query` a un texto inexistente: 422 `no_usable_videos`, sin llamada a IA.
-3. Cambia `sample_size` a 11: 422 `invalid_input`, sin llamar a las dependencias.
-4. Detén el servicio IA y repite una búsqueda válida: 503 `ai_unavailable`.
+- Timeout por petición: 30 s; plazo total de creación y consultas: 150 s.
+- IA: 45 s; plazo total `/research`: 210 s. Mantén el total por encima del plazo
+  de recolección más el de IA. El proxy de despliegue puede imponer su propio límite.
+- El recolector puede seguir trabajando tras un timeout: no hay endpoint de cancelación.
+- Si se conoce el ID, el error lo conserva para consultar GET `/busquedas/{id}`.
+  Si el inicio quedó ambiguo sin ID, no repitas automáticamente `/research`.
 
-Documentación: `http://127.0.0.1:8000/docs`; contrato OpenAPI en `/openapi.json`.
-
-## Filtros y preparación
-
-- `question`: texto no vacío, máximo 1500 caracteres; `audience`: máximo 1000.
-- `filters.query`: obligatorio, máximo 200; `platform`: solo `youtube`.
-- `language`, `country`, `published_after`, `published_before`: opcionales.
-  Idioma de dos letras minúsculas; país de dos letras mayúsculas; fechas con zona.
-- `sample_size`: entero 1–10, por defecto 5. Es el máximo enviado a IA.
-- El adaptador local aplica búsqueda literal sin distinguir mayúsculas sobre
-  título + descripción, idioma/país por igualdad y fechas inclusivas. No es una
-  búsqueda semántica. Estas reglas se aplican también al resultado HTTP.
-- Si faltan idioma o país y se solicitó ese filtro, el registro se excluye y se
-  cuenta en `missing_filter_fields_records`. El país se trata como campo del
-  recolector; no se deduce la nacionalidad ni ubicación del autor.
-- Se unen metadatos y métricas por ID completo; no se elimina `yt:`. Se excluyen
-  duplicados, registros inválidos y registros sin estadísticas. Se preserva cero,
-  se usa `null` para desconocidos y `author: null` si solo hay `autor_hash`.
-- Tras filtrar, se seleccionan las mayores vistas conocidas. Cero participa;
-  vistas desconocidas no participan en esta selección. Empates por ID.
-- El ranking final lo produce IA mediante su módulo Python de ranking. El backend
-  principal lo recalcula solo para verificar el contrato y rechaza diferencias.
-- La pregunta original se conserva y se añade contexto sobre selección, muestra
-  y ausencia de historial. No se afirma crecimiento reciente.
-- Las exclusiones del recolector quedan en `collection.preparation` con índices
-  referidos al orden original. No se envían a Groq todos los registros recibidos.
-- Entrada máxima 256 KiB; respuesta del recolector 2 MiB y hasta 2000 metadatos;
-  respuesta IA 512 KiB. No hay paginación automática todavía.
-
-## Contrato HTTP provisional del recolector
-
-**Esto es una interfaz propuesta, no una afirmación sobre el endpoint existente
-de tu compañero.** Cuando entregue su contrato, adapta `CollectorClient.collect`
-y el mapeo de preparación si hace falta; mantén `/research` y `/analyze` estables.
-
-`COLLECTOR_MODE=http`: envía POST a la URL exacta `COLLECTOR_URL`, sin añadir rutas.
-Cuerpo: `{"filters": {...}}` con los filtros anteriores, omitiendo valores nulos.
-Si `COLLECTOR_TOKEN` está configurado, envía `Authorization: Bearer ...`.
-
-Respuesta HTTP 200 propuesta:
-
-```json
-{
-  "metadata": [
-    {
-      "id": "yt:abc123",
-      "plataforma": "youtube",
-      "titulo": "Ejemplo de IA",
-      "texto": "Descripción disponible",
-      "autor_hash": "hash-sin-nombre",
-      "url": "https://www.youtube.com/watch?v=abc123",
-      "publicada_en": "2026-10-10T12:00:00Z",
-      "idioma": "es",
-      "pais": "CO"
-    }
-  ],
-  "statistics": {
-    "capturada_en": "2026-10-17T06:00:00Z",
-    "stats": {
-      "yt:abc123": {"viewCount": 12000, "likeCount": null, "commentCount": 0}
-    }
-  }
-}
-```
-
-No cambies a modo HTTP hasta conocer el contrato. Si falta URL o falla el recolector,
-se devuelve error: **no se reemplaza silenciosamente por datos ficticios**.
-Las URLs se configuran en el servidor; el frontend no puede elegir servidores externos.
-
-Pide al compañero:
-
-1. URL base y ruta, método GET/POST y parámetros exactos.
-2. Autenticación y entrega del secreto fuera del chat/código.
-3. Respuestas de ejemplo, campos/tipos, IDs con prefijo y valores desconocidos.
-4. Si metadatos y estadísticas vienen juntos o en endpoints distintos; cómo se
-   identifica una captura coherente y cómo se obtienen las métricas por IDs.
-5. Significado real de idioma/país, filtros admitidos y orden de resultados.
-6. Paginación, tamaños máximos, cuotas, tiempos y errores esperados.
-
-## Errores y conexión del frontend
-
-Formato: `{"error":{"code":"ai_unavailable","message":"...","details":[]}}`.
-
-| HTTP | Situaciones |
+| HTTP | Código / situación |
 |---|---|
-| 413 | Entrada demasiado grande |
-| 422 | Entrada inválida, filtros sin resultados o ninguna vista conocida utilizable |
-| 502 | JSON/contrato externo inválido, referencias o ranking incorrectos, solicitud rechazada |
-| 503 | Conexión, configuración, autenticación o cuotas de una dependencia |
-| 504 | Plazo del recolector, IA o flujo total agotado |
+| 413 | `body_too_large`: más de 256 KiB de entrada |
+| 422 | `invalid_input`, `invalid_collector_filters` o `no_usable_videos` |
+| 502 | `collector_search_failed`, `collector_search_lost`, `collector_invalid_state`, `collector_invalid_response` o fallo de contrato IA |
+| 503 | `collector_busy` (409 remoto), `collector_rate_limited`, `collector_unavailable` o IA no disponible |
+| 504 | `collector_timeout`, `collector_search_timeout`, `research_timeout` o timeout IA |
+| 502/503/504 | `collector_start_uncertain`: inicio no confirmado; **no repetir automáticamente** |
 
-Los códigos identifican `collector`, `ai` o `research`. No se reenvían cuerpos de
-error internos, credenciales ni solicitudes completas a los logs. Para diagnosticar
-un 503 del servicio IA, comprueba su `/analyze` directamente y su configuración local.
+Formato estable: `{"error":{"code":"...","message":"...","details":[]}}`.
+No se devuelven mensajes privados de proveedores ni se registran claves/cuerpos.
+Respuestas de recolector limitadas a 2 MiB y 2000 publicaciones/métricas; IA a
+512 KiB. No hay paginación automática; no se envía la colección completa a IA.
 
-El frontend llama a `/research` y renderiza `analysis`, usando `sources` para enlaces.
-Para un navegador, configura por ejemplo en `main_backend/.env`:
+## Render
 
-```dotenv
-CORS_ORIGINS=["http://localhost:5173"]
-```
+Conserva la conexión de IA que ya funciona. Para desplegar el backend principal:
 
-Por defecto no se habilitan orígenes externos. CORS no es autenticación; esta fase
-no incluye usuarios ni autenticación de clientes. El servidor se inicia solo en
-loopback para pruebas locales. `127.0.0.1` no conecta máquinas o contenedores distintos.
+- Root Directory vacío (necesita ambos paquetes del repositorio).
+- Build: `pip install ./ai_service ./main_backend`.
+- Start: `uvicorn radar_backend.main:app --host 0.0.0.0 --port $PORT`.
+- Health Check: `/health`.
+- Actualiza las variables de `.env.example` en Environment; no subas `.env`.
+- Conserva `AI_ANALYZE_URL` apuntando a la IA desplegada y `AI_TIMEOUT_SECONDS=45`.
+- Elimina cualquier `COLLECTOR_TOKEN` y reemplaza modo `mock`/`https` por `http`.
+- Para navegador: `CORS_ORIGINS=["https://tu-frontend.example"]` sin barra final.
 
-## Archivos y pruebas
+No se implementó autenticación de usuarios ni control por usuario de cuotas.
+CORS no es autenticación. Las instancias gratuitas pueden tardar en despertar;
+GET `/salud` del recolector y `/health` de IA permiten comprobar disponibilidad
+sin iniciar búsquedas ni inferencias. No crees búsquedas para despertar servicios.
 
-- `radar_backend/main.py`: rutas, ciclo de vida, CORS, límites y errores.
-- `config.py`: entorno propio, plazos y direcciones de las dependencias.
-- `schemas.py`: contratos del frontend y de la respuesta.
-- `clients.py`: recolector simulado/HTTP y cliente HTTP de IA.
-- `service.py`: filtrado, preparación, selección y comprobación del análisis.
-- `examples/research_request.json`: solicitud para Postman.
-- `tests/test_backend.py`: flujo, filtros, errores y comunicación HTTP simulada.
+## Pruebas y comprobación real manual
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Las pruebas bloquean la red real. Cubren una ida y vuelta por la aplicación real
-de IA con inferencia simulada. Las pruebas originales de IA se ejecutan aparte
-desde `ai_service` y su entorno; no se modificó su implementación.
+Las pruebas bloquean red externa y verifican creación/polling, plazos, POST único,
+estados, búsquedas vacías/fallidas, normalización, filtros, ranking y referencias.
+Incluyen una aplicación real de IA con la inferencia simulada. No necesitan claves.
 
-PostgreSQL, Docker y despliegue quedan para otra etapa.
+La comprobación real manual es separada, consume cuotas y crea una búsqueda:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\smoke_live.py --ai-url https://radar-ai-8xi7.onrender.com/analyze --report examples\live_check_nuevo.json
+```
+
+Hace una sola solicitud al `/research` local mediante ASGI, con clientes HTTP reales
+para recolector e IA, un día, un tema, un país y muestra de un video. Guarda primero
+el ID y después el informe, sin claves ni cuerpos completos. No ejecutes de nuevo
+para recuperar una tarea anterior; usa su ID. Rechaza sobrescribir informes.
+
+La prueba del 17 de octubre de 2026 (hora de Colombia) quedó en
+`examples/live_check_collector_2026-10-17.json`: HTTP 200, 49 publicaciones y métricas,
+un video analizado, tres hallazgos y tres recomendaciones. Es evidencia de integración,
+no una prueba de tendencias ni de acceso ilimitado a proveedores.
