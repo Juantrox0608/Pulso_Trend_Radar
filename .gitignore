@@ -1,10 +1,26 @@
+# Entorno y credenciales
 .env*
 !.env.example
 *.key
 *.pem
+
+# Python y dependencias
 .venv/
+venv/
 __pycache__/
+*.py[cod]
+*$py.class
 *.egg-info/
+dist/
+build/
+
+# Pruebas y cache
 .pytest_cache/
+
+# Bases de datos y datos locales
 data/raw/
 *.duckdb
+*.db
+*.sqlite
+*.sqlite3
+radar.db
