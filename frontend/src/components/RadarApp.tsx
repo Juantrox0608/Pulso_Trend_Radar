@@ -323,7 +323,7 @@ export default function RadarApp() {
 
     try {
       const result = await analyzeVideos(
-        '¿Qué videos destacan y qué contenido relevante podría producir 404 x ARCA-PROGRAM?',
+        '¿Qué videos destacan y qué contenido relevante podría producir PULSO?',
         'Líderes y equipos de Latinoamérica',
         demoVideos
       );
@@ -410,7 +410,7 @@ export default function RadarApp() {
           onClick={() => openPage('discover')}
         >
           <Radar size={25} color="var(--lime)" />
-          <strong>404 x ARCA-PROGRAM</strong>
+          <strong>PULSO</strong>
         </button>
 
         <span className="demo-label">
@@ -444,7 +444,7 @@ export default function RadarApp() {
           ))}
 
           <div className="side-footer">
-            404 x ARCA-PROGRAM · Inteligencia editorial
+            PULSO · Inteligencia editorial
           </div>
         </aside>
 
@@ -644,7 +644,7 @@ export default function RadarApp() {
                       <h3>Buscando tendencias...</h3>
                       <p>
                         Consultando la información
-                        disponible en 404 x ARCA-PROGRAM.
+                        disponible en PULSO.
                       </p>
                     </div>
                   )}

@@ -86,7 +86,7 @@ export async function searchTrends(
       question:
         `Analiza las publicaciones sobre "${topic}". ` +
         'Identifica los patrones observables, distingue las hipótesis ' +
-        'de los hechos y propone oportunidades editoriales para 404 x ARCA-PROGRAM.',
+        'de los hechos y propone oportunidades editoriales para PULSO.',
       audience:
         'Líderes, emprendedores, profesionales y equipos de Latinoamérica',
       filters: {
