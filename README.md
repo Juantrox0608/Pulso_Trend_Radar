@@ -689,9 +689,12 @@ En otra terminal, el chequeo funciona incluso sin claves:
 curl.exe http://127.0.0.1:8000/salud
 ```
 
-Devuelve `{"estado":"ok"}`. Para recolectar, configura en el entorno del servidor `RADAR_TOKEN`,
-`AUTOR_HASH_SAL` y las claves de las redes que usarás. En la terminal cliente, configura
-`RADAR_TOKEN` con el mismo valor. No pongas secretos en archivos del repo.
+Devuelve `{"estado":"ok"}`. Para recolectar, configura en el entorno del servidor
+`AUTOR_HASH_SAL` y las claves de las redes que usarás. `RADAR_TOKEN` es opcional:
+si no está definida o está vacía, el servicio queda abierto y no pide `X-Token`.
+Para cerrarlo, basta con definir `RADAR_TOKEN` en Render; en la terminal cliente,
+configúrala con el mismo valor. No pongas secretos en archivos del repo.
+Los ejemplos incluyen `X-Token`; puedes omitir esa cabecera cuando el servicio esté abierto.
 Estos ejemplos de búsqueda sí consultan proveedores y pueden gastar cuota/saldo:
 
 ```powershell
@@ -708,8 +711,8 @@ El POST responde 202 con `id` y `estado: en_curso`; el trabajo sigue en un hilo.
 Consulta ese ID con GET hasta `lista` (incluye `resumen`, `publicaciones` y `metricas`
 según el contrato) o `error` (mensaje genérico y `resumen`). Solo hay una búsqueda en curso:
 otra recibe 409. Un ID desconocido o eliminado responde 404. No hay envío a la base del equipo.
-POST y GET de búsquedas requieren `X-Token`: ausente o incorrecto devuelve 401;
-sin `RADAR_TOKEN`, todo salvo `/salud` devuelve 503.
+Si `RADAR_TOKEN` tiene valor, POST y GET de búsquedas requieren `X-Token`:
+ausente o incorrecto devuelve 401. Sin token configurado, ambos permiten acceso sin cabecera.
 
 `render.yaml` prepara el servicio `radar-recoleccion` con Python 3.12, plan free,
 instalación `pip install -e ".[api]"`, uvicorn en `$PORT` y chequeo `/salud`.
@@ -717,7 +720,7 @@ Al crear el servicio en Render, configura sus variables secretas (todas con `syn
 
 | Variable | Uso |
 |---|---|
-| `RADAR_TOKEN` | Token compartido obligatorio para las búsquedas |
+| `RADAR_TOKEN` | Token compartido opcional; sin valor, el servicio queda abierto |
 | `AUTOR_HASH_SAL` | Sal del hash de autores |
 | `YOUTUBE_API_KEY` | YouTube Data API |
 | `OPENROUTER_API_KEY` | Proveedor principal de búsqueda y filtro |

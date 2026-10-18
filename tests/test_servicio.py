@@ -59,11 +59,21 @@ def test_salud_y_token(cliente, monkeypatch):
     for headers in ({}, {'X-Token': 'malo'}):
         assert cliente.post('/busquedas', json={'tema': 'IA'}, headers=headers).status_code == 401
         assert cliente.get('/busquedas/no-existe', headers=headers).status_code == 401
-    monkeypatch.delenv('RADAR_TOKEN')
+
+
+@pytest.mark.parametrize('token', [None, ''])
+def test_servicio_abierto_sin_token(cliente, monkeypatch, token):
+    if token is None:
+        monkeypatch.delenv('RADAR_TOKEN')
+    else:
+        monkeypatch.setenv('RADAR_TOKEN', token)
+    cliente.headers.clear()
     assert cliente.get('/salud').status_code == 200
     for ruta in ('/busquedas/no-existe', '/docs', '/openapi.json'):
-        assert cliente.get(ruta).status_code == 503
-    assert cliente.post('/busquedas', json={'tema': 'IA'}).status_code == 503
+        assert cliente.get(ruta).status_code == 404
+    r = cliente.post('/busquedas', json={'tema': 'IA'})
+    assert r.status_code == 202
+    assert esperar(cliente, r.json()['id'])['estado'] == 'lista'
 
 
 def test_resultado_contrato(monkeypatch):

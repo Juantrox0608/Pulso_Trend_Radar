@@ -37,10 +37,8 @@ def crear_app(*, recolector=None):
     async def autenticar(request, call_next):
         if request.url.path != '/salud':
             esperado = os.environ.get('RADAR_TOKEN', '')
-            if not esperado:
-                return JSONResponse({'detail': 'RADAR_TOKEN no configurada'}, status_code=503)
             recibido = request.headers.get('X-Token', '')
-            if not compare_digest(recibido.encode('utf-8'), esperado.encode('utf-8')):
+            if esperado and not compare_digest(recibido.encode('utf-8'), esperado.encode('utf-8')):
                 return JSONResponse({'detail': 'Token inválido'}, status_code=401)
         return await call_next(request)
 
