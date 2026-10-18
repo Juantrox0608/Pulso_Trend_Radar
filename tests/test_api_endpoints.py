@@ -153,3 +153,13 @@ def test_get_trends_with_alias_and_sort(client):
     assert len(trends_vistas) >= 2
     assert trends_vistas[0]["views"] >= trends_vistas[1]["views"]
 
+
+def test_get_trend_history(client):
+    # Probar endpoint de historial
+    resp = client.get("/api/trends/yt:ai-agents-b2b/history")
+    assert resp.status_code == 200
+    puntos = resp.json()
+    assert len(puntos) >= 1
+    assert "capturada_en" in puntos[0]
+    assert "vistas" in puntos[0]
+
