@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "Radar · Recolección (Render)",
+    "description": "Pruebas del servicio de recolección. Antes de correr: en Variables, pon base_url (la URL de Render, sin / final) y token (RADAR_TOKEN, pedirlo por privado). El token nunca se guarda en el repo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://radar-recoleccion.onrender.com" },
+    { "key": "token", "value": "" },
+    { "key": "busqueda_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Salud (sin token)",
+      "request": { "method": "GET", "url": "{{base_url}}/salud" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 y estado ok', () => {",
+        "  pm.response.to.have.status(200);",
+        "  pm.expect(pm.response.json().estado).to.eql('ok');",
+        "});"
+      ] } }]
+    },
+    {
+      "name": "2. Sin token → 401",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/busquedas",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"tema\": \"prueba\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('rechaza sin token', () => pm.response.to.have.status(401));"
+      ] } }]
+    },
+    {
+      "name": "3. Iniciar búsqueda",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/busquedas",
+        "header": [
+          { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+          { "key": "X-Token", "value": "{{token}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"tema\": \"agentes de IA en empresas, automatización con IA\",\n  \"dias\": 7,\n  \"redes\": [\"youtube\", \"linkedin\", \"tiktok\"],\n  \"paises\": [\"MX\", \"CO\"]\n}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('202 en curso', () => {",
+        "  pm.response.to.have.status(202);",
+        "  pm.expect(pm.response.json().estado).to.eql('en_curso');",
+        "});",
+        "if (pm.response.code === 202) pm.collectionVariables.set('busqueda_id', pm.response.json().id);"
+      ] } }]
+    },
+    {
+      "name": "4. Consultar búsqueda (repetir hasta 'lista')",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/busquedas/{{busqueda_id}}",
+        "header": [{ "key": "X-Token", "value": "{{token}}" }]
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "const d = pm.response.json();",
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('estado válido', () => pm.expect(['en_curso', 'lista', 'error']).to.include(d.estado));",
+        "if (d.estado === 'lista') {",
+        "  const redes = {};",
+        "  d.publicaciones.forEach(p => redes[p.plataforma] = (redes[p.plataforma] || 0) + 1);",
+        "  console.log('publicaciones por red', redes, 'métricas', d.metricas.length);",
+        "  pm.test('trae publicaciones y métricas', () => {",
+        "    pm.expect(d.publicaciones.length).to.be.above(0);",
+        "    pm.expect(d.metricas.length).to.be.above(0);",
+        "  });",
+        "  pm.test('sin autores ni @usuario', () => {",
+        "    pm.expect(JSON.stringify(d)).to.not.match(/@(?!\\[usuario\\])[A-Za-z0-9_.]{3,}/);",
+        "  });",
+        "}"
+      ] } }]
+    }
+  ]
+}
