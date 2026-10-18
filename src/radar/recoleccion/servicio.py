@@ -27,7 +27,7 @@ class Busqueda(BaseModel):
 
 
 def crear_app(*, recolector=None):
-    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title='Radar · Recolección', version='0.1', redoc_url=None)
     recolector = recolector or buscar.recolectar
     cerrojo = Lock()
     # shortcut: en memoria, se pierde al reiniciar Render; pasar a la base del equipo al unir
@@ -35,7 +35,8 @@ def crear_app(*, recolector=None):
 
     @app.middleware('http')
     async def autenticar(request, call_next):
-        if request.url.path != '/salud':
+        # La documentación es pública; las búsquedas siguen protegidas si hay RADAR_TOKEN.
+        if request.url.path not in ('/salud', '/docs', '/openapi.json'):
             esperado = os.environ.get('RADAR_TOKEN', '')
             recibido = request.headers.get('X-Token', '')
             if esperado and not compare_digest(recibido.encode('utf-8'), esperado.encode('utf-8')):

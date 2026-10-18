@@ -69,8 +69,9 @@ def test_servicio_abierto_sin_token(cliente, monkeypatch, token):
         monkeypatch.setenv('RADAR_TOKEN', token)
     cliente.headers.clear()
     assert cliente.get('/salud').status_code == 200
-    for ruta in ('/busquedas/no-existe', '/docs', '/openapi.json'):
-        assert cliente.get(ruta).status_code == 404
+    assert cliente.get('/busquedas/no-existe').status_code == 404
+    assert cliente.get('/docs').status_code == 200
+    assert '/busquedas' in cliente.get('/openapi.json').json()['paths']
     r = cliente.post('/busquedas', json={'tema': 'IA'})
     assert r.status_code == 202
     assert esperar(cliente, r.json()['id'])['estado'] == 'lista'
