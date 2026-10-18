@@ -546,3 +546,60 @@ Remove-Item Env:AUTOR_HASH_SAL -ErrorAction SilentlyContinue
 
 Las corridas reales en tres redes, la recaptura de los 1.010 videos y la integración con trends/IA
 quedan para la revisión del equipo.
+
+## Cuidar el saldo de OpenRouter
+
+Las búsquedas web pagas de LinkedIn y las que descubren cuentas de TikTok comparten un control
+local de gasto. La captura de cuentas ya conocidas sigue sin pagar búsquedas web; el filtro de
+relevancia mantiene su modelo gratuito y su cuota propia. No se añaden modelos pagos de respaldo.
+
+Valores iniciales, ajustables mediante variables del entorno antes de arrancar el proceso:
+
+| Control | Valor inicial | Variable |
+|---|---|---|
+| Presupuesto diario de búsquedas, UTC | USD 0,25 | `OPENROUTER_BUSQUEDA_DIARIO_USD` |
+| Máximo de llamadas de búsqueda por proceso/corrida | 5 | `OPENROUTER_BUSQUEDA_MAX_LLAMADAS` |
+| Reserva local antes de cada llamada | USD 0,05 | Fija, conservadora |
+
+Se conservan el tope de 10 resultados por consulta, 300 tokens de respuesta y el razonamiento
+apagado. El motor sigue fijado a Exa; no se migra al server tool que permite búsquedas repetidas
+por decisión del modelo. Un tema por comas puede consumir una llamada por término en LinkedIn.
+YouTube y las capturas de cuentas TikTok no gastan saldo de búsqueda de OpenRouter.
+
+Antes de cada petición se guarda la reserva en `data/raw/openrouter_busqueda_gasto.json`,
+fuera de Git; después se sustituye por `usage.cost` si es válido. El registro solo contiene día
+UTC e importe, sin consultas, URLs, usuarios ni claves. Se comparte entre reinicios y ambas redes
+cuando se ejecutan desde el mismo repo. No borres el archivo ni cambies de directorio para reiniciar
+el presupuesto. Una exclusión por archivo impide dos cobros simultáneos desde este registro.
+
+Un timeout, un error o una respuesta sin costo válido conserva la reserva: no se considera gratis.
+Con HTTP 402/429 se detienen las búsquedas pagas en ese proceso, sin reintentar. Al alcanzar el tope
+se informa el motivo y se conservan los resultados ya reunidos. El costo mostrado de respuestas
+válidas no incluye las reservas por cargos desconocidos; estas siguen descontadas en el registro.
+El filtro gratuito y otras aplicaciones con la misma clave no entran en este presupuesto de búsquedas.
+
+**El registro local no impone un límite de facturación en OpenRouter.** El costo real de una llamada
+podría superar su reserva; se registra completo y bloquea llamadas posteriores si supera el presupuesto.
+Configura también un límite de gasto diario en la clave de OpenRouter para la protección del lado del
+proveedor. No se han modificado la cuenta, clave o facturación. Referencias oficiales:
+[control de límites de clave](https://openrouter.ai/docs/api/api-reference/api-keys/update-keys),
+[costos de búsqueda y tokens](https://openrouter.ai/docs/guides/features/plugins/web-search).
+
+Un bloqueo local por `.lock` que quede tras una terminación forzada solo se retira tras comprobar
+que ningún proceso sigue usando el registro. Una copia dañada del registro bloquea la búsqueda;
+no se reinicia silenciosamente. Los límites no incluyen gasto anterior a esta implementación.
+
+Comprobación sin red desde el checkout de preparación:
+
+```powershell
+$pythonRadar = (Resolve-Path ..\tred_radar\.venv\Scripts\python.exe).Path
+$env:PYTHONPATH = (Resolve-Path .\src).Path
+& $pythonRadar -m radar.recoleccion.linkedin_buscar --help
+& $pythonRadar -m radar.recoleccion.buscar --help
+Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+$env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
+& $pythonRadar -m radar.recoleccion.linkedin_buscar --consulta "IA en empresas"
+```
+
+La última orden debe terminar con código 1, error de clave ausente y sin gasto. Para cambiar el
+presupuesto basta cargar la variable correspondiente en el entorno; no se lee ningún archivo `.env`.

@@ -11,6 +11,9 @@ from urllib.request import Request, urlopen
 
 from radar.contrato import id_contrato, id_desde_url
 from radar.recoleccion import imprimir_json, linkedin
+from radar.recoleccion.presupuesto_busqueda import PresupuestoBusqueda, LimiteBusqueda
+
+_presupuesto = None
 
 
 def _fecha_desde_id(identificador):
@@ -47,6 +50,13 @@ def _validar_post(url):
     linkedin._validar_url(url, final=True)
 
 
+def _pedir_busqueda(request):
+    global _presupuesto
+    if _presupuesto is None:
+        _presupuesto = PresupuestoBusqueda.desde_entorno()
+    return _presupuesto.llamar(request, _pedir)
+
+
 def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None,
                 dominio="linkedin.com", validar_url=_validar_post):
     """Devuelve (URLs únicas de posts, costo USD); pedir recibe un Request y devuelve JSON."""
@@ -65,7 +75,7 @@ def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None,
         request = Request("https://openrouter.ai/api/v1/chat/completions",
             data=json.dumps(cuerpo).encode("utf-8"),
             headers={"Authorization": f"Bearer {clave}", "Content-Type": "application/json"})
-        respuesta = (pedir or _pedir)(request)
+        respuesta = (pedir or _pedir_busqueda)(request)
         anotaciones = respuesta["choices"][0]["message"]["annotations"]
         costo = Decimal(str(respuesta["usage"]["cost"]))
         if not isinstance(anotaciones, list) or not costo.is_finite() or costo < 0:
@@ -84,6 +94,8 @@ def buscar_urls(consulta, *, clave, max_resultados=10, pedir=None,
                 if len(urls) == max_resultados:
                     break
         return urls, costo
+    except LimiteBusqueda:
+        raise
     except Exception:
         # El proveedor puede incluir credenciales, consultas o nombres en sus errores.
         raise ValueError("OpenRouter: no se pudo obtener una respuesta de búsqueda válida") from None
@@ -119,6 +131,12 @@ def descubrir(consultas, *, clave, sal, dias=None, maximo=100, pedir=None, obten
         resumen["consultas"] += 1
         try:
             encontradas, costo = buscar_urls(consulta, clave=clave, max_resultados=max_resultados, pedir=pedir)
+        except LimiteBusqueda as error:
+            resumen['consultas_fallidas'] += 1
+            if resumen['consultas'] == resumen['consultas_fallidas']:
+                raise
+            resumen['aviso'] = str(error)
+            break
         except ValueError:
             resumen["consultas_fallidas"] += 1
             continue

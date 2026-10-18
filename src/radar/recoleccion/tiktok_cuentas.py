@@ -18,6 +18,7 @@ import yt_dlp
 from radar.contrato import Plataforma, id_desde_url
 from radar.recoleccion import imprimir_json, texto_publico, terminos_tema, normalizar_hashtag, tiktok
 from radar.recoleccion.linkedin_buscar import buscar_urls, _consultas, _entero, _pedir
+from radar.recoleccion.presupuesto_busqueda import LimiteBusqueda
 
 SEMILLAS = Path('data/raw/tiktok_cuentas.txt')
 
@@ -176,10 +177,17 @@ def descubrir_cuentas(consultas, *, clave, pedir=None, extractor=None, pausa=sle
     consultas = _consultas(consultas)
     urls, vistos = [], set()
     fallidas = 0
+    aviso = None
     for consulta in consultas:
         try:
             encontradas, _ = buscar_urls(consulta, clave=clave, pedir=pedir,
                                         dominio='tiktok.com', validar_url=_validar_video)
+        except LimiteBusqueda as error:
+            if not urls:
+                raise
+            fallidas += 1
+            aviso = str(error)
+            break
         except ValueError:
             fallidas += 1
             continue
@@ -192,6 +200,7 @@ def descubrir_cuentas(consultas, *, clave, pedir=None, extractor=None, pausa=sle
         raise ValueError('OpenRouter: ninguna consulta de cuentas pudo completarse')
     cuentas, resumen = _cuentas_de_urls(urls, extractor=extractor, pausa=pausa, existentes=existentes)
     resumen['consultas_fallidas'] = fallidas
+    resumen['aviso'] = aviso
     return cuentas, resumen
 
 
@@ -434,6 +443,8 @@ def main(argv=None):
             cantidad = guardar_semillas(args.semillas, nuevas)
             print(f"Cuentas nuevas: {cantidad}; fallidas: {resumen['fallidas']}; "
                   f"consultas fallidas: {resumen.get('consultas_fallidas', 0)}", file=sys.stderr)
+            if resumen.get('aviso'):
+                print(resumen['aviso'], file=sys.stderr)
         else:
             if not cuentas:
                 raise ValueError('No hay cuentas semilla; ejecuta primero semillas')

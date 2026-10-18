@@ -22,7 +22,9 @@ def respuesta(urls):
 
 
 @pytest.fixture(autouse=True)
-def sin_red(monkeypatch):
+def sin_red(monkeypatch, tmp_path):
+    from radar.recoleccion.presupuesto_busqueda import PresupuestoBusqueda
+    monkeypatch.setattr(buscar, '_presupuesto', PresupuestoBusqueda(tmp_path/'gasto_ficticio.json'))
     monkeypatch.setattr("socket.socket.connect", lambda *a: pytest.fail("Red prohibida"))
 
 
