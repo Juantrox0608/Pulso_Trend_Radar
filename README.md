@@ -272,6 +272,12 @@ Antes de abrir LinkedIn se descartan los posts antiguos usando la fecha del ID d
 intentos de `--max` ni pausas. Después se comprueba también `publicada_en`, incluso si el ID
 no es numérico o no permite calcular una fecha. Sin `--dias`, la consulta y las fechas se conservan.
 No se garantiza que el buscador encuentre posts recientes ni que reúna la cantidad solicitada.
+Si las consultas iniciales dejan cero publicaciones dentro de `--dias`, se intenta **una consulta
+extra** con otra redacción y las mismas fechas, sin repetir IDs de URLs ya vistas. El resumen
+cuenta `consultas_extra` (también incluida en `consultas`), proveedor, costo y tokens. Se conserva
+el presupuesto compartido: si OpenRouter falla o no queda presupuesto, se usa Groq cuando está
+configurado. No amplía la ventana; sin `--dias` no hace esta consulta. Tampoco continúa tras un
+bloqueo de LinkedIn ni al agotar el máximo de lecturas.
 
 Mediciones del 17/10/2026: 8 consultas dieron 78 URLs, 78 posts completados, 0 omitidos,
 USD 0,060 y 5 min 35 s; solo 5 posts eran de los últimos 7 días y 27 de los últimos 30
@@ -288,7 +294,8 @@ no permite conocer un posible cargo de consultas fallidas.
 
 Un post caído o sin JSON-LD se omite y se cuenta. Un HTTP 429/999 o una redirección de acceso
 detiene las lecturas de LinkedIn, sin reintentar, y devuelve lo reunido con un aviso en stderr.
-Las búsquedas de OpenRouter se reúnen antes de empezar las lecturas de LinkedIn.
+Las búsquedas iniciales se reúnen antes de empezar las lecturas de LinkedIn; la consulta extra,
+cuando corresponde, se hace después de comprobar esas publicaciones.
 La salida JSON de siempre (`publicaciones`, `metricas`) va a stdout en UTF-8, con `pagina_publica`.
 Por stderr se informa: consultas intentadas, consultas fallidas (`consultas_fallidas`), URLs únicas
 encontradas antes del filtro, posts completados, omitidos, fuera de fecha y costo total USD.
@@ -365,6 +372,25 @@ La salida contiene hash del autor, menciones `@[usuario]` y URL canónica sin us
 El resumen por stderr cuenta cuentas, cuentas fallidas, videos guardados, fuera de fecha, omitidos,
 descartados por tema y `lotes_descartados_sin_filtro`. Cada captura nueva conserva otra observación de métricas
 para el mismo video, útil para comparar crecimiento, velocidad y aceleración.
+
+### Si TikTok falla en el servidor
+
+El resumen incluye `motivos_fallo: {categoria: cantidad}` por cuentas fallidas. Cada fallo deja
+una línea en stderr (logs de Render) con categoría y tipo de excepción, sin identificador de
+cuenta, usuario, URL ni mensaje del proveedor:
+
+| Categoría | Significado |
+|---|---|
+| `http_403` | Acceso rechazado; desde la nube suele indicar bloqueo de IP, pero la categoría por sí sola no confirma la causa |
+| `http_429` | Demasiadas peticiones |
+| `http_otro` | Otro error HTTP |
+| `tiempo_agotado` | La petición agotó el tiempo de espera |
+| `sin_datos` | Respuesta sin entradas o sin campos utilizables; una cuenta con solo videos antiguos no cuenta como fallo |
+| `extractor` | yt-dlp no pudo interpretar la página |
+| `otro` | Error sin una de las señales anteriores |
+
+Se mantienen las paradas por 403/429 o tres cuentas fallidas consecutivas. Estos diagnósticos
+permiten comparar la PC y Render; no añaden reintentos ni métodos para eludir el bloqueo.
 
 Filtro opcional de relevancia, con `OPENROUTER_API_KEY` o `GROQ_API_KEY` cargada:
 

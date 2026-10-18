@@ -70,7 +70,7 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
                 detalle = resultado[2]
                 if red == 'linkedin' and 'detalle' in r:
                     anteriores = r['detalle'].get('consultas', 0)
-                    for campo in ('consultas', 'consultas_fallidas', 'urls', 'completados',
+                    for campo in ('consultas', 'consultas_extra', 'consultas_fallidas', 'urls', 'completados',
                                   'omitidos', 'fuera_fecha', 'costo_usd', 'groq_tokens'):
                         r['detalle'][campo] = r['detalle'].get(campo, 0) + detalle.get(campo, 0)
                     r['detalle'].setdefault('proveedores', []).extend(

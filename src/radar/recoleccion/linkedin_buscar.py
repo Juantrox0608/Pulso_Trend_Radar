@@ -182,72 +182,83 @@ def descubrir(consultas, *, clave, sal, dias=None, maximo=100, pedir=None, obten
         raise ValueError("Falta AUTOR_HASH_SAL en el entorno")
     resumen = {"consultas": 0, "consultas_fallidas": 0, "urls": 0, "completados": 0, "omitidos": 0,
                "fuera_fecha": 0, "costo_usd": Decimal("0"), "aviso": None,
-               "proveedores": [], "groq_tokens": 0}
-    urls, vistos = [], set()
-    for consulta in consultas:
-        if dias is not None:
-            meses = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
-                     "septiembre", "octubre", "noviembre", "diciembre")
-            consulta = (f"publicaciones de los últimos {dias} días ({meses[ahora.month - 1]} de {ahora.year}) "
-                        f"en LinkedIn: {consulta}")
-        resumen["consultas"] += 1
-        detalle = {'consulta': resumen['consultas'], 'proveedor': None, 'groq_tokens': 0}
-        resumen['proveedores'].append(detalle)
-        try:
-            encontradas, costo = buscar_urls(consulta, clave=clave, max_resultados=max_resultados,
-                                            pedir=pedir, resumen=detalle)
-        except LimiteBusqueda as error:
-            resumen['consultas_fallidas'] += 1
-            if resumen['consultas'] == resumen['consultas_fallidas']:
-                raise
-            resumen['aviso'] = str(error)
-            break
-        except ValueError:
-            resumen["consultas_fallidas"] += 1
-            continue
-        resumen["costo_usd"] += costo
-        resumen['groq_tokens'] += detalle['groq_tokens']
-        for url in encontradas:
-            identificador = id_contrato(*id_desde_url(url))
-            if identificador not in vistos:
-                vistos.add(identificador)
-                urls.append(url)
-    if resumen["consultas_fallidas"] == resumen["consultas"]:
-        raise ValueError("OpenRouter/Groq: no se pudo obtener una respuesta de búsqueda válida en ninguna consulta")
-    resumen["urls"] = len(urls)
-    if desde is not None:
-        recientes = []
-        for url in urls:
-            fecha = _fecha_desde_id(id_desde_url(url)[1])
-            if fecha is not None and fecha < desde:
-                resumen["fuera_fecha"] += 1
-            else:
-                recientes.append(url)
-        urls = recientes
+               "proveedores": [], "groq_tokens": 0, "consultas_extra": 0}
+    vistos, reunidos = set(), set()
     publicaciones, metricas = [], []
-    reunidos = set()
-    for intento, url in enumerate(urls[:maximo]):
-        if intento:
-            pausa(3)
-        try:
-            publicacion, metrica = linkedin.recolectar(url, sal=sal, obtener=obtener)
-        except linkedin.BloqueoLinkedIn:
-            resumen["aviso"] = "Bloqueo de LinkedIn: consultas a posts detenidas sin reintentos; salida parcial."
+    intentos, bloqueado = 0, False
+    originales = consultas
+    for ronda in range(2):
+        urls = []
+        for consulta in consultas:
+            if dias is not None:
+                meses = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+                         "septiembre", "octubre", "noviembre", "diciembre")
+                consulta = (f"publicaciones de los últimos {dias} días ({meses[ahora.month - 1]} de {ahora.year}) "
+                            f"en LinkedIn: {consulta}")
+            if ronda:
+                resumen["consultas_extra"] += 1
+            resumen["consultas"] += 1
+            detalle = {'consulta': resumen['consultas'], 'proveedor': None, 'groq_tokens': 0}
+            resumen['proveedores'].append(detalle)
+            try:
+                encontradas, costo = buscar_urls(consulta, clave=clave, max_resultados=max_resultados,
+                                                pedir=pedir, resumen=detalle)
+            except LimiteBusqueda as error:
+                resumen['consultas_fallidas'] += 1
+                if resumen['consultas'] == resumen['consultas_fallidas']:
+                    raise
+                resumen['aviso'] = str(error)
+                break
+            except ValueError:
+                resumen["consultas_fallidas"] += 1
+                continue
+            resumen["costo_usd"] += costo
+            resumen['groq_tokens'] += detalle['groq_tokens']
+            for url in encontradas:
+                identificador = id_contrato(*id_desde_url(url))
+                if identificador not in vistos:
+                    vistos.add(identificador)
+                    urls.append(url)
+        if resumen["consultas_fallidas"] == resumen["consultas"]:
+            raise ValueError("OpenRouter/Groq: no se pudo obtener una respuesta de búsqueda válida en ninguna consulta")
+        resumen["urls"] += len(urls)
+        if desde is not None:
+            recientes = []
+            for url in urls:
+                fecha = _fecha_desde_id(id_desde_url(url)[1])
+                if fecha is not None and fecha < desde:
+                    resumen["fuera_fecha"] += 1
+                else:
+                    recientes.append(url)
+            urls = recientes
+        for url in urls[:maximo-intentos]:
+            if intentos:
+                pausa(3)
+            intentos += 1
+            try:
+                publicacion, metrica = linkedin.recolectar(url, sal=sal, obtener=obtener)
+            except linkedin.BloqueoLinkedIn:
+                bloqueado = True
+                resumen["aviso"] = "Bloqueo de LinkedIn: consultas a posts detenidas sin reintentos; salida parcial."
+                break
+            except ValueError:
+                resumen["omitidos"] += 1
+                continue
+            resumen["completados"] += 1
+            if desde is not None and publicacion.publicada_en < desde:
+                resumen["fuera_fecha"] += 1
+                continue
+            # Una redirección puede revelar que dos URLs correspondían al mismo post.
+            if publicacion.id in reunidos:
+                continue
+            reunidos.add(publicacion.id)
+            publicaciones.append(publicacion)
+            if metrica is not None:
+                metricas.append(metrica)
+        if dias is None or publicaciones or bloqueado or intentos >= maximo or ronda:
             break
-        except ValueError:
-            resumen["omitidos"] += 1
-            continue
-        resumen["completados"] += 1
-        if desde is not None and publicacion.publicada_en < desde:
-            resumen["fuera_fecha"] += 1
-            continue
-        # Una redirección puede revelar que dos URLs correspondían al mismo post.
-        if publicacion.id in reunidos:
-            continue
-        reunidos.add(publicacion.id)
-        publicaciones.append(publicacion)
-        if metrica is not None:
-            metricas.append(metrica)
+        consultas = [f"busca posts recientes publicados entre {desde.date()} y {ahora.date()}, "
+                     f"priorizando esta semana en LinkedIn sobre: {'; '.join(originales)}"]
     return publicaciones, metricas, resumen
 
 
@@ -265,7 +276,8 @@ def main(argv=None):
     except ValueError as error:
         parser.exit(1, f"Error: {error}\n")
     imprimir_json(publicaciones, metricas)
-    print(f"Consultas: {resumen['consultas']}; consultas fallidas: {resumen['consultas_fallidas']}; "
+    print(f"Consultas: {resumen['consultas']}; consultas extra: {resumen['consultas_extra']}; "
+          f"consultas fallidas: {resumen['consultas_fallidas']}; "
           f"URLs encontradas (únicas): {resumen['urls']}; "
           f"posts completados: {resumen['completados']}; omitidos: {resumen['omitidos']}; "
           f"fuera de fecha: {resumen['fuera_fecha']}; costo total: USD {resumen['costo_usd']:.6f}", file=sys.stderr)

@@ -55,21 +55,46 @@ def _listar(channel_id, por_cuenta):
     with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True, 'logger': tiktok._SinLog(),
             'skip_download': True, 'extract_flat': True, 'playlistend': por_cuenta,
             'socket_timeout': 20, 'retries': 0, 'extractor_retries': 0}) as ydl:
-        return list(ydl.extract_info('tiktokuser:' + channel_id, download=False)['entries'])
+        info = ydl.extract_info('tiktokuser:' + channel_id, download=False)
+        return list((info or {}).get('entries') or [])
 
 
-class BloqueoTikTok(ValueError):
+class FalloTikTok(ValueError):
+    def __init__(self, categoria, tipo):
+        super().__init__('TikTok: no se pudo listar una cuenta pública')
+        self.categoria, self.tipo = categoria, tipo
+
+
+class BloqueoTikTok(FalloTikTok):
     pass
 
 
-def _bloqueo(error):
-    # yt-dlp puede envolver el HTTPError en DownloadError y conservar solo el mensaje.
-    while error is not None:
-        if getattr(error, 'code', None) in (403, 429) or re.search(
-                r'(?i)(?:HTTP(?: Error)?[ :]+|status(?: code)?[ :]+)(?:403|429)\b', str(error)):
-            return True
-        error = error.__cause__ or error.__context__
-    return False
+def _motivo_fallo(error):
+    pendientes, vistos, motivos = [error], set(), set()
+    while pendientes:
+        actual = pendientes.pop()
+        if not isinstance(actual, BaseException) or id(actual) in vistos:
+            continue
+        vistos.add(id(actual))
+        texto = str(actual)
+        codigo = getattr(actual, 'code', getattr(actual, 'status', None))
+        match = re.search(r'(?i)(?:HTTP(?: Error)?[ :]+|status(?: code)?[ :]+)(\d{3})\b', texto)
+        if match:
+            codigo = int(match[1])
+        if isinstance(codigo, int) and 400 <= codigo <= 599:
+            motivos.add(f'http_{codigo}' if codigo in (403, 429) else 'http_otro')
+        if isinstance(actual, TimeoutError) or re.search(r'(?i)\b(?:timed? out|timeout)\b', texto):
+            motivos.add('tiempo_agotado')
+        if isinstance(actual, yt_dlp.utils.ExtractorError) or re.search(
+                r'(?i)\b(?:unable to extract|unsupported URL)\b', texto):
+            motivos.add('extractor')
+        pendientes.extend([actual.__cause__, actual.__context__, getattr(actual, 'cause', None),
+                           getattr(actual, 'reason', None)])
+        info = getattr(actual, 'exc_info', None)
+        if isinstance(info, tuple) and len(info) > 1:
+            pendientes.append(info[1])
+    return next((m for m in ('http_403', 'http_429', 'http_otro', 'tiempo_agotado', 'extractor')
+                 if m in motivos), 'otro')
 
 
 def videos_de_cuenta(channel_id, *, sal, dias=7, por_cuenta=30, listar=None, ahora=None):
@@ -81,11 +106,13 @@ def videos_de_cuenta(channel_id, *, sal, dias=7, por_cuenta=30, listar=None, aho
     publicaciones, metricas = [], []
     resumen = {'fuera_fecha': 0, 'omitidos': 0}
     try:
-        entradas = list(islice(iter((listar or _listar)(channel_id, por_cuenta)), por_cuenta))
+        entradas = list(islice(iter((listar or _listar)(channel_id, por_cuenta) or []), por_cuenta))
     except Exception as error:
-        if _bloqueo(error):
-            raise BloqueoTikTok('Bloqueo HTTP de TikTok: captura detenida sin reintentos') from None
-        raise ValueError('TikTok: no se pudo listar una cuenta pública') from None
+        motivo = _motivo_fallo(error)
+        clase = BloqueoTikTok if motivo in ('http_403', 'http_429') else FalloTikTok
+        raise clase(motivo, type(error).__name__) from None
+    if not entradas:
+        raise FalloTikTok('sin_datos', 'FalloTikTok')
     for entrada in entradas:
         try:
             nativo = str(entrada['id'])
@@ -103,6 +130,8 @@ def videos_de_cuenta(channel_id, *, sal, dias=7, por_cuenta=30, listar=None, aho
         publicaciones.append(p)
         if m is not None:
             metricas.append(m)
+    if not publicaciones and resumen['omitidos'] and not resumen['fuera_fecha']:
+        raise FalloTikTok('sin_datos', 'FalloTikTok')
     return publicaciones, metricas, resumen
 
 
@@ -373,7 +402,7 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
     pares, vistos = [], set()
     r = dict(cuentas=0, cuentas_fallidas=0, videos=0, fuera_fecha=0, omitidos=0,
              descartados_tema=0, lotes_descartados_sin_filtro=0, lotes_openrouter=0, lotes_groq=0,
-             aviso=None, interrumpido=False, detenido=False)
+             aviso=None, interrumpido=False, detenido=False, motivos_fallo={})
     consecutivos = 0
     try:
         for i, canal in enumerate(cuentas):
@@ -387,6 +416,10 @@ def capturar(cuentas, *, sal, dias=7, por_cuenta=30, maximo=300, listar=None,
                     por_cuenta=por_cuenta, listar=listar, ahora=ahora)
             except ValueError as error:
                 r['cuentas_fallidas'] += 1
+                motivo = error.categoria if isinstance(error, FalloTikTok) else 'otro'
+                tipo = error.tipo if isinstance(error, FalloTikTok) else type(error).__name__
+                r['motivos_fallo'][motivo] = r['motivos_fallo'].get(motivo, 0) + 1
+                print(f'TikTok: {motivo} ({tipo})', file=sys.stderr)
                 consecutivos += 1
                 if isinstance(error, BloqueoTikTok) or consecutivos >= 3:
                     r['detenido'] = True
@@ -430,6 +463,7 @@ def _resumir(r):
           f"fuera de fecha: {r['fuera_fecha']}; omitidos: {r['omitidos']}; "
           f"descartados por tema: {r['descartados_tema']}; lotes descartados sin filtro: {r['lotes_descartados_sin_filtro']}", file=sys.stderr)
     print(f"Lotes OpenRouter: {r['lotes_openrouter']}; lotes Groq: {r['lotes_groq']}", file=sys.stderr)
+    print(f"Motivos de fallo: {r['motivos_fallo']}", file=sys.stderr)
     if r['aviso']:
         print(r['aviso'], file=sys.stderr)
 

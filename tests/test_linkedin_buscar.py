@@ -133,7 +133,8 @@ def test_consulta_con_periodo_y_mes_en_espanol(monkeypatch, dias):
         return respuesta([])
     buscar.descubrir(["IA", "automatización"], clave="ficticia", sal="sal", dias=dias, pedir=pedir)
     prefijo = "publicaciones de los últimos 7 días (octubre de 2026) en LinkedIn: " if dias else ""
-    assert consultas == [prefijo + "IA", prefijo + "automatización"]
+    assert consultas[:2] == [prefijo + "IA", prefijo + "automatización"]
+    assert len(consultas) == (3 if dias else 2)
 
 
 def test_filtra_id_antes_de_consultar_sin_gastar_tope_ni_pausas():
