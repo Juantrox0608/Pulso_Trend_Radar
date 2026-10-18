@@ -305,6 +305,7 @@ Ejemplo de sintaxis con dos consultas y comprobación del error por falta de cla
 
 ```powershell
 Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
 $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 ./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --consulta "agentes de IA en español LatAm" --consulta "automatización con IA para empresas LatAm" --dias 7 --max 100 --resultados 10
 ```
@@ -365,7 +366,7 @@ El resumen por stderr cuenta cuentas, cuentas fallidas, videos guardados, fuera 
 descartados por tema y lotes sin filtrar. Cada captura nueva conserva otra observación de métricas
 para el mismo video, útil para comparar crecimiento, velocidad y aceleración.
 
-Filtro opcional de relevancia, con `OPENROUTER_API_KEY` cargada:
+Filtro opcional de relevancia, con `OPENROUTER_API_KEY` o `GROQ_API_KEY` cargada:
 
 ```powershell
 ./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --tema "inteligencia artificial en la educación"
@@ -387,15 +388,18 @@ Esto filtra los videos de las cuentas semilla; no descubre nuevas cuentas.
 
 Usa `nvidia/nemotron-3-super-120b-a12b:free`, razonamiento desactivado, hasta 30 textos por pedido.
 Al modelo solo llegan textos anonimizados: sin enlaces ni datos de autor. Conserva los `SI`/`SÍ`.
-Una respuesta vacía, incompleta o mal formada se reintenta una vez; si vuelve a fallar,
-conserva ese lote sin filtrar y lo cuenta. Un HTTP 429 detiene el filtro durante esa corrida,
-conserva los lotes pendientes y avisa. La siguiente captura puede volver a intentarlo.
-Sin `--tema` no se hacen llamadas a OpenRouter durante la captura.
+Una respuesta vacía, incompleta o mal formada pasa a Groq si está configurado; sin Groq se
+reintenta una vez y, si vuelve a fallar, conserva ese lote sin filtrar y lo cuenta.
+Un HTTP 429 detiene las llamadas al proveedor afectado durante esa corrida. Con `GROQ_API_KEY`,
+los lotes pasan al respaldo; si ambos fallan conserva los lotes pendientes y avisa.
+La siguiente captura puede volver a intentarlo.
+Sin `--tema` no se hacen llamadas a modelos durante la captura.
 
 La prueba histórica de este filtro dio 30/30 respuestas en 3,5 s, USD 0 y coincidencia en 30/30;
 no garantiza la clasificación futura ni disponibilidad. El límite indicado del plan gratis es
 20 pedidos/minuto y 50/día: el comando espacia pedidos al menos 3,1 s y persiste el contador diario
-UTC en `data/raw/tiktok_filtro_cuota.json`, incluidos reintentos y reinicios. Al agotarlo conserva
+UTC en `data/raw/tiktok_filtro_cuota.json`, incluidos reintentos y reinicios.
+Al agotarlo usa Groq si su clave está disponible; en otro caso conserva
 sin filtrar. Ese contador solo conoce pedidos de este comando: otros usos de la clave también
 consumen la cuota del proveedor. Ejecuta una sola instancia del recolector por clave.
 
@@ -433,6 +437,7 @@ por falta de clave y de semillas, respectivamente. No ejecutan búsquedas ni cap
 ./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas semillas --help
 ./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --help
 Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
 ./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas semillas --consulta "agentes de IA en empresas"
 ./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --semillas tests\fixtures\tiktok_sin_semillas.txt
 ```
@@ -462,13 +467,15 @@ comparar observaciones; las métricas de YouTube deben borrarse a los 30 días.
 ## Búsqueda general por tema (paso 9)
 
 YouTube busca en MX, CO, AR, CL y PE; LinkedIn descubre publicaciones por tema; TikTok captura las
-cuentas semilla existentes y aplica el filtro gratis de Nemotron. Por defecto son las tres redes,
+cuentas semilla existentes y aplica Nemotron, con Groq de respaldo. Por defecto son las tres redes,
 los últimos 7 días y un único JSON sin repetir publicaciones ni métricas por id. Una red o un país
 que falla se cuenta en stderr y las demás consultas siguen; si todas fallan, termina con error.
 El resumen incluye avisos de capturas parciales, bloqueo o lotes que se conservaron sin filtrar.
 
-Necesita `AUTOR_HASH_SAL`, `YOUTUBE_API_KEY` para YouTube y `OPENROUTER_API_KEY` para LinkedIn y
-el filtro de texto de TikTok (con solo hashtags no necesita OpenRouter). TikTok requiere semillas en `data/raw/tiktok_cuentas.txt`; su cobertura depende
+Necesita `AUTOR_HASH_SAL`, `YOUTUBE_API_KEY` para YouTube y `OPENROUTER_API_KEY` como principal
+para LinkedIn y el filtro de texto de TikTok; `GROQ_API_KEY` permite el respaldo, incluso si falta
+la de OpenRouter (con solo hashtags no necesita ninguna de las dos).
+TikTok requiere semillas en `data/raw/tiktok_cuentas.txt`; su cobertura depende
 de esas cuentas. LinkedIn y TikTok usan las vías públicas no oficiales descritas arriba, sin sesión
 ni cookies. Exa tiene costo; el filtro comparte el contador diario existente de Nemotron.
 
@@ -547,11 +554,65 @@ Remove-Item Env:AUTOR_HASH_SAL -ErrorAction SilentlyContinue
 Las corridas reales en tres redes, la recaptura de los 1.010 videos y la integración con trends/IA
 quedan para la revisión del equipo.
 
+## Proveedores (paso 11)
+
+**OpenRouter es el principal; Groq es el respaldo opcional.** Decisión de Juan del 17/10/2026,
+con USD 10 de saldo declarado en OpenRouter. Carga `GROQ_API_KEY` en el entorno del proceso para
+habilitar el respaldo; sin esa variable se conserva el funcionamiento anterior. No se leen `.env`.
+Si falta la clave de OpenRouter pero existe la de Groq, se usa directamente el respaldo.
+
+| Uso | Principal: OpenRouter | Respaldo: Groq |
+|---|---|---|
+| Descubrir posts LinkedIn y cuentas TikTok | DeepSeek + Exa, con los límites locales de gasto | `openai/gpt-oss-20b` con `browser_search`, `tool_choice: required`, razonamiento `low`, 2.000 tokens máximos |
+| Filtrar textos por tema | Nemotron 3 Super gratuito, hasta 30 textos por lote | `openai/gpt-oss-20b`, razonamiento `low`, temperatura 0, 6.000 tokens máximos |
+
+Una respuesta inválida, timeout o error de OpenRouter (incluidos HTTP 402/429/5xx) activa Groq.
+Los límites locales de búsquedas y la cuota diaria de Nemotron también permiten pasar al respaldo;
+no se restablecen ni se saltan los controles de OpenRouter. La petición a Groq usa un User-Agent
+propio (`TredRadar/1.0`): la prueba del encargo observó un 403 de Cloudflare con el de urllib.
+
+En búsqueda se extraen URLs de `choices[0].message.executed_tools` y del texto, se quita puntuación
+final y se aplica el mismo validador y deduplicado por ID de cada plataforma. Esto valida la forma
+del enlace; la lectura pública y el filtro por fecha siguen decidiendo qué piezas se conservan.
+Cada consulta aparece por número y `proveedor` en el resumen; el costo USD suma únicamente costos
+confirmados de OpenRouter y `groq_tokens` suma los tokens de las búsquedas respondidas por Groq.
+Una reserva de costo desconocido en OpenRouter sigue consumiendo presupuesto local aunque Groq responda.
+
+El filtro envía el mismo texto anonimizado y lee las mismas líneas `n: SI/SÍ/NO` con ambos proveedores.
+Con Groq configurado, el primer fallo de OpenRouter pasa ese lote al respaldo; sin Groq se conserva
+el reintento anterior. El resumen cuenta `lotes_openrouter`, `lotes_groq` y `lotes_sin_filtrar`.
+Si ambos fallan, se conserva el lote sin filtrar y se avisa sin exponer respuestas ni credenciales.
+Un HTTP 402/429 de Groq detiene sus llamadas restantes durante esa captura.
+Una búsqueda donde ambos fallan se cuenta como fallida; si todas fallan, el comando termina con error.
+
+Mediciones históricas del 17/10/2026, proporcionadas en el encargo (no repetidas aquí):
+Groq encontró 16 URLs LinkedIn en 3 s, todas presentes en `executed_tools`; de 14 abiertas, 9 completas
+y del tema y 5 fallidas, con edades de 5–15 días. El filtro contestó 30/30 en 2,3 s y fue más estricto
+que Nemotron en la muestra de «IA en la educación»; con 1.500 tokens solo contestó 18/30. Por eso se
+usan 6.000. Son mediciones de esa muestra, sin garantía de cobertura, clasificación ni costo futuro.
+
+Comprobación del paso 11 sin red: ayudas con código 0 y consulta sin ambas claves con código 1.
+Las pruebas simulan los dos proveedores, incluyendo `executed_tools`, cuotas, errores y User-Agent.
+La corrida real corresponde a la revisión del equipo.
+
+```powershell
+./.venv/Scripts/python -m pytest -q
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --help
+./.venv/Scripts/python -m radar.recoleccion.tiktok_cuentas capturar --help
+./.venv/Scripts/python -m radar.recoleccion.buscar --help
+Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
+$env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
+./.venv/Scripts/python -m radar.recoleccion.linkedin_buscar --consulta "IA en la educación" --dias 7
+```
+
 ## Cuidar el saldo de OpenRouter
 
 Las búsquedas web pagas de LinkedIn y las que descubren cuentas de TikTok comparten un control
 local de gasto. La captura de cuentas ya conocidas sigue sin pagar búsquedas web; el filtro de
-relevancia mantiene su modelo gratuito y su cuota propia. No se añaden modelos pagos de respaldo.
+relevancia mantiene su modelo gratuito y su cuota propia. Groq es opcional y no se carga contra
+el saldo de OpenRouter. Groq tiene su propia cuota y condiciones de cobro; aquí se cuentan sus
+tokens, sin calcular su costo en USD.
 
 Valores iniciales, ajustables mediante variables del entorno antes de arrancar el proceso:
 
@@ -597,6 +658,7 @@ $env:PYTHONPATH = (Resolve-Path .\src).Path
 & $pythonRadar -m radar.recoleccion.linkedin_buscar --help
 & $pythonRadar -m radar.recoleccion.buscar --help
 Remove-Item Env:OPENROUTER_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
 $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 & $pythonRadar -m radar.recoleccion.linkedin_buscar --consulta "IA en empresas"
 ```

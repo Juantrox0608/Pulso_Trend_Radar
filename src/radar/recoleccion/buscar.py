@@ -57,16 +57,19 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
                 r['fallidas'] += 1
                 r['aviso'] = ('No se completaron una o más consultas; revisa YOUTUBE_API_KEY y AUTOR_HASH_SAL'
                     if red == 'youtube' else
-                    'No se completó la red; revisa OPENROUTER_API_KEY, AUTOR_HASH_SAL, saldo y acceso público')
+                    'No se completó la red; revisa OPENROUTER_API_KEY, GROQ_API_KEY, AUTOR_HASH_SAL, saldo y acceso público')
                 continue
             exitos += 1
             ps, ms = resultado[:2]
             if len(resultado) > 2:
                 detalle = resultado[2]
                 if red == 'linkedin' and 'detalle' in r:
+                    anteriores = r['detalle'].get('consultas', 0)
                     for campo in ('consultas', 'consultas_fallidas', 'urls', 'completados',
-                                  'omitidos', 'fuera_fecha', 'costo_usd'):
+                                  'omitidos', 'fuera_fecha', 'costo_usd', 'groq_tokens'):
                         r['detalle'][campo] = r['detalle'].get(campo, 0) + detalle.get(campo, 0)
+                    r['detalle'].setdefault('proveedores', []).extend(
+                        dict(p, consulta=p['consulta']+anteriores) for p in detalle.get('proveedores', []))
                     avisos = dict.fromkeys(filter(None, (r['detalle'].get('aviso'), detalle.get('aviso'))))
                     r['detalle']['aviso'] = ' '.join(avisos) or None
                 else:
@@ -83,7 +86,7 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
     if not exitos:
         fallos = '; '.join(f'{red}: {r["fallidas"]} consultas fallidas' for red,r in resumen.items())
         raise ValueError('Todas las redes fallaron; ' + fallos +
-            '; revisa YOUTUBE_API_KEY, OPENROUTER_API_KEY, AUTOR_HASH_SAL, saldo y conexión')
+            '; revisa YOUTUBE_API_KEY, OPENROUTER_API_KEY, GROQ_API_KEY, AUTOR_HASH_SAL, saldo y conexión')
     return list(publicaciones.values()), list(metricas.values()), resumen
 
 
