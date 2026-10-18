@@ -1,0 +1,18 @@
+{
+  "question": "PRUEBA CON DATOS FICTICIOS: analiza solo este video de ejemplo y propone una idea para 30X. No son datos reales ni evidencia de crecimiento.",
+  "audience": "Líderes y equipos de Latinoamérica que aplican IA en su trabajo",
+  "videos": [
+    {
+      "id": "yt:diagnostic-test",
+      "title": "[FICTICIO] IA para automatizar reportes de equipo",
+      "description": "Metadatos inventados para comprobar la conexión con Groq. No existe contenido audiovisual disponible.",
+      "author": null,
+      "url": "https://www.youtube.com/watch?v=diagnostic-test",
+      "published_at": "2026-10-16T12:00:00Z",
+      "metrics_collected_at": "2026-10-17T12:00:00Z",
+      "views": 100,
+      "likes": null,
+      "comments": 0
+    }
+  ]
+}

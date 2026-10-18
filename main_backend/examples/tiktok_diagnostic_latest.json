@@ -1,0 +1,53 @@
+{
+  "platform": "tiktok",
+  "search_id": "1f478120918b460d98374efb7a323e2b",
+  "state": "lista",
+  "summary": {
+    "tiktok": {
+      "publicaciones": 0,
+      "metricas": 0,
+      "fallidas": 0,
+      "detalle": {
+        "cuentas": 3,
+        "cuentas_fallidas": 3,
+        "videos": 0,
+        "fuera_fecha": 0,
+        "omitidos": 0,
+        "descartados_tema": 0,
+        "lotes_descartados_sin_filtro": 0,
+        "lotes_openrouter": 0,
+        "lotes_groq": 0,
+        "aviso": "Captura detenida por bloqueo o tres cuentas fallidas consecutivas; salida parcial.",
+        "interrumpido": false,
+        "detenido": true
+      }
+    }
+  },
+  "seconds": 8.66,
+  "publications": 0,
+  "metrics": 0,
+  "usable_publications": 0,
+  "normalization": {
+    "metadata_records": 0,
+    "statistics_records": 0,
+    "duplicate_metadata_ids": [],
+    "duplicate_metric_ids": [],
+    "metadata_without_statistics": [],
+    "statistics_without_metadata": [],
+    "invalid_records": [],
+    "missing_metric_fields": [],
+    "statistics_captured_at_by_id": {},
+    "search_id": "1f478120918b460d98374efb7a323e2b",
+    "collector_parameters": {
+      "tema": "inteligencia artificial",
+      "redes": [
+        "tiktok"
+      ],
+      "dias": 7,
+      "paises": [
+        "CO"
+      ]
+    },
+    "valid_joined_records": 0
+  }
+}

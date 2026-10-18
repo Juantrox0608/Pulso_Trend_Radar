@@ -1,0 +1,54 @@
+{
+  "question": "DATOS FICTICIOS DE PRUEBA: ¿qué videos destacan en esta muestra y qué contenidos podríamos producir? No son resultados reales de YouTube.",
+  "audience": "Líderes y equipos de Latinoamérica que están aprendiendo a aplicar IA en su trabajo",
+  "videos": [
+    {
+      "id": "test-video-a",
+      "title": "[FICTICIO] Cómo automatizar reportes con IA",
+      "description": "Ejemplo inventado de aplicaciones de IA para reportes de equipos pequeños. No corresponde a un video real.",
+      "author": "Canal ficticio A",
+      "url": "https://www.youtube.com/watch?v=test-video-a",
+      "published_at": "2026-10-10T14:00:00Z",
+      "metrics_collected_at": "2026-10-17T05:00:00Z",
+      "views": 12000,
+      "likes": 600,
+      "comments": 40
+    },
+    {
+      "id": "test-video-b",
+      "title": "[FICTICIO] Tres errores al adoptar IA en una empresa",
+      "description": "Metadatos de prueba sobre adopción y evaluación de herramientas. No hay transcripción ni contenido audiovisual disponible.",
+      "author": "Canal ficticio B",
+      "url": "https://www.youtube.com/watch?v=test-video-b",
+      "published_at": "2026-10-14T14:00:00Z",
+      "metrics_collected_at": "2026-10-17T05:00:00Z",
+      "views": 12000,
+      "likes": null,
+      "comments": 25
+    },
+    {
+      "id": "test-video-c",
+      "title": "[FICTICIO] IA para preparar reuniones de equipo",
+      "description": "Ejemplo ficticio con visualizaciones conocidas iguales a cero.",
+      "author": null,
+      "url": "https://www.youtube.com/watch?v=test-video-c",
+      "published_at": "2026-10-16T14:00:00Z",
+      "metrics_collected_at": "2026-10-17T05:00:00Z",
+      "views": 0,
+      "likes": 0,
+      "comments": 0
+    },
+    {
+      "id": "test-video-d",
+      "title": "[FICTICIO] Evaluar riesgos de IA antes de usarla",
+      "description": null,
+      "author": "Canal ficticio D",
+      "url": "https://www.youtube.com/watch?v=test-video-d",
+      "published_at": "2026-10-15T14:00:00Z",
+      "metrics_collected_at": "2026-10-17T05:00:00Z",
+      "views": null,
+      "likes": null,
+      "comments": null
+    }
+  ]
+}
