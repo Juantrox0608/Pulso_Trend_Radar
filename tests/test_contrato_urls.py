@@ -27,6 +27,23 @@ def test_extrae_id_nativo_de_urls_pegadas(url, plataforma, id_nativo):
     assert id_desde_url(url) == (plataforma, id_nativo)
 
 
+def test_acepta_link_corto_de_linkedin():
+    plataforma, id_nativo = id_desde_url("https://lnkd.in/e/aB3d-f_9")
+
+    assert plataforma is Plataforma.LINKEDIN
+    assert id_contrato(plataforma, id_nativo) == "li:lnkd-e-aB3d-f_9"
+    assert url_canonica(plataforma, id_nativo) == "https://lnkd.in/e/aB3d-f_9"
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["https://lnkd.in/e/abc1https://lnkd.in/e/abcd1234", "https://lnkd.in/", "https://lnkd.in/e/"],
+)
+def test_rechaza_link_corto_roto(url):
+    with pytest.raises(ValueError, match="No se encontró el id"):
+        id_desde_url(url)
+
+
 def test_url_canonica_no_lleva_autor():
     _, id_nativo = id_desde_url(
         "https://www.linkedin.com/posts/nombre-apellido_tema-activity-7411490079984250880-Vb5v"

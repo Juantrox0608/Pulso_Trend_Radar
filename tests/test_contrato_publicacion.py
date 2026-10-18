@@ -65,6 +65,7 @@ def test_rechaza_id_nativo_con_formato_incorrecto():
             "li:7411490079984250880",
             "https://www.linkedin.com/feed/update/urn:li:activity:7411490079984250880/",
         ),
+        ("linkedin", "li:lnkd-e-aB3d-f_9", "https://lnkd.in/e/aB3d-f_9"),
     ],
 )
 def test_url_canonica_se_arma_desde_el_id(plataforma, id_, esperada):

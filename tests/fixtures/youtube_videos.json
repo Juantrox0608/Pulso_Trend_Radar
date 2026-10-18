@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "id": "vid_test01A",
+      "snippet": {
+        "title": "Agentes de IA",
+        "description": "Descripción de ejemplo",
+        "tags": [
+          "IA",
+          "#ia",
+          "Agentes"
+        ],
+        "publishedAt": "2026-01-02T10:00:00-05:00",
+        "channelId": "canal_ficticio",
+        "channelTitle": "CANAL_SINTETICO_NO_DEVOLVER",
+        "defaultAudioLanguage": "es-419"
+      },
+      "contentDetails": {
+        "duration": "PT3M"
+      },
+      "statistics": {
+        "viewCount": "1200",
+        "likeCount": "0",
+        "commentCount": "5"
+      }
+    },
+    {
+      "id": "vid_test02B",
+      "snippet": {
+        "title": "Agentes de IA",
+        "description": "Descripción de ejemplo",
+        "tags": [
+          "IA",
+          "#ia",
+          "Agentes"
+        ],
+        "publishedAt": "2026-01-02T10:00:00-05:00",
+        "channelId": "canal_ficticio",
+        "channelTitle": "CANAL_SINTETICO_NO_DEVOLVER",
+        "defaultAudioLanguage": "es-419"
+      },
+      "contentDetails": {
+        "duration": "PT3M1S"
+      },
+      "statistics": {
+        "viewCount": "0"
+      }
+    }
+  ]
+}

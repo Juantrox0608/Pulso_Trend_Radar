@@ -3,6 +3,7 @@
 Formatos verificados en navegador sin sesión el 2026-10-17:
 - LinkedIn: /feed/update/urn:li:activity:ID/ abre el post.
 - TikTok: /@/video/ID abre el video (redirige a la url completa); /video/ID da 404.
+- LinkedIn: "Copiar enlace a la publicación" puede dar lnkd.in/X/CODIGO, que abre el post (comprobado por Juan).
 """
 
 import re
@@ -13,7 +14,8 @@ from radar.contrato.base import PREFIJO_ID, Plataforma
 PATRON_ID_NATIVO: dict[Plataforma, re.Pattern[str]] = {
     Plataforma.YOUTUBE: re.compile(r"^[A-Za-z0-9_-]{11}$"),
     Plataforma.TIKTOK: re.compile(r"^\d{15,22}$"),
-    Plataforma.LINKEDIN: re.compile(r"^\d{15,22}$"),
+    # shortcut: un mismo post puede tener varios links cortos, así que no se detecta como repetido.
+    Plataforma.LINKEDIN: re.compile(r"^(\d{15,22}|lnkd-[A-Za-z]-[A-Za-z0-9_-]{4,16})$"),
 }
 
 PLANTILLA_URL: dict[Plataforma, str] = {
@@ -25,6 +27,7 @@ PLANTILLA_URL: dict[Plataforma, str] = {
 _YOUTUBE_RUTA = re.compile(r"^/(?:shorts|embed|live)/([A-Za-z0-9_-]{11})")
 _TIKTOK_RUTA = re.compile(r"/video/(\d{15,22})")
 _LINKEDIN_ACTIVIDAD = re.compile(r"activity[:\-](\d{15,22})")
+_LINKEDIN_CORTO = re.compile(r"/([A-Za-z])/([A-Za-z0-9_-]{4,16})/?")
 
 
 def es_id_nativo_valido(plataforma: Plataforma, id_nativo: str) -> bool:
@@ -34,6 +37,9 @@ def es_id_nativo_valido(plataforma: Plataforma, id_nativo: str) -> bool:
 def url_canonica(plataforma: Plataforma, id_nativo: str) -> str:
     if not es_id_nativo_valido(plataforma, id_nativo):
         raise ValueError(f"id nativo inválido para {plataforma.value}: {id_nativo!r}")
+    if id_nativo.startswith("lnkd-"):
+        _, letra, codigo = id_nativo.split("-", 2)
+        return f"https://lnkd.in/{letra}/{codigo}"
     return PLANTILLA_URL[plataforma].format(id=id_nativo)
 
 
@@ -52,6 +58,10 @@ def id_desde_url(url: str) -> tuple[Plataforma, str]:
     elif host.endswith("linkedin.com"):
         coincidencia = _LINKEDIN_ACTIVIDAD.search(partes.path)
         candidato = coincidencia.group(1) if coincidencia else None
+        plataforma = Plataforma.LINKEDIN
+    elif host == "lnkd.in":
+        coincidencia = _LINKEDIN_CORTO.fullmatch(partes.path)
+        candidato = f"lnkd-{coincidencia.group(1)}-{coincidencia.group(2)}" if coincidencia else None
         plataforma = Plataforma.LINKEDIN
     else:
         raise ValueError(f"La url no es de YouTube, TikTok ni LinkedIn: {host or url!r}")

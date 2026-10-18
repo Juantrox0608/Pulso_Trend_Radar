@@ -1,0 +1,18 @@
+{
+  "choices": [{"message": {
+    "content": "Texto ficticio del buscador que no se debe usar: Nombre Exa",
+    "annotations": [
+      {"type": "url_citation", "url_citation": {"url": "https://www.linkedin.com/posts/autorficticio_ia-activity-2234567890123456789-abcd", "title": "Nombre Exa"}},
+      {"url_citation": {"url": "https://www.linkedin.com/in/perfil-ficticio"}},
+      {"url_citation": {"url": "https://www.linkedin.com/company/empresa-ficticia"}},
+      {"url_citation": {"url": "https://www.linkedin.com/posts/autorficticio_ia-activity-2234567890123456789-abcd"}},
+      {"url_citation": {"url": "https://www.linkedin.com/feed/update/urn:li:activity:2234567890123456790/"}},
+      {"url_citation": {"url": "https://www.linkedin.com/pulse/articulo-ficticio"}},
+      {"url_citation": {"url": "https://linkedin.com.evil.test/posts/ia-activity-2234567890123456791"}},
+      {"url_citation": {"url": "https://www.linkedin.com/authwall"}},
+      {"url_citation": {"url": "https://lnkd.in/p/ficticio"}},
+      {"url_citation": {"url": "https://www.linkedin.com/posts/sin-id"}}
+    ]
+  }}],
+  "usage": {"cost": 0.007}
+}

@@ -1,3 +1,4 @@
+
 # Entorno y credenciales
 .env*
 !.env.example
@@ -7,6 +8,8 @@
 # Python y dependencias
 .venv/
 venv/
+.venv-backend/
+.venv-radar/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -24,14 +27,6 @@ data/raw/
 *.sqlite
 *.sqlite3
 radar.db
-
-# Entornos virtuales locales adicionales
-.venv-backend/
-.venv-radar/
-
-# Entornos virtuales adicionales
-.venv-backend/
-.venv-radar/
 
 # Next.js
 node_modules/
