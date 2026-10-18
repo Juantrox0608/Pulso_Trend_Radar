@@ -672,3 +672,64 @@ $env:AUTOR_HASH_SAL = 'sal_ficticia_solo_prueba'
 
 La última orden debe terminar con código 1, error de clave ausente y sin gasto. Para cambiar el
 presupuesto basta cargar la variable correspondiente en el entorno; no se lee ningún archivo `.env`.
+
+## Servicio HTTP (Render)
+
+API de pruebas sin base de datos, reutiliza `buscar.recolectar`. Instala el extra `.[api]`
+(o `.[api,dev]` para ejecutar todas las pruebas) cuando prepares el entorno. En este checkout ya están instalados.
+Desde la raíz, inicia un único proceso, sin `--workers` ni `--reload`:
+
+```powershell
+./.venv/Scripts/python -m uvicorn radar.recoleccion.servicio:app --host 127.0.0.1 --port 8000
+```
+
+En otra terminal, el chequeo funciona incluso sin claves:
+
+```powershell
+curl.exe http://127.0.0.1:8000/salud
+```
+
+Devuelve `{"estado":"ok"}`. Para recolectar, configura en el entorno del servidor `RADAR_TOKEN`,
+`AUTOR_HASH_SAL` y las claves de las redes que usarás. En la terminal cliente, configura
+`RADAR_TOKEN` con el mismo valor. No pongas secretos en archivos del repo.
+Estos ejemplos de búsqueda sí consultan proveedores y pueden gastar cuota/saldo:
+
+```powershell
+'{"tema":"ciberseguridad, hacking","redes":["youtube"],"dias":7,"paises":["MX"]}' | curl.exe -X POST http://127.0.0.1:8000/busquedas -H "X-Token: $env:RADAR_TOKEN" -H "Content-Type: application/json" --data-binary '@-'
+curl.exe http://127.0.0.1:8000/busquedas/ID_DEVUELTO -H "X-Token: $env:RADAR_TOKEN"
+```
+
+Solo `tema` es obligatorio: por defecto busca las tres redes, últimos 7 días y países
+MX, CO, AR, CL y PE. Aplica la validación de `buscar`: tema amplio o hasta cinco términos,
+días enteros entre 1 y 36500, redes conocidas y países de dos letras. Normaliza países y
+elimina redes/países repetidos. JSON inválido o parámetros inválidos responden 422.
+
+El POST responde 202 con `id` y `estado: en_curso`; el trabajo sigue en un hilo.
+Consulta ese ID con GET hasta `lista` (incluye `resumen`, `publicaciones` y `metricas`
+según el contrato) o `error` (mensaje genérico y `resumen`). Solo hay una búsqueda en curso:
+otra recibe 409. Un ID desconocido o eliminado responde 404. No hay envío a la base del equipo.
+POST y GET de búsquedas requieren `X-Token`: ausente o incorrecto devuelve 401;
+sin `RADAR_TOKEN`, todo salvo `/salud` devuelve 503.
+
+`render.yaml` prepara el servicio `radar-recoleccion` con Python 3.12, plan free,
+instalación `pip install -e ".[api]"`, uvicorn en `$PORT` y chequeo `/salud`.
+Al crear el servicio en Render, configura sus variables secretas (todas con `sync: false`):
+
+| Variable | Uso |
+|---|---|
+| `RADAR_TOKEN` | Token compartido obligatorio para las búsquedas |
+| `AUTOR_HASH_SAL` | Sal del hash de autores |
+| `YOUTUBE_API_KEY` | YouTube Data API |
+| `OPENROUTER_API_KEY` | Proveedor principal de búsqueda y filtro |
+| `GROQ_API_KEY` | Respaldo opcional |
+| `TIKTOK_CUENTAS` | Identificadores `channel_id` separados por comas, sin URLs ni usuarios |
+
+Si `TIKTOK_CUENTAS` existe, sustituye `data/raw/tiktok_cuentas.txt`, incluso si está vacía.
+Se quitan espacios y duplicados, y se valida cada identificador igual que en las semillas
+del archivo. Si no está definida se conserva el archivo local. El archivo real no está en Git.
+
+Se guardan como máximo 20 búsquedas en memoria; la siguiente elimina la más vieja.
+El plan gratis se duerme tras inactividad y un reinicio pierde búsquedas y resultados,
+también los trabajos en curso. El registro local de gasto de OpenRouter tampoco es persistente
+en Render: configura el límite de gasto en la clave del proveedor. Usa un solo proceso/instancia
+para mantener la exclusión de búsquedas. El despliegue y la prueba real quedan para el equipo.

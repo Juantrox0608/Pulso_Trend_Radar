@@ -32,7 +32,7 @@ def _tiktok(tema, dias):
                                   sal=os.environ.get('AUTOR_HASH_SAL', ''))
 
 
-def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
+def validar_busqueda(tema, dias, redes, paises):
     if not tema.strip() or not 1 <= dias <= 36500:
         raise ValueError('Usa un tema con texto y --dias entre 1 y 36500')
     terminos = terminos_tema(tema)
@@ -42,6 +42,11 @@ def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
         raise ValueError('--redes admite youtube,linkedin,tiktok')
     if not paises or any(not re.fullmatch('[A-Z]{2}', p) for p in paises):
         raise ValueError('--paises requiere códigos de dos letras')
+    return terminos, redes, paises
+
+
+def recolectar(tema, *, dias=7, redes=REDES, paises=PAISES, recolectores=None):
+    terminos, redes, paises = validar_busqueda(tema, dias, redes, paises)
     recolectores = recolectores or dict(youtube=_youtube, linkedin=_linkedin, tiktok=_tiktok)
     publicaciones, metricas, resumen = {}, {}, {}
     exitos = 0

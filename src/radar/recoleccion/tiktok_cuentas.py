@@ -136,6 +136,9 @@ def urls_desde_csv(ruta):
 
 
 def leer_semillas(ruta=SEMILLAS):
+    if 'TIKTOK_CUENTAS' in os.environ:
+        return list(dict.fromkeys(_canal(c.strip()) for c in
+            os.environ['TIKTOK_CUENTAS'].split(',') if c.strip()))
     try:
         lineas = Path(ruta).read_text(encoding='utf-8-sig').splitlines()
         return list(dict.fromkeys(_canal(l.strip()) for l in lineas if l.strip()))

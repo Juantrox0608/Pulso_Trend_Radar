@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: radar-recoleccion
+    runtime: python
+    plan: free
+    buildCommand: pip install -e ".[api]"
+    startCommand: uvicorn radar.recoleccion.servicio:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /salud
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AUTOR_HASH_SAL
+        sync: false
+      - key: RADAR_TOKEN
+        sync: false
+      - key: TIKTOK_CUENTAS
+        sync: false
