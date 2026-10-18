@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 import httpx
@@ -26,6 +27,10 @@ def create_app(settings=None, collector=None, ai=None):
 
     @asynccontextmanager
     async def lifespan(app):
+        logging.getLogger("uvicorn.error").info(
+            "IA configurada: host=%s path=%s",
+            config.ai_analyze_url.host, config.ai_analyze_url.path,
+        )
         async with httpx.AsyncClient(follow_redirects=False) as http:
             app.state.settings = config
             app.state.collector = collector or CollectorClient(config, http)
@@ -53,7 +58,8 @@ def create_app(settings=None, collector=None, ai=None):
 
     @app.get("/health")
     async def health():
-        return {"status": "ok", "service": "main_backend", "collector_mode": app.state.settings.collector_mode}
+        return {"status": "ok", "service": "main_backend", "collector_mode": app.state.settings.collector_mode,
+                "ai_target": {"host": config.ai_analyze_url.host, "path": config.ai_analyze_url.path}}
 
     @app.post("/research", response_model=ResearchResponse, responses={
         code: {"model": ErrorResponse} for code in (413, 422, 502, 503, 504)

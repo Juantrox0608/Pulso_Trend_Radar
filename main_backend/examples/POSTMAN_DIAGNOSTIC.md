@@ -1,5 +1,13 @@
 # Diagnóstico por componentes en Postman
 
+La IA actual está en `https://ia-analisis.onrender.com/analyze`; las URLs del
+servicio anterior más abajo son históricas y deben sustituirse por ese dominio.
+Antes de repetir búsquedas consulta GET `/health` del backend principal. Su campo
+`ai_target` muestra host y ruta efectivos, sin credenciales ni parámetros. Debe
+ser `{"host":"ia-analisis.onrender.com","path":"/analyze"}`. El mismo destino
+se registra al arrancar en los logs de `tred-radar`. Esta comprobación no consume
+Groq ni inicia tareas. Actualizar `.env.example` no cambia las variables de Render.
+
 No repetir `/research` hasta comprobar IA por separado. El mensaje antiguo
 `ai_error` ocultaba varias respuestas del servicio IA. No demuestra que el JSON
 del frontend sea incorrecto ni permite atribuirlo a una clave o cuota sin evidencia.

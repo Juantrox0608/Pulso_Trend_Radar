@@ -423,3 +423,13 @@ def test_postman_probe_is_valid_and_ranked():
     ranking = calculate_ranking(request.videos)
     assert len(ranking) == 1
     assert ranking[0].video_id == "yt:diagnostic-test" and ranking[0].value == 100
+
+
+def test_health_identifies_ai_target_without_leaking_credentials(result):
+    settings = config(ai_analyze_url="https://private-user:private-password@ia-analisis.onrender.com/analyze?token=private-token")
+    collector, ai = FakeCollector(result), FakeAI()
+    with TestClient(create_app(settings, collector, ai)) as client:
+        response = client.get("/health")
+    assert response.json()["ai_target"] == {"host": "ia-analisis.onrender.com", "path": "/analyze"}
+    assert "private-" not in response.text
+    assert not collector.calls and not ai.requests
