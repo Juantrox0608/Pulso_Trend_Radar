@@ -32,7 +32,10 @@ class CargaTikTok(BaseModel):
 
 
 class Busqueda(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', json_schema_extra={'examples': [
+        {'tema': 'agentes de IA en empresas', 'redes': ['youtube', 'linkedin', 'tiktok'], 'dias': 7, 'paises': ['MX', 'CO']},
+        {'tema': 'ciberseguridad, hacking, fraude digital', 'redes': ['youtube'], 'dias': 7, 'paises': ['CO']},
+        {'tema': '#ia', 'redes': ['tiktok'], 'dias': 7}]})
 
     tema: str
     redes: list[str] = Field(default_factory=lambda: list(buscar.REDES))
@@ -47,7 +50,12 @@ class Busqueda(BaseModel):
 
 
 def crear_app(*, recolector=None):
-    app = FastAPI(title='Radar · Recolección', version='0.1', redoc_url=None)
+    app = FastAPI(title='Radar · Recolección', version='0.2', redoc_url=None, description=(
+        'Recolecta publicaciones públicas de YouTube, LinkedIn y TikTok con sus métricas, sin autores ni @usuarios. '
+        'Flujo: `POST /busquedas` devuelve un `id`; consultar `GET /busquedas/{id}` hasta `estado: lista` '
+        '(1–5 minutos). Una búsqueda a la vez. TikTok se sirve desde lo que sube la PC del equipo '
+        '(`POST /tiktok/carga`), porque TikTok bloquea los servidores de Render. Si el servidor define '
+        '`RADAR_TOKEN`, las búsquedas exigen la cabecera `X-Token`.'))
     cerrojo = Lock()
     # shortcut: en memoria, se pierde al reiniciar Render; pasar a la base del equipo al unir
     busquedas = {}
@@ -87,23 +95,33 @@ def crear_app(*, recolector=None):
         with cerrojo:
             busquedas[id] = resultado
 
-    @app.get('/salud')
+    @app.get('/salud', tags=['Servicio'], summary='Salud del servicio',
+             description='No pide token ni llama a proveedores. Sirve para despertar el servicio gratis de Render.')
     def salud():
         return {'estado': 'ok'}
 
-    @app.post('/tiktok/carga')
+    @app.post('/tiktok/carga', tags=['TikTok'], summary='Subir captura de TikTok (solo la PC del equipo)',
+              description='Reemplaza los videos de TikTok guardados en memoria. Exige la cabecera `X-Carga-Token`. '
+                          'Solo ids `tt:`, máximo 3000, una métrica por publicación. Lo usa el comando '
+                          '`python -m radar.recoleccion.tiktok_cuentas subir`.')
     def cargar(datos: CargaTikTok):
         nonlocal carga
         with cerrojo:
             carga = (datos.publicaciones, datos.metricas, datetime.now(timezone.utc).isoformat())
             return {'publicaciones': len(carga[0]), 'cargado_en': carga[2]}
 
-    @app.get('/tiktok/carga')
+    @app.get('/tiktok/carga', tags=['TikTok'], summary='Ver cuántos videos de TikTok hay cargados',
+             description='Devuelve la cantidad de publicaciones cargadas y la hora de la última carga (UTC). No pide token.')
     def estado_carga():
         with cerrojo:
             return {'publicaciones': len(carga[0]), 'cargado_en': carga[2]}
 
-    @app.post('/busquedas', status_code=202)
+    @app.post('/busquedas', status_code=202, tags=['Búsquedas'], summary='Iniciar una búsqueda',
+              description='`tema`: frase amplia o hasta 5 términos por comas (más preciso); admite `#hashtag` exacto. '
+                          '`redes`: youtube, linkedin, tiktok (por defecto las tres). `dias`: ventana de publicación '
+                          '(por defecto 7). `paises`: códigos de dos letras, solo afectan a YouTube. Responde 202 con '
+                          'el `id`; 409 si ya hay una búsqueda en curso; 422 si la entrada no es válida. '
+                          'No reintentar automáticamente.')
     def iniciar(datos: Busqueda):
         with cerrojo:
             if any(b['estado'] == 'en_curso' for b in busquedas.values()):
@@ -119,7 +137,11 @@ def crear_app(*, recolector=None):
                 raise HTTPException(503, 'No se pudo iniciar la búsqueda') from None
         return dict(id=id, estado='en_curso')
 
-    @app.get('/busquedas/{id}')
+    @app.get('/busquedas/{id}', tags=['Búsquedas'], summary='Consultar una búsqueda',
+             description='`estado`: `en_curso`, `lista` o `error`. En `lista` trae `publicaciones` y `metricas` del contrato '
+                         '(ids `yt:`, `li:`, `tt:`; vacío es `null`, no 0) y un `resumen` por red con avisos y fallos. '
+                         'En LinkedIn `likes` es el total de reacciones. Los resultados viven en memoria (máximo 20) '
+                         'y se pierden si Render reinicia: 404.')
     def consultar(id: str):
         with cerrojo:
             if id not in busquedas:

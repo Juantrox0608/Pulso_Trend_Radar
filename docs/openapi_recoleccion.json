@@ -2,12 +2,17 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Radar · Recolección",
-    "version": "0.1"
+    "description": "Recolecta publicaciones públicas de YouTube, LinkedIn y TikTok con sus métricas, sin autores ni @usuarios. Flujo: `POST /busquedas` devuelve un `id`; consultar `GET /busquedas/{id}` hasta `estado: lista` (1–5 minutos). Una búsqueda a la vez. TikTok se sirve desde lo que sube la PC del equipo (`POST /tiktok/carga`), porque TikTok bloquea los servidores de Render. Si el servidor define `RADAR_TOKEN`, las búsquedas exigen la cabecera `X-Token`.",
+    "version": "0.2"
   },
   "paths": {
     "/salud": {
       "get": {
-        "summary": "Salud",
+        "tags": [
+          "Servicio"
+        ],
+        "summary": "Salud del servicio",
+        "description": "No pide token ni llama a proveedores. Sirve para despertar el servicio gratis de Render.",
         "operationId": "salud_salud_get",
         "responses": {
           "200": {
@@ -21,9 +26,71 @@
         }
       }
     },
+    "/tiktok/carga": {
+      "get": {
+        "tags": [
+          "TikTok"
+        ],
+        "summary": "Ver cuántos videos de TikTok hay cargados",
+        "description": "Devuelve la cantidad de publicaciones cargadas y la hora de la última carga (UTC). No pide token.",
+        "operationId": "estado_carga_tiktok_carga_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TikTok"
+        ],
+        "summary": "Subir captura de TikTok (solo la PC del equipo)",
+        "description": "Reemplaza los videos de TikTok guardados en memoria. Exige la cabecera `X-Carga-Token`. Solo ids `tt:`, máximo 3000, una métrica por publicación. Lo usa el comando `python -m radar.recoleccion.tiktok_cuentas subir`.",
+        "operationId": "cargar_tiktok_carga_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CargaTikTok"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/busquedas": {
       "post": {
-        "summary": "Iniciar",
+        "tags": [
+          "Búsquedas"
+        ],
+        "summary": "Iniciar una búsqueda",
+        "description": "`tema`: frase amplia o hasta 5 términos por comas (más preciso); admite `#hashtag` exacto. `redes`: youtube, linkedin, tiktok (por defecto las tres). `dias`: ventana de publicación (por defecto 7). `paises`: códigos de dos letras, solo afectan a YouTube. Responde 202 con el `id`; 409 si ya hay una búsqueda en curso; 422 si la entrada no es válida. No reintentar automáticamente.",
         "operationId": "iniciar_busquedas_post",
         "requestBody": {
           "content": {
@@ -59,7 +126,11 @@
     },
     "/busquedas/{id}": {
       "get": {
-        "summary": "Consultar",
+        "tags": [
+          "Búsquedas"
+        ],
+        "summary": "Consultar una búsqueda",
+        "description": "`estado`: `en_curso`, `lista` o `error`. En `lista` trae `publicaciones` y `metricas` del contrato (ids `yt:`, `li:`, `tt:`; vacío es `null`, no 0) y un `resumen` por red con avisos y fallos. En LinkedIn `likes` es el total de reacciones. Los resultados viven en memoria (máximo 20) y se pierden si Render reinicia: 404.",
         "operationId": "consultar_busquedas__id__get",
         "parameters": [
           {
@@ -130,7 +201,78 @@
         "required": [
           "tema"
         ],
-        "title": "Busqueda"
+        "title": "Busqueda",
+        "examples": [
+          {
+            "dias": 7,
+            "paises": [
+              "MX",
+              "CO"
+            ],
+            "redes": [
+              "youtube",
+              "linkedin",
+              "tiktok"
+            ],
+            "tema": "agentes de IA en empresas"
+          },
+          {
+            "dias": 7,
+            "paises": [
+              "CO"
+            ],
+            "redes": [
+              "youtube"
+            ],
+            "tema": "ciberseguridad, hacking, fraude digital"
+          },
+          {
+            "dias": 7,
+            "redes": [
+              "tiktok"
+            ],
+            "tema": "#ia"
+          }
+        ]
+      },
+      "CargaTikTok": {
+        "properties": {
+          "publicaciones": {
+            "items": {
+              "$ref": "#/components/schemas/Publicacion"
+            },
+            "type": "array",
+            "maxItems": 3000,
+            "title": "Publicaciones"
+          },
+          "metricas": {
+            "items": {
+              "$ref": "#/components/schemas/Metrica"
+            },
+            "type": "array",
+            "maxItems": 3000,
+            "title": "Metricas"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "publicaciones",
+          "metricas"
+        ],
+        "title": "CargaTikTok"
+      },
+      "Formato": {
+        "type": "string",
+        "enum": [
+          "video_corto",
+          "video_largo",
+          "post_texto",
+          "post_imagen",
+          "carrusel",
+          "articulo"
+        ],
+        "title": "Formato"
       },
       "HTTPValidationError": {
         "properties": {
@@ -144,6 +286,244 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Metrica": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "publicacion_id": {
+            "type": "string",
+            "pattern": "^(yt|tt|li):[A-Za-z0-9_\\-]+$",
+            "title": "Publicacion Id"
+          },
+          "capturada_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Capturada En"
+          },
+          "vistas": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vistas"
+          },
+          "likes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Likes"
+          },
+          "comentarios": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comentarios"
+          },
+          "compartidos": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compartidos"
+          },
+          "origen": {
+            "$ref": "#/components/schemas/Origen"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "publicacion_id",
+          "capturada_en",
+          "origen"
+        ],
+        "title": "Metrica"
+      },
+      "Origen": {
+        "type": "string",
+        "enum": [
+          "api_oficial",
+          "csv_manual",
+          "pagina_publica"
+        ],
+        "title": "Origen"
+      },
+      "Plataforma": {
+        "type": "string",
+        "enum": [
+          "youtube",
+          "tiktok",
+          "linkedin"
+        ],
+        "title": "Plataforma"
+      },
+      "Publicacion": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "1.0",
+            "title": "Schema Version",
+            "default": "1.0"
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^(yt|tt|li):[A-Za-z0-9_\\-]+$",
+            "title": "Id",
+            "examples": [
+              "yt:dQw4w9WgXcQ"
+            ]
+          },
+          "plataforma": {
+            "$ref": "#/components/schemas/Plataforma"
+          },
+          "titulo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Titulo"
+          },
+          "texto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texto"
+          },
+          "hashtags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hashtags",
+            "default": []
+          },
+          "formato": {
+            "$ref": "#/components/schemas/Formato"
+          },
+          "duracion_segundos": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duracion Segundos"
+          },
+          "idioma": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z]{2}$",
+                "description": "ISO 639-1, ej. es"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idioma"
+          },
+          "pais": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$",
+                "description": "ISO 3166-1 alfa-2, ej. MX"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pais"
+          },
+          "tipo_autor": {
+            "$ref": "#/components/schemas/TipoAutor",
+            "default": "desconocido"
+          },
+          "autor_hash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{16}$",
+            "title": "Autor Hash"
+          },
+          "publicada_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Publicada En"
+          },
+          "capturada_en": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Capturada En"
+          },
+          "origen": {
+            "$ref": "#/components/schemas/Origen"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "plataforma",
+          "formato",
+          "autor_hash",
+          "publicada_en",
+          "capturada_en",
+          "origen"
+        ],
+        "title": "Publicacion",
+        "description": "Lo que se sabe de una pieza de contenido. Las métricas van aparte, en Metrica.\n\nLa url no se recibe: se arma desde el id en formato canónico, sin usuario ni nombre del autor."
+      },
+      "TipoAutor": {
+        "type": "string",
+        "enum": [
+          "empresa",
+          "medio",
+          "experto",
+          "creador",
+          "institucion",
+          "desconocido"
+        ],
+        "title": "TipoAutor"
       },
       "ValidationError": {
         "properties": {
